@@ -1,0 +1,1061 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <title>Sistema HX — Administração Completa</title>
+
+  <!-- Chart.js -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js/dist/chart.umd.min.js"></script>
+
+  <!-- Supabase -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+
+  <script>
+    const { createClient } = supabase;
+
+    const supabaseClient = createClient(
+      "https://axfccmezfofnqfsdurqb.supabase.co",
+      "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImF4ZmNjbWV6Zm9mbnFmc2R1cnFiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjUwNzA1NDMsImV4cCI6MjA4MDY0NjU0M30.woGp6hBgiEa41opQxyxqqMULlDKMXm9T83bhJ7UEmb8"
+    );
+
+    window.supabase = supabaseClient;
+  </script>
+
+  <style>
+    :root {
+      --hx-dark: #0d0d0d;
+      --hx-dark2: #151515;
+      --hx-dark3: #1f1f1f;
+      --hx-accent: #0aff9d;
+      --hx-text: #eaeaea;
+      --hx-card: #181818;
+    }
+
+    /* GRÁFICOS REDUZIDOS */
+    canvas {
+      max-height: 220px !important;
+      width: 100% !important;
+    }
+
+    body.light {
+      --hx-dark: #f5f5f5;
+      --hx-dark2: #ffffff;
+      --hx-dark3: #e0e0e0;
+      --hx-text: #111111;
+      --hx-card: #ffffff;
+    }
+
+    body {
+      margin: 0;
+      background: var(--hx-dark);
+      color: var(--hx-text);
+      font-family: "Segoe UI", sans-serif;
+    }
+
+    #loginOverlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.88);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 9999;
+    }
+
+    .login-card {
+      background: #111;
+      width: 340px;
+      padding: 25px;
+      border-radius: 12px;
+      color: white;
+      border: 1px solid var(--hx-accent);
+      box-shadow: 0 0 20px rgba(0,255,150,0.3);
+    }
+
+    .login-card input {
+      width: 100%;
+      padding: 10px;
+      margin-top: 6px;
+      background: #222;
+      border: 1px solid #444;
+      border-radius: 8px;
+      color: white;
+    }
+
+    .login-btn {
+      width: 100%;
+      padding: 12px;
+      margin-top: 12px;
+      border: none;
+      border-radius: 8px;
+      background: var(--hx-accent);
+      color: black;
+      font-weight: bold;
+      cursor: pointer;
+    }
+
+    header {
+      padding: 16px;
+      background: var(--hx-dark2);
+      color: var(--hx-accent);
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      font-size: 22px;
+      font-weight: bold;
+      box-shadow: 0 2px 10px #000;
+    }
+
+    #sidebar {
+      position: fixed;
+      top: 0;
+      left: 0;
+      padding-top: 80px;
+      width: 240px;
+      height: 100vh;
+      background: var(--hx-dark2);
+    }
+
+    #sidebar button {
+      width: 100%;
+      background: none;
+      border: none;
+      color: var(--hx-text);
+      padding: 14px;
+      font-size: 17px;
+      text-align: left;
+      cursor: pointer;
+      transition: 0.25s;
+    }
+
+    #sidebar button:hover {
+      background: var(--hx-dark3);
+      padding-left: 20px;
+    }
+
+    .menu-active {
+      background: var(--hx-accent) !important;
+      color: black !important;
+    }
+
+    main {
+      margin-left: 260px;
+      padding: 22px;
+    }
+
+    .card {
+      background: var(--hx-card);
+      padding: 12px;
+      border-radius: 12px;
+      margin-bottom: 20px;
+      box-shadow: 0 2px 8px #000;
+    }
+
+    h2, h3 {
+      color: var(--hx-accent);
+    }
+
+    input, select, textarea {
+      width: 100%;
+      padding: 10px;
+      border-radius: 8px;
+      border: 1px solid #333;
+      background: var(--hx-dark3);
+      color: var(--hx-text);
+      margin-bottom: 12px;
+    }
+
+    .btn {
+      background: var(--hx-accent);
+      color: black;
+      padding: 10px 16px;
+      border-radius: 8px;
+      border: none;
+      cursor: pointer;
+      font-weight: bold;
+    }
+
+    .btn.secondary {
+      background: #444;
+      color: white;
+    }
+  </style>
+</head>
+
+
+<body>
+
+  <!-- ======================= LOGIN ======================= -->
+  <div id="loginOverlay">
+    <div class="login-card">
+      <h2 style="color:#0aff9d; text-align:center; margin-bottom:10px;">
+        🔒 Acesso ao Sistema HX
+      </h2>
+
+      <label>Email</label>
+      <input id="loginEmail" type="email">
+
+      <label>Senha</label>
+      <input id="loginPass" type="password">
+
+      <button class="login-btn" onclick="login()">Entrar</button>
+
+      <div id="loginMsg" class="login-msg"></div>
+
+      <div style="margin-top:12px; font-size:13px; text-align:center;">
+        <a href="#" onclick="enviarRecuperacaoSenha(); return false;">Esqueci minha senha</a><br>
+        <a href="#" onclick="cadastrarUsuario(); return false;">Criar novo usuário</a>
+      </div>
+    </div>
+  </div>
+
+  <!-- ======================= HEADER ======================= -->
+  <header>
+    <img src="https://i.imgur.com/8Tqj0MW.png" height="40">
+    Sistema HX — Painel Administrativo
+
+    <span id="userLabel" style="margin-left:auto; color:#0aff9d;"></span>
+
+    <button id="themeToggle" class="btn secondary" onclick="toggleTheme()">🌙 / ☀️</button>
+  </header>
+
+  <!-- ======================= SIDEBAR ======================= -->
+  <div id="sidebar">
+    <button onclick="showSection('dashboardSec', this)" class="menu-active">📊 Dashboard</button>
+    <button onclick="showSection('clientesSec', this)">👤 Clientes</button>
+    <button onclick="showSection('produtosSec', this)">📦 Estoque</button>
+    <button onclick="showSection('vendasSec', this)">💵 Vendas</button>
+    <button onclick="showSection('osSec', this)">🛠 Ordem de Serviço</button>
+    <button onclick="showSection('orcamentoSec', this)">📝 Orçamentos</button>
+
+    <button onclick="alterarSenha()" class="btn secondary" style="margin-top:20px;">Alterar senha</button>
+    <button onclick="logout()" class="btn secondary" style="margin-top:10px;">Sair</button>
+  </div>
+
+  <!-- ======================= FUNÇÕES GERAIS ======================= -->
+  <script>
+    function toggleTheme() {
+      document.body.classList.toggle("light");
+      localStorage.setItem("hxTheme",
+        document.body.classList.contains("light") ? "light" : "dark"
+      );
+    }
+
+    /** Alterna entre seções do menu */
+    function showSection(secId, btn) {
+      document.querySelectorAll("main section").forEach(s => s.style.display = "none");
+      document.getElementById(secId).style.display = "block";
+
+      document.querySelectorAll("#sidebar button").forEach(b =>
+        b.classList.remove("menu-active")
+      );
+
+      if (btn) btn.classList.add("menu-active");
+    }
+
+    /** Logout */
+    async function logout() {
+      await supabase.auth.signOut();
+      userLabel.innerText = "";
+      loginOverlay.style.display = "flex";
+    }
+
+    /** Recuperação de senha */
+    async function enviarRecuperacaoSenha() {
+      const email = loginEmail.value.trim();
+      if (!email) return alert("Digite o email!");
+
+      const { error } = await supabase.auth.resetPasswordForEmail(email);
+      alert(error ? "Erro: " + error.message : "Email enviado!");
+    }
+
+    /** Criar novo usuário */
+    async function cadastrarUsuario() {
+      const email = prompt("Digite o email do novo usuário:");
+      const senha = prompt("Digite a senha:");
+
+      if (!email || !senha) return;
+
+      const { error } = await supabase.auth.signUp({ email, password: senha });
+      alert(error ? error.message : "Usuário criado com sucesso!");
+    }
+
+  </script>
+
+  <main>
+
+  <!-- ======================== DASHBOARD ======================== -->
+  <section id="dashboardSec">
+    <h2>📊 Dashboard Financeiro</h2>
+
+    <div class="card">
+      <h3>Resumo Geral</h3>
+
+      <div style="display:flex; gap:20px; flex-wrap:wrap;">
+        
+        <div class="card" style="flex:1;">
+          <h3>Faturamento Total</h3>
+          <div id="fatTotal" style="font-size:28px; color:var(--hx-accent);">
+            R$ 0,00
+          </div>
+        </div>
+
+        <div class="card" style="flex:1;">
+          <h3>Total de Vendas</h3>
+          <div id="numVendas" style="font-size:28px; color:var(--hx-accent);">
+            0
+          </div>
+        </div>
+
+        <div class="card" style="flex:1;">
+          <h3>Ordens de Serviço</h3>
+          <div id="numOS" style="font-size:28px; color:var(--hx-accent);">
+            0
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+
+    <!-- ==== GRÁFICOS SERÃO INSERIDOS NA PARTE 5 ==== -->
+    <div class="card">
+      <h3>Vendas Diárias</h3>
+      <canvas id="grafVendasDiarias" class="canvas-small"></canvas>
+    </div>
+
+    <div class="card">
+      <h3>Vendas Semanais</h3>
+      <canvas id="grafVendasSemanal" class="canvas-small"></canvas>
+    </div>
+
+    <div class="card">
+      <h3>Vendas Mensais</h3>
+      <canvas id="grafVendasMensal" class="canvas-small"></canvas>
+    </div>
+
+    <div class="card">
+      <h3>Vendas Anuais</h3>
+      <canvas id="grafVendasAnual" class="canvas-small"></canvas>
+    </div>
+
+    <div class="card">
+      <h3>Lucro Total por Dia</h3>
+      <canvas id="grafLucro" class="canvas-small"></canvas>
+    </div>
+
+    <div class="card">
+      <h3>Custo × Revenda × Lucro</h3>
+      <canvas id="grafCustoRevenda" class="canvas-small"></canvas>
+    </div>
+
+    <div class="card">
+      <h3>Ranking dos Produtos Mais Vendidos</h3>
+      <canvas id="grafRankingProdutos" class="canvas-small"></canvas>
+    </div>
+
+    <div class="card">
+      <h3>Estoque Crítico</h3>
+      <div id="estoqueCritico"></div>
+    </div>
+
+  </section>
+
+
+  <!-- ======================== CLIENTES ======================== -->
+  <section id="clientesSec" style="display:none;">
+    <h2>👤 Clientes</h2>
+
+    <div class="card">
+      <label>Nome</label>
+      <input id="cliNome">
+
+      <label>Telefone</label>
+      <input id="cliTel">
+
+      <label>CPF</label>
+      <input id="cliCPF">
+
+      <label>Endereço</label>
+      <input id="cliEnd">
+
+      <button class="btn" onclick="salvarCliente()">Salvar Cliente</button>
+    </div>
+
+    <div class="card">
+      <h3>Lista de Clientes</h3>
+      <div id="listaClientes"></div>
+    </div>
+  </section>
+
+
+  <!-- ======================== PRODUTOS ======================== -->
+  <section id="produtosSec" style="display:none;">
+    <h2>📦 Estoque</h2>
+
+    <div class="card">
+      <label>Nome</label>
+      <input id="prodNome">
+
+      <label>Código</label>
+      <input id="prodCodigo">
+
+      <label>Marca</label>
+      <input id="prodMarca">
+
+      <label>Modelo</label>
+      <input id="prodModelo">
+
+      <label>Preço de Custo</label>
+      <input id="prodCusto" type="number" step="0.01">
+
+      <label>Preço de Revenda</label>
+      <input id="prodRevenda" type="number" step="0.01">
+
+      <label>Quantidade</label>
+      <input id="prodQtd" type="number" value="0">
+
+      <label>Estoque Mínimo</label>
+      <input id="prodMin" type="number" value="1">
+
+      <button class="btn" onclick="salvarProduto()">Salvar Produto</button>
+    </div>
+
+    <div class="card">
+      <h3>Lista de Produtos</h3>
+      <div id="listaProdutos"></div>
+    </div>
+  </section>
+
+
+  <!-- ======================== VENDAS ======================== -->
+  <section id="vendasSec" style="display:none;">
+    <h2>💵 Registrar Venda</h2>
+
+    <div class="card">
+      <label>Cliente</label>
+      <select id="venCliente"></select>
+
+      <label>Produto</label>
+      <select id="venProduto"></select>
+
+      <label>Quantidade</label>
+      <input id="venQtd" type="number" value="1">
+
+      <label>Valor Pago (R$)</label>
+      <input id="venValor" type="number">
+
+      <button class="btn" onclick="registrarVenda()">Registrar Venda</button>
+    </div>
+
+    <div class="card">
+      <h3>Lista de Vendas</h3>
+      <div id="listaVendas"></div>
+    </div>
+  </section>
+
+
+  <!-- ======================== ORDEM DE SERVIÇO ======================== -->
+  <section id="osSec" style="display:none;">
+    <h2>🛠 Ordens de Serviço</h2>
+
+    <div class="card">
+      <label>Cliente</label>
+      <select id="osCliente"></select>
+
+      <label>Status</label>
+      <select id="osStatus">
+        <option value="Aberta">Aberta</option>
+        <option value="Em andamento">Em andamento</option>
+        <option value="Concluída">Concluída</option>
+      </select>
+
+      <label>Descrição</label>
+      <textarea id="osDesc"></textarea>
+
+      <button class="btn" onclick="criarOS()">Criar OS</button>
+    </div>
+
+    <div class="card">
+      <h3>Lista de OS</h3>
+      <div id="listaOS"></div>
+    </div>
+  </section>
+
+
+  <!-- ======================== ORÇAMENTOS ======================== -->
+  <section id="orcamentoSec" style="display:none;">
+    <h2>📝 Orçamentos</h2>
+
+    <div class="card">
+
+      <label>Cliente</label>
+      <select id="orcCliente"></select>
+
+      <label>Descrição</label>
+      <textarea id="orcDesc"></textarea>
+
+      <button class="btn" onclick="criarOrcamento()">Criar Orçamento</button>
+    </div>
+
+    <div class="card">
+      <h3>Lista de Orçamentos</h3>
+      <div id="listaOrcamentos"></div>
+    </div>
+
+  </section>
+
+</main>
+
+<!-- ============================================================
+     PARTE 4 — CRUD COMPLETO: CLIENTES, PRODUTOS, VENDAS, OS, ORÇAMENTOS
+=============================================================== -->
+
+<script>
+/* ============================================================
+   CLIENTES
+=============================================================== */
+async function salvarCliente() {
+  const nome = cliNome.value.trim();
+  if (!nome) return alert("Informe o nome!");
+
+  const { error } = await supabase.from("clientes").insert({
+    nome,
+    telefone: cliTel.value.trim(),
+    cpf: cliCPF.value.trim(),
+    endereco: cliEnd.value.trim(),
+  });
+
+  if (error) return alert("Erro: " + error.message);
+
+  cliNome.value = cliTel.value = cliCPF.value = cliEnd.value = "";
+
+  carregarClientes();
+}
+
+async function carregarClientes() {
+  const { data, error } = await supabase
+    .from("clientes")
+    .select("*")
+    .order("nome", { ascending: true });
+
+  if (error) return console.error(error);
+
+  listaClientes.innerHTML = "";
+  venCliente.innerHTML = "";
+  osCliente.innerHTML = "";
+  orcCliente.innerHTML = "";
+
+  data.forEach(cli => {
+    listaClientes.innerHTML += `
+      <div class="card">
+        <b>${cli.nome}</b><br>
+        Telefone: ${cli.telefone || "-"}<br>
+        CPF: ${cli.cpf || "-"}<br>
+        Endereço: ${cli.endereco || "-"}<br>
+      </div>
+    `;
+
+    const option = `<option value="${cli.id}">${cli.nome}</option>`;
+    venCliente.innerHTML += option;
+    osCliente.innerHTML += option;
+    orcCliente.innerHTML += option;
+  });
+}
+
+/* ============================================================
+   PRODUTOS
+=============================================================== */
+async function salvarProduto() {
+  const nome = prodNome.value.trim();
+  if (!nome) return alert("Informe o nome do produto!");
+
+  const { error } = await supabase.from("produtos").insert({
+    nome,
+    codigo: prodCodigo.value,
+    marca: prodMarca.value,
+    modelo: prodModelo.value,
+    preco_custo: Number(prodCusto.value),
+    preco_revenda: Number(prodRevenda.value),
+    qtd: Number(prodQtd.value),
+    estoque_minimo: Number(prodMin.value),
+  });
+
+  if (error) return alert("Erro ao salvar produto: " + error.message);
+
+  prodNome.value = prodCodigo.value = prodMarca.value = prodModelo.value = "";
+  prodCusto.value = prodRevenda.value = "";
+  prodQtd.value = "0";
+  prodMin.value = "1";
+
+  carregarProdutos();
+}
+
+async function carregarProdutos() {
+  const { data, error } = await supabase.from("produtos").select("*").order("nome");
+
+  if (error) return console.error(error);
+
+  listaProdutos.innerHTML = "";
+  venProduto.innerHTML = "";
+
+  data.forEach(p => {
+    listaProdutos.innerHTML += `
+      <div class="card">
+        <b>${p.nome}</b><br>
+        Código: ${p.codigo || "-"}<br>
+        Marca: ${p.marca || "-"}<br>
+        Modelo: ${p.modelo || "-"}<br>
+        Custo: R$ ${(p.preco_custo || 0).toFixed(2)}<br>
+        Revenda: R$ ${(p.preco_revenda || 0).toFixed(2)}<br>
+        Qtd: ${p.qtd}<br>
+        Mínimo: ${p.estoque_minimo}<br><br>
+
+        <button class="btn secondary" onclick="excluirProduto(${p.id})">Excluir</button>
+      </div>
+    `;
+
+    venProduto.innerHTML += `<option value="${p.id}">${p.nome}</option>`;
+  });
+}
+
+async function excluirProduto(id) {
+  if (!confirm("Tem certeza que deseja excluir este produto?")) return;
+  await supabase.from("produtos").delete().eq("id", id);
+  carregarProdutos();
+}
+
+/* ============================================================
+   VENDAS
+=============================================================== */
+async function registrarVenda() {
+  const cliente = venCliente.value;
+  const produto = venProduto.value;
+  const qtd = Number(venQtd.value);
+  const valor = Number(venValor.value);
+
+  if (!cliente || !produto || qtd <= 0 || valor <= 0)
+    return alert("Preencha todos os campos corretamente!");
+
+  const { data: prod } = await supabase
+    .from("produtos")
+    .select("*")
+    .eq("id", produto)
+    .single();
+
+  if (!prod) return alert("Produto não encontrado!");
+
+  const custo = prod.preco_custo * qtd;
+  const lucro = (prod.preco_revenda - prod.preco_custo) * qtd;
+
+  await supabase.from("vendas").insert({
+    cliente_id: cliente,
+    produto_id: produto,
+    quantidade: qtd,
+    valor,
+    preco_custo: prod.preco_custo,
+    preco_revenda: prod.preco_revenda,
+    custo_total: custo,
+    lucro_total: lucro,
+    data: new Date().toISOString()
+  });
+
+  await supabase
+    .from("produtos")
+    .update({ qtd: prod.qtd - qtd })
+    .eq("id", produto);
+
+  alert("Venda registrada com sucesso!");
+  atualizarTudo();
+}
+
+async function carregarVendas() {
+  const { data, error } = await supabase.from("vendas").select(`
+    *,
+    clientes(nome),
+    produtos(nome)
+  `);
+
+  if (error) return console.error(error);
+
+  listaVendas.innerHTML = "";
+
+  data.forEach(v => {
+    listaVendas.innerHTML += `
+      <div class="card">
+        <b>Venda #${v.id}</b><br>
+        Cliente: ${v.clientes?.nome}<br>
+        Produto: ${v.produtos?.nome}<br>
+        Quantidade: ${v.quantidade}<br>
+        Valor: R$ ${v.valor.toFixed(2)}<br>
+        Lucro: R$ ${v.lucro_total.toFixed(2)}<br>
+        Data: ${new Date(v.data).toLocaleString("pt-BR")}
+      </div>
+    `;
+  });
+}
+
+/* ============================================================
+   ORDENS DE SERVIÇO
+=============================================================== */
+async function criarOS() {
+  if (!osCliente.value || !osDesc.value.trim())
+    return alert("Preencha todos os campos da OS!");
+
+  await supabase.from("ordens_servico").insert({
+    cliente_id: osCliente.value,
+    descricao: osDesc.value,
+    status: osStatus.value,
+    data_abertura: new Date().toISOString()
+  });
+
+  osDesc.value = "";
+  carregarOS();
+}
+
+async function carregarOS() {
+  const { data, error } = await supabase.from("ordens_servico").select(`
+    id, descricao, status, data_abertura,
+    clientes(nome)
+  `);
+
+  if (error) return console.error(error);
+
+  listaOS.innerHTML = "";
+
+  data.forEach(os => {
+    listaOS.innerHTML += `
+      <div class="card">
+        <b>OS #${os.id}</b><br>
+        Cliente: ${os.clientes?.nome}<br>
+        Status: ${os.status}<br>
+        Abertura: ${new Date(os.data_abertura).toLocaleString("pt-BR")}<br><br>
+        ${os.descricao}
+      </div>
+    `;
+  });
+}
+
+/* ============================================================
+   ORÇAMENTOS
+=============================================================== */
+async function criarOrcamento() {
+  if (!orcCliente.value || !orcDesc.value.trim())
+    return alert("Preencha todos os dados do orçamento!");
+
+  await supabase.from("orcamentos").insert({
+    cliente_id: orcCliente.value,
+    descricao: orcDesc.value,
+    data: new Date().toISOString()
+  });
+
+  orcDesc.value = "";
+  carregarOrcamentos();
+}
+
+async function carregarOrcamentos() {
+  const { data, error } = await supabase.from("orcamentos").select(`
+    id, descricao, data,
+    clientes(nome)
+  `);
+
+  if (error) return console.error(error);
+
+  listaOrcamentos.innerHTML = "";
+
+  data.forEach(o => {
+    listaOrcamentos.innerHTML += `
+      <div class="card">
+        <b>Orçamento #${o.id}</b><br>
+        Cliente: ${o.clientes?.nome}<br>
+        Data: ${new Date(o.data).toLocaleString("pt-BR")}<br><br>
+        ${o.descricao}
+      </div>
+    `;
+  });
+}
+</script>
+<!-- ============================================================
+     PARTE 5 — DASHBOARD + GRÁFICOS (Chart.js)
+=============================================================== -->
+
+<script>
+let chartDiarias, chartSemanal, chartMensal, chartAnual, chartLucro, chartCustoRevenda, chartRanking;
+
+/* ============================================================
+   RESUMO DO DASHBOARD
+=============================================================== */
+async function carregarDashboard() {
+    const { data: vendas } = await supabase.from("vendas").select("*");
+
+    let total = 0;
+    let lucroTotal = 0;
+
+    vendas.forEach(v => {
+        total += Number(v.valor || 0);
+        lucroTotal += Number(v.lucro_total || 0);
+    });
+
+    fatTotal.innerText = "R$ " + total.toFixed(2);
+    numVendas.innerText = vendas.length;
+}
+
+/* ============================================================
+   GRÁFICOS DO DASHBOARD
+=============================================================== */
+async function gerarGraficosDashboard() {
+    const { data: vendas, error } = await supabase.from("vendas").select(`
+        data, valor, lucro_total, preco_custo, preco_revenda,
+        quantidade, produto_id,
+        produtos(nome)
+    `);
+
+    if (error || !vendas || vendas.length === 0) {
+        console.log("Sem dados para gráficos.");
+        return;
+    }
+
+    // Destruir gráficos antigos, evitando erro de contexto duplicado
+    [chartDiarias, chartSemanal, chartMensal, chartAnual, chartLucro, chartCustoRevenda, chartRanking]
+        .forEach(c => c && c.destroy());
+
+    /* ============================================================
+       1) GRÁFICO — Vendas Diárias
+    ================================================================ */
+    const dias = {};
+    vendas.forEach(v => {
+        const d = new Date(v.data).toLocaleDateString("pt-BR");
+        dias[d] = (dias[d] || 0) + Number(v.valor);
+    });
+
+    chartDiarias = new Chart(document.getElementById("grafVendasDiarias"), {
+        type: "bar",
+        data: {
+            labels: Object.keys(dias),
+            datasets: [{
+                label: "Vendas Diárias (R$)",
+                data: Object.values(dias),
+                backgroundColor: "#0aff9d66"
+            }]
+        },
+        options: { responsive: true }
+    });
+
+    /* ============================================================
+       2) GRÁFICO — Vendas Semanais
+    ================================================================ */
+    const semanas = {};
+    vendas.forEach(v => {
+        const d = new Date(v.data);
+        const ano = d.getFullYear();
+
+        const primeiroDiaAno = new Date(ano, 0, 1);
+        const diferenca = Math.floor((d - primeiroDiaAno) / (1000 * 60 * 60 * 24));
+        const semana = Math.ceil((diferenca + primeiroDiaAno.getDay() + 1) / 7);
+
+        const chave = `Semana ${semana}/${ano}`;
+        semanas[chave] = (semanas[chave] || 0) + Number(v.valor);
+    });
+
+    chartSemanal = new Chart(document.getElementById("grafVendasSemanal"), {
+        type: "line",
+        data: {
+            labels: Object.keys(semanas),
+            datasets: [{
+                label: "Vendas Semanais",
+                data: Object.values(semanas),
+                borderColor: "#0aff9d",
+                borderWidth: 2
+            }]
+        }
+    });
+
+    /* ============================================================
+       3) GRÁFICO — Vendas Mensais
+    ================================================================ */
+    const meses = {};
+    vendas.forEach(v => {
+        const d = new Date(v.data);
+        const chave = `${String(d.getMonth() + 1).padStart(2, "0")}/${d.getFullYear()}`;
+        meses[chave] = (meses[chave] || 0) + Number(v.valor);
+    });
+
+    chartMensal = new Chart(document.getElementById("grafVendasMensal"), {
+        type: "line",
+        data: {
+            labels: Object.keys(meses),
+            datasets: [{
+                label: "Vendas Mensais",
+                data: Object.values(meses),
+                borderColor: "#0aff9d",
+                borderWidth: 2
+            }]
+        }
+    });
+
+    /* ============================================================
+       4) GRÁFICO — Vendas Anuais
+    ================================================================ */
+    const anos = {};
+    vendas.forEach(v => {
+        const ano = new Date(v.data).getFullYear();
+        anos[ano] = (anos[ano] || 0) + Number(v.valor);
+    });
+
+    chartAnual = new Chart(document.getElementById("grafVendasAnual"), {
+        type: "bar",
+        data: {
+            labels: Object.keys(anos),
+            datasets: [{
+                label: "Vendas Anuais",
+                data: Object.values(anos),
+                backgroundColor: "#0aff9d66"
+            }]
+        }
+    });
+
+    /* ============================================================
+       5) GRÁFICO — Lucro Total Diário
+    ================================================================ */
+    const lucroDias = {};
+    vendas.forEach(v => {
+        const d = new Date(v.data).toLocaleDateString("pt-BR");
+        lucroDias[d] = (lucroDias[d] || 0) + Number(v.lucro_total);
+    });
+
+    chartLucro = new Chart(document.getElementById("grafLucro"), {
+        type: "line",
+        data: {
+            labels: Object.keys(lucroDias),
+            datasets: [{
+                label: "Lucro Diário",
+                data: Object.values(lucroDias),
+                borderColor: "#0aff9d",
+                borderWidth: 2
+            }]
+        }
+    });
+
+    /* ============================================================
+       6) GRÁFICO — Custo × Revenda × Lucro
+    ================================================================ */
+    const labelsVenda = vendas.map(v => `${v.produtos?.nome || "Produto"} #${v.id}`);
+    const custos = vendas.map(v => Number(v.preco_custo));
+    const revendas = vendas.map(v => Number(v.preco_revenda));
+    const lucros = vendas.map(v => Number(v.lucro_total));
+
+    chartCustoRevenda = new Chart(document.getElementById("grafCustoRevenda"), {
+        type: "bar",
+        data: {
+            labels: labelsVenda,
+            datasets: [
+                { label: "Custo", data: custos, backgroundColor: "#ff444455" },
+                { label: "Revenda", data: revendas, backgroundColor: "#0aff9d55" },
+                { label: "Lucro", data: lucros, backgroundColor: "#0099ff55" }
+            ]
+        }
+    });
+
+    /* ============================================================
+       7) GRÁFICO — Ranking dos Produtos
+    ================================================================ */
+    const ranking = {};
+    const nomes = {};
+
+    vendas.forEach(v => {
+        ranking[v.produto_id] = (ranking[v.produto_id] || 0) + v.quantidade;
+        nomes[v.produto_id] = v.produtos?.nome || `Produto ${v.produto_id}`;
+    });
+
+    chartRanking = new Chart(document.getElementById("grafRankingProdutos"), {
+        type: "pie",
+        data: {
+            labels: Object.keys(ranking).map(id => nomes[id]),
+            datasets: [{
+                data: Object.values(ranking),
+                backgroundColor: [
+                    "#0aff9d88", "#33bbff88", "#ffcc0088",
+                    "#ff336688", "#8844ff88", "#ffaa0088"
+                ]
+            }]
+        }
+    });
+}
+</script>
+
+
+<!-- ============================================================
+     PARTE 6 — INICIALIZAÇÃO FINAL
+=============================================================== -->
+<script>
+async function atualizarTudo() {
+    await carregarClientes();
+    await carregarProdutos();
+    await carregarVendas();
+    await carregarOS();
+    await carregarOrcamentos();
+    await carregarDashboard();
+    await gerarGraficosDashboard();
+}
+
+/* ============================================================
+   INICIALIZAÇÃO AO CARREGAR A PÁGINA
+=============================================================== */
+document.addEventListener("DOMContentLoaded", async () => {
+
+    // 🌙 Carregar tema salvo
+    const theme = localStorage.getItem("hxTheme");
+    if (theme === "light") {
+        document.body.classList.add("light");
+    }
+
+    // 📌 Mostrar painel inicial
+    showSection("dashboardSec", document.querySelector("#sidebar button"));
+
+    // 🔑 Verificar se o usuário já está logado
+    const sessionResp = await supabase.auth.getSession();
+    const session = sessionResp.data.session;
+
+    if (!session) {
+        loginOverlay.style.display = "flex";
+        return;
+    }
+
+    // Ocultar login
+    loginOverlay.style.display = "none";
+
+    // Mostrar e-mail do usuário
+    carregarUsuario();
+
+    // Carregar dados iniciais
+    atualizarTudo();
+});
+</script>
+<script>
+function carregarUsuario() {
+  supabase.auth.getUser().then(res => {
+    if (res.data.user) {
+      userLabel.innerText = res.data.user.email;
+    }
+  });
+}
+
+function alterarSenha() {
+  const nova = prompt("Digite a nova senha:");
+  if (!nova) return;
+
+  supabase.auth.updateUser({ password: nova })
+    .then(r => {
+      if (r.error) alert("Erro: " + r.error.message);
+      else alert("Senha alterada com sucesso!");
+    });
+}
+</script>
+
+</html>
+
+
+
+
