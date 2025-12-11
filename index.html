@@ -1053,9 +1053,39 @@ function alterarSenha() {
     });
 }
 </script>
+<script>
+async function login() {
+  const email = loginEmail.value.trim();
+  const senha = loginPass.value.trim();
 
+  if (!email || !senha) {
+    loginMsg.innerText = "Preencha email e senha!";
+    loginMsg.style.color = "red";
+    return;
+  }
+
+  const { data, error } = await supabase.auth.signInWithPassword({
+    email: email,
+    password: senha
+  });
+
+  if (error) {
+    loginMsg.innerText = "Erro: " + error.message;
+    loginMsg.style.color = "red";
+    return;
+  }
+
+  // LOGIN OK
+  loginMsg.innerText = "";
+  loginOverlay.style.display = "none";
+
+  carregarUsuario();
+  atualizarTudo();
+}
+</script>
+
+</body>
 </html>
-
 
 
 
