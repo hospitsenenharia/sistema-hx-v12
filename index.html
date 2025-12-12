@@ -881,12 +881,16 @@ function editarVenda(v) {
 
       <label>Nº Parcelas</label>
       <input id="editVParcelas" type="number" value="${v.parcelas}">
+
+      <label>Data da Venda</label>
+      <input id="editVData" type="datetime-local" value="${new Date(v.data).toISOString().slice(0,16)}">
     `,
     async () => {
       const novoValor = Number(editVValor.value);
       const novasParcelas = Number(editVParcelas.value);
-      let listaParcelas = [];
+      const novaData = new Date(editVData.value).toISOString();
 
+      let listaParcelas = [];
       if (editVTipo.value === "Crédito parcelado") {
         const valParc = novoValor / novasParcelas;
         for (let i = 1; i <= novasParcelas; i++) {
@@ -898,7 +902,8 @@ function editarVenda(v) {
         valor: novoValor,
         tipo_venda: editVTipo.value,
         parcelas: novasParcelas,
-        parcelas_lista: listaParcelas
+        parcelas_lista: listaParcelas,
+        data: novaData
       }).eq("id", v.id);
 
       fecharModal();
@@ -1072,11 +1077,15 @@ function editarOS(os) {
 
       <label>Descrição</label>
       <textarea id="editOSDesc">${os.descricao}</textarea>
+
+      <label>Data de Abertura</label>
+      <input id="editOSData" type="datetime-local" value="${new Date(os.data_abertura).toISOString().slice(0,16)}">
     `,
     async () => {
       await supabase.from("ordens_servico").update({
         status: editOSStatus.value,
-        descricao: editOSDesc.value
+        descricao: editOSDesc.value,
+        data_abertura: new Date(editOSData.value).toISOString()
       }).eq("id", os.id);
 
       fecharModal();
@@ -1084,6 +1093,7 @@ function editarOS(os) {
     }
   );
 }
+
 
 /* ============================================================
    IMPRESSÃO DE OS (PDF SIMPLES)
@@ -1223,10 +1233,14 @@ function editarOrcamento(o) {
     `
       <label>Descrição</label>
       <textarea id="editOrcDesc">${o.descricao}</textarea>
+
+      <label>Data do Orçamento</label>
+      <input id="editOrcData" type="datetime-local" value="${new Date(o.data).toISOString().slice(0,16)}">
     `,
     async () => {
       await supabase.from("orcamentos").update({
-        descricao: editOrcDesc.value
+        descricao: editOrcDesc.value,
+        data: new Date(editOrcData.value).toISOString()
       }).eq("id", o.id);
 
       fecharModal();
@@ -1234,6 +1248,7 @@ function editarOrcamento(o) {
     }
   );
 }
+
 
 /* ============================================================
    IMPRESSÃO — MODELO B (PROFISSIONAL)
