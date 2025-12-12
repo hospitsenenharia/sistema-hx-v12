@@ -917,31 +917,40 @@ function editarVenda(v) {
 ============================================================ */
 function imprimirCupom(v) {
   let texto = "";
-  texto += "HX ELETRÔNICOS\n";
+
+  texto += "HX Acessórios & Eletrônicos\n";
+  texto += "CNPJ: 61.331.523/0001-05\n";
+  texto += "Av. Mamede Paes Mendonça, 752\n";
+  texto += "Aracaju - Sergipe\n";
+  texto += "Tel: (79) 99819-6955\n";
   texto += "--------------------------------\n";
-  texto += `Venda #${v.id}\n`;
+
+  texto += `RECIBO DE VENDA #${v.id}\n`;
   texto += `Cliente: ${v.clientes?.nome}\n`;
-  texto += `Data: ${new Date(v.data).toLocaleString("pt-BR")}\n\n`;
+  texto += `Data: ${new Date(v.data).toLocaleString("pt-BR")}\n`;
+  texto += "--------------------------------\n\n";
+
   texto += `Produto: ${v.produtos?.nome}\n`;
-  texto += `Qtd: ${v.quantidade}\n`;
+  texto += `Quantidade: ${v.quantidade}\n`;
   texto += `Valor total: R$ ${v.valor.toFixed(2)}\n`;
   texto += `Tipo: ${v.tipo_venda}\n\n`;
 
   if (v.tipo_venda === "Crédito parcelado") {
-    texto += `Parcelamento: ${v.parcelas}x\n`;
-    texto += "Parcelas:\n";
+    texto += `Parcelamento: ${v.parcelas}x\nParcelas:\n`;
     v.parcelas_lista.forEach((p, index) => {
       texto += `${index + 1}/${v.parcelas} - R$ ${p.toFixed(2)}\n`;
     });
   }
 
   texto += "\nObrigado pela preferência!\n";
+  texto += "--------------------------------\n";
 
   const janela = window.open("", "_blank");
   janela.document.write(`<pre style="font-size:14px;">${texto}</pre>`);
   janela.print();
   janela.close();
 }
+
 
 </script>
 
@@ -1102,22 +1111,34 @@ function imprimirOS(os) {
   const win = window.open("", "_blank");
 
   win.document.write(`
-    <h2>Ordem de Serviço #${os.id}</h2>
-    <p><b>Cliente:</b> ${os.clientes?.nome}</p>
-    <p><b>Status:</b> ${os.status}</p>
-    <p><b>Abertura:</b> ${new Date(os.data_abertura).toLocaleString("pt-BR")}</p>
+    <div style="font-family:Arial; padding:20px;">
+      <h1 style="margin:0; padding:0;">HX Acessórios & Eletrônicos</h1>
+      <p style="margin:4px 0;">CNPJ: 61.331.523/0001-05</p>
+      <p style="margin:4px 0;">Av. Mamede Paes Mendonça, 752 — Aracaju/SE</p>
+      <p style="margin:4px 0;">Tel: (79) 99819-6955</p>
 
-    <p><b>Descrição:</b><br>${os.descricao}</p>
+      <hr>
 
-    <br><br>
-    <p>______________________________________<br>
-    Assinatura do Cliente</p>
+      <h2>Ordem de Serviço #${os.id}</h2>
+
+      <p><b>Cliente:</b> ${os.clientes?.nome}</p>
+      <p><b>Status:</b> ${os.status}</p>
+      <p><b>Abertura:</b> ${new Date(os.data_abertura).toLocaleString("pt-BR")}</p>
+
+      <h3>Descrição</h3>
+      <p>${os.descricao}</p>
+
+      <br><br><br>
+      <p>__________________________________________<br>
+      Assinatura do Cliente</p>
+    </div>
 
     <script>window.print();<\/script>
   `);
 
   win.document.close();
 }
+
 </script>
 
 <!-- ======================== ORÇAMENTOS ======================== -->
@@ -1258,18 +1279,23 @@ function imprimirOrcamento(o) {
 
   win.document.write(`
     <div style="font-family:Arial; padding:20px;">
-      <h1 style="color:#0aff9d;">Orçamento #${o.id}</h1>
+      <h1 style="margin:0;">HX Acessórios & Eletrônicos</h1>
+      <p style="margin:4px 0;">CNPJ: 61.331.523/0001-05</p>
+      <p style="margin:4px 0;">Av. Mamede Paes Mendonça, 752 — Aracaju/SE</p>
+      <p style="margin:4px 0;">Tel: (79) 99819-6955</p>
+
+      <hr>
+
+      <h2>Orçamento #${o.id}</h2>
 
       <p><b>Cliente:</b> ${o.clientes?.nome}</p>
       <p><b>Data:</b> ${new Date(o.data).toLocaleString("pt-BR")}</p>
 
-      <br>
-
       <h3>Descrição do Serviço / Produto</h3>
       <p>${o.descricao}</p>
 
-      <br><br>
-      <p>______________________________________<br>
+      <br><br><br>
+      <p>__________________________________________<br>
       Assinatura do Cliente</p>
     </div>
 
@@ -1278,6 +1304,7 @@ function imprimirOrcamento(o) {
 
   win.document.close();
 }
+
 </script>
 
 <!-- ======================== DASHBOARD ======================== -->
