@@ -1295,7 +1295,7 @@ function imprimirOrcamento(o) {
       <p>${o.descricao}</p>
 
       <br><br><br>
-      <p>__________________________________________<br>
+      <p>__________________________________________<br>async function carregarGraficoEstoqueCritico
       Assinatura do Cliente</p>
     </div>
 
@@ -1409,9 +1409,81 @@ async function gerarGraficosDashboard() {
     produtos(nome)
   `);
 
-  if (!vendas || vendas.length === 0) return;
+  // === SE NÃO HÁ VENDAS — EXIBE GRÁFICOS VAZIOS ===
+  if (!vendas || vendas.length === 0) {
 
-  // Destruir gráficos antigos para evitar erro
+    [chartDiarias, chartSemanal, chartMensal, chartAnual, chartLucro, chartCustoRevenda, chartRanking]
+      .forEach(c => c && c.destroy());
+
+    chartDiarias = new Chart(document.getElementById("grafVendasDiarias"), {
+      type: "bar",
+      data: {
+        labels: ["Sem vendas"],
+        datasets: [{ label: "Vendas Diárias", data: [0], backgroundColor: "#0aff9d33" }]
+      }
+    });
+
+    chartSemanal = new Chart(document.getElementById("grafVendasSemanal"), {
+      type: "line",
+      data: {
+        labels: ["Sem vendas"],
+        datasets: [{ label: "Vendas Semanais", data: [0], borderColor: "#0aff9d" }]
+      }
+    });
+
+    chartMensal = new Chart(document.getElementById("grafVendasMensal"), {
+      type: "line",
+      data: {
+        labels: ["Sem vendas"],
+        datasets: [{ label: "Vendas Mensais", data: [0], borderColor: "#0aff9d" }]
+      }
+    });
+
+    chartAnual = new Chart(document.getElementById("grafVendasAnual"), {
+      type: "bar",
+      data: {
+        labels: ["Sem vendas"],
+        datasets: [{ label: "Vendas Anuais", data: [0], backgroundColor: "#0aff9d33" }]
+      }
+    });
+
+    chartLucro = new Chart(document.getElementById("grafLucro"), {
+      type: "line",
+      data: {
+        labels: ["Sem vendas"],
+        datasets: [{ label: "Lucro Diário", data: [0], borderColor: "#0aff9d" }]
+      }
+    });
+
+    chartCustoRevenda = new Chart(document.getElementById("grafCustoRevenda"), {
+      type: "bar",
+      data: {
+        labels: ["Sem vendas"],
+        datasets: [
+          { label: "Custo", data: [0], backgroundColor: "#ff444455" },
+          { label: "Revenda", data: [0], backgroundColor: "#0aff9d55" },
+          { label: "Lucro", data: [0], backgroundColor: "#0099ff55" }
+        ]
+      }
+    });
+
+    chartRanking = new Chart(document.getElementById("grafRankingProdutos"), {
+      type: "pie",
+      data: {
+        labels: ["Sem vendas"],
+        datasets: [{ data: [1], backgroundColor: ["#0aff9d88"] }]
+      }
+    });
+
+    return; // encerra apenas o caso SEM vendas
+  }
+
+  // ============================================
+  // AQUI COMEÇA O CÓDIGO PARA GRÁFICOS REAIS
+  // (quando EXISTEM vendas)
+  // ============================================
+
+  // Destruir gráficos antigos
   [chartDiarias, chartSemanal, chartMensal, chartAnual, chartLucro, chartCustoRevenda, chartRanking]
     .forEach(c => c && c.destroy());
 
@@ -1498,7 +1570,7 @@ async function gerarGraficosDashboard() {
     }
   });
 
-  /* ========= Lucro por dia ========= */
+  /* ========= Lucro por Dia ========= */
   const lucro = {};
   vendas.forEach(v => {
     const d = new Date(v.data).toLocaleDateString("pt-BR");
@@ -1518,7 +1590,7 @@ async function gerarGraficosDashboard() {
     }
   });
 
-  /* ========= Custo x Revenda x Lucro ========= */
+  /* ========= Custo × Revenda × Lucro ========= */
   chartCustoRevenda = new Chart(document.getElementById("grafCustoRevenda"), {
     type: "bar",
     data: {
@@ -1531,7 +1603,7 @@ async function gerarGraficosDashboard() {
     }
   });
 
-  /* ========= Ranking ========= */
+  /* ========= Ranking de Produtos ========= */
   const ranking = {};
   vendas.forEach(v => {
     const nome = v.produtos?.nome || "Produto";
@@ -1549,6 +1621,7 @@ async function gerarGraficosDashboard() {
     }
   });
 }
+
 
 /* ============================================================
    IMPRESSÃO DE GRÁFICOS
@@ -1572,6 +1645,41 @@ function imprimirGrafico(id) {
 /* ============================================================
    FUNÇÃO GERAL DE ATUALIZAÇÃO
 ============================================================ */
+
+async function carregarEstoqueCriticoDashboard() {
+  const { data: produtos, error } = await supabase
+    .from("produtos")
+    .select("*");
+
+  if (error) {
+    console.error("Erro ao carregar produtos:", error);
+    return;
+  }
+
+  // Filtrar itens críticos
+  const criticos = produtos.filter(p => p.qtd <= p.estoque_minimo);
+
+  const box = document.getElementById("estoqueCritico");
+  box.innerHTML = "";
+
+  if (criticos.length === 0) {
+    box.innerHTML = `<p style="color:#0aff9d;">Nenhum produto em estoque crítico 🎉</p>`;
+    return;
+  }
+
+  criticos.forEach(p => {
+    box.innerHTML += `
+      <div class="card" style="margin-bottom:10px;">
+        <b>${p.nome}</b><br>
+        Quantidade: ${p.qtd}<br>
+        Mínimo: ${p.estoque_minimo}<br>
+        <span style="color:red;font-weight:bold;">⚠ Estoque crítico</span>
+      </div>
+    `;
+  });
+}
+
+
 async function atualizarTudo() {
   try {
     await carregarClientes();
@@ -1581,10 +1689,12 @@ async function atualizarTudo() {
     await carregarOrcamentos();
     await carregarDashboard();
     await gerarGraficosDashboard();
+    await carregarEstoqueCriticoDashboard(); // 🔥 ESSA LINHA É OBRIGATÓRIA!
   } catch (e) {
     console.error("Erro ao atualizar tudo:", e);
   }
 }
+
 
 /* ============================================================
    CARREGAR USUÁRIO LOGADO
