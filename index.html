@@ -1412,32 +1412,36 @@ async function carregarDashboard() {
   const { data: os } = await supabase.from("ordens_servico").select("*");
 
   let faturamentoTotal = 0;
-  let lucroMes = 0;
+  let lucroMesAtual = 0;
 
   const agora = new Date();
   const mesAtual = agora.getMonth();
   const anoAtual = agora.getFullYear();
 
   vendas.forEach(v => {
-    const valor = Number(v.valor || 0);
-    faturamentoTotal += valor;
+    faturamentoTotal += Number(v.valor || 0);
 
-    const dataVenda = new Date(v.data);
+    // 🔥 CONVERSÃO SEGURA (ignora fuso)
+    const dataVenda = new Date(v.data.split("T")[0] + "T00:00:00");
+    const mesVenda = dataVenda.getMonth();
+    const anoVenda = dataVenda.getFullYear();
 
-    // 🔥 SOMA APENAS O LUCRO DO MÊS ATUAL
-    if (
-      dataVenda.getMonth() === mesAtual &&
-      dataVenda.getFullYear() === anoAtual
-    ) {
-      lucroMes += Number(v.lucro_total || 0);
+    const lucroSeguro =
+      v.lucro_total !== null && v.lucro_total !== undefined
+        ? Number(v.lucro_total)
+        : (Number(v.preco_revenda) - Number(v.preco_custo)) * Number(v.quantidade);
+
+    if (mesVenda === mesAtual && anoVenda === anoAtual) {
+      lucroMesAtual += lucroSeguro;
     }
   });
 
   fatTotal.innerText = "R$ " + faturamentoTotal.toFixed(2);
-  lucroMes.innerText = "R$ " + lucroMes.toFixed(2);
+  lucroMes.innerText = "R$ " + lucroMesAtual.toFixed(2);
   numVendas.innerText = vendas.length;
   numOS.innerText = os.length;
 }
+
 
 /* ============================================================
    GERAÇÃO DOS GRÁFICOS
@@ -1855,7 +1859,7 @@ async function carregarEstoqueCriticoDashboard() {
   if (criticos.length === 0) {
     box.innerHTML = `<p style="color:#0aff9d;">Nenhum produto em estoque crítico 🎉</p>`;
     return;
-  }
+  }carregarDashboard()
 
   criticos.forEach(p => {
     box.innerHTML += `
