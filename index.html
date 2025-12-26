@@ -1314,24 +1314,30 @@ function imprimirOrcamento(o) {
   <div class="card">
     <h3>Resumo Geral</h3>
 
-    <div style="display:flex; gap:20px; flex-wrap:wrap;">
+<div style="display:flex; gap:20px; flex-wrap:wrap;">
 
-      <div class="card" style="flex:1;">
-        <h3>Faturamento Total</h3>
-        <div id="fatTotal" style="font-size:28px; color:var(--hx-accent);">R$ 0,00</div>
-      </div>
+  <div class="card" style="flex:1;">
+    <h3>Faturamento Total</h3>
+    <div id="fatTotal" style="font-size:28px; color:var(--hx-accent);">R$ 0,00</div>
+  </div>
 
-      <div class="card" style="flex:1;">
-        <h3>Total de Vendas</h3>
-        <div id="numVendas" style="font-size:28px; color:var(--hx-accent);">0</div>
-      </div>
+  <div class="card" style="flex:1;">
+    <h3>Lucro do Mês</h3>
+    <div id="lucroMes" style="font-size:28px; color:#00e0ff;">R$ 0,00</div>
+  </div>
 
-      <div class="card" style="flex:1;">
-        <h3>Ordens de Serviço</h3>
-        <div id="numOS" style="font-size:28px; color:var(--hx-accent);">0</div>
-      </div>
+  <div class="card" style="flex:1;">
+    <h3>Total de Vendas</h3>
+    <div id="numVendas" style="font-size:28px; color:var(--hx-accent);">0</div>
+  </div>
 
-    </div>
+  <div class="card" style="flex:1;">
+    <h3>Ordens de Serviço</h3>
+    <div id="numOS" style="font-size:28px; color:var(--hx-accent);">0</div>
+  </div>
+
+</div>
+
   </div>
 
   <div class="card">
@@ -1392,10 +1398,30 @@ async function carregarDashboard() {
   const { data: vendas } = await supabase.from("vendas").select("*");
   const { data: os } = await supabase.from("ordens_servico").select("*");
 
-  let total = 0;
-  vendas.forEach(v => total += Number(v.valor || 0));
+  let faturamentoTotal = 0;
+  let lucroMes = 0;
 
-  fatTotal.innerText = "R$ " + total.toFixed(2);
+  const agora = new Date();
+  const mesAtual = agora.getMonth();
+  const anoAtual = agora.getFullYear();
+
+  vendas.forEach(v => {
+    const valor = Number(v.valor || 0);
+    faturamentoTotal += valor;
+
+    const dataVenda = new Date(v.data);
+
+    // 🔥 SOMA APENAS O LUCRO DO MÊS ATUAL
+    if (
+      dataVenda.getMonth() === mesAtual &&
+      dataVenda.getFullYear() === anoAtual
+    ) {
+      lucroMes += Number(v.lucro_total || 0);
+    }
+  });
+
+  fatTotal.innerText = "R$ " + faturamentoTotal.toFixed(2);
+  lucroMes.innerText = "R$ " + lucroMes.toFixed(2);
   numVendas.innerText = vendas.length;
   numOS.innerText = os.length;
 }
@@ -1834,5 +1860,6 @@ document.addEventListener("DOMContentLoaded", async () => {
   await atualizarTudo();
 });
 </script>
+
 
 
