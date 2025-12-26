@@ -1295,8 +1295,9 @@ function imprimirOrcamento(o) {
       <p>${o.descricao}</p>
 
       <br><br><br>
-      <p>__________________________________________<br>async function carregarGraficoEstoqueCritico
-      Assinatura do Cliente</p>
+      <p>__________________________________________<br>
+Assinatura do Cliente</p>
+
     </div>
 
     <script>window.print();<\/script>
@@ -1306,7 +1307,6 @@ function imprimirOrcamento(o) {
 }
 
 </script>
-
 <!-- ======================== DASHBOARD ======================== -->
 <section id="dashboardSec" style="display:block;">
   <h2>📊 Dashboard Financeiro</h2>
@@ -1314,79 +1314,92 @@ function imprimirOrcamento(o) {
   <div class="card">
     <h3>Resumo Geral</h3>
 
-<div style="display:flex; gap:20px; flex-wrap:wrap;">
+    <div style="display:flex; gap:20px; flex-wrap:wrap;">
 
-  <div class="card" style="flex:1;">
-    <h3>Faturamento Total</h3>
-    <div id="fatTotal" style="font-size:28px; color:var(--hx-accent);">R$ 0,00</div>
+      <div class="card" style="flex:1;">
+        <h3>Faturamento Total</h3>
+        <div id="fatTotal" style="font-size:28px; color:var(--hx-accent);">
+          R$ 0,00
+        </div>
+      </div>
+
+      <div class="card" style="flex:1;">
+        <h3>Lucro do Mês</h3>
+        <div id="lucroMes" style="font-size:28px; color:#00e0ff;">
+          R$ 0,00
+        </div>
+      </div>
+
+      <div class="card" style="flex:1;">
+        <h3>Lucro Mês Anterior</h3>
+        <div id="lucroMesAnterior" style="font-size:28px; color:#ffaa00;">
+          R$ 0,00
+        </div>
+      </div>
+
+      <div class="card" style="flex:1;">
+        <h3>Variação</h3>
+        <div id="variacaoLucro" style="font-size:28px; font-weight:bold;">
+          R$ 0,00
+        </div>
+      </div>
+
+      <div class="card" style="flex:1;">
+        <h3>Total de Vendas</h3>
+        <div id="numVendas" style="font-size:28px; color:var(--hx-accent);">
+          0
+        </div>
+      </div>
+
+      <div class="card" style="flex:1;">
+        <h3>Ordens de Serviço</h3>
+        <div id="numOS" style="font-size:28px; color:var(--hx-accent);">
+          0
+        </div>
+      </div>
+
+    </div>
   </div>
+<!-- ===== FILTRO DE PERÍODO ===== -->
+<div class="card">
+  <h3>📅 Filtro de Período</h3>
 
-  <div class="card" style="flex:1;">
-    <h3>Lucro do Mês</h3>
-    <div id="lucroMes" style="font-size:28px; color:#00e0ff;">R$ 0,00</div>
+  <div style="display:flex; gap:15px; flex-wrap:wrap;">
+    <select id="filtroMes">
+      <option value="0">Janeiro</option>
+      <option value="1">Fevereiro</option>
+      <option value="2">Março</option>
+      <option value="3">Abril</option>
+      <option value="4">Maio</option>
+      <option value="5">Junho</option>
+      <option value="6">Julho</option>
+      <option value="7">Agosto</option>
+      <option value="8">Setembro</option>
+      <option value="9">Outubro</option>
+      <option value="10">Novembro</option>
+      <option value="11">Dezembro</option>
+    </select>
+
+    <input id="filtroAno" type="number" placeholder="Ano" style="max-width:120px;">
+
+    <button class="btn" onclick="calcularLucroPorPeriodo()">Aplicar</button>
   </div>
-
-  <div class="card" style="flex:1;">
-    <h3>Total de Vendas</h3>
-    <div id="numVendas" style="font-size:28px; color:var(--hx-accent);">0</div>
-  </div>
-
-  <div class="card" style="flex:1;">
-    <h3>Ordens de Serviço</h3>
-    <div id="numOS" style="font-size:28px; color:var(--hx-accent);">0</div>
-  </div>
-
 </div>
 
-  </div>
+<!-- ===== GRÁFICO DE LUCRO MENSAL ===== -->
+<div class="card">
+  <h3>📈 Lucro Diário no Mês</h3>
+  <button class="btn secondary" onclick="imprimirGrafico('grafLucroMensal')">
+    🖨 Imprimir
+  </button>
+  <canvas id="grafLucroMensal"></canvas>
+</div>
 
-  <div class="card">
-    <h3>Vendas Diárias</h3>
-    <button class="btn secondary" onclick="imprimirGrafico('grafVendasDiarias')">🖨 Imprimir</button>
-    <canvas id="grafVendasDiarias"></canvas>
-  </div>
 
-  <div class="card">
-    <h3>Vendas Semanais</h3>
-    <button class="btn secondary" onclick="imprimirGrafico('grafVendasSemanal')">🖨 Imprimir</button>
-    <canvas id="grafVendasSemanal"></canvas>
-  </div>
 
-  <div class="card">
-    <h3>Vendas Mensais</h3>
-    <button class="btn secondary" onclick="imprimirGrafico('grafVendasMensal')">🖨 Imprimir</button>
-    <canvas id="grafVendasMensal"></canvas>
-  </div>
-
-  <div class="card">
-    <h3>Vendas Anuais</h3>
-    <button class="btn secondary" onclick="imprimirGrafico('grafVendasAnual')">🖨 Imprimir</button>
-    <canvas id="grafVendasAnual"></canvas>
-  </div>
-
-  <div class="card">
-    <h3>Lucro Total por Dia</h3>
-    <button class="btn secondary" onclick="imprimirGrafico('grafLucro')">🖨 Imprimir</button>
-    <canvas id="grafLucro"></canvas>
-  </div>
-
-  <div class="card">
-    <h3>Custo × Revenda × Lucro</h3>
-    <button class="btn secondary" onclick="imprimirGrafico('grafCustoRevenda')">🖨 Imprimir</button>
-    <canvas id="grafCustoRevenda"></canvas>
-  </div>
-
-  <div class="card">
-    <h3>Ranking dos Produtos Mais Vendidos</h3>
-    <button class="btn secondary" onclick="imprimirGrafico('grafRankingProdutos')">🖨 Imprimir</button>
-    <canvas id="grafRankingProdutos"></canvas>
-  </div>
-
-  <div class="card">
-    <h3>Estoque Crítico</h3>
-    <div id="estoqueCritico"></div>
-  </div>
 </section>
+
+
 
 <script>
 let chartDiarias, chartSemanal, chartMensal, chartAnual, chartLucro, chartCustoRevenda, chartRanking;
@@ -1434,6 +1447,153 @@ async function gerarGraficosDashboard() {
     id, data, valor, lucro_total, preco_custo, preco_revenda, quantidade,
     produtos(nome)
   `);
+
+  if (!vendas || vendas.length === 0) return;
+// ================= LUCRO MENSAL =================
+let chartLucroMensal;
+
+async function gerarGraficoLucroMensal() {
+  const mes = Number(document.getElementById("filtroMes").value);
+  const ano = Number(document.getElementById("filtroAno").value);
+
+  if (!ano) return;
+
+  const { data: vendas, error } = await supabase
+    .from("vendas")
+    .select("*");
+
+  if (error) {
+    console.error("Erro ao gerar gráfico de lucro mensal:", error);
+    return;
+  }
+
+async function gerarGraficosDashboard() {
+  const { data: vendas } = await supabase.from("vendas").select(`
+    id, data, valor, lucro_total, preco_custo, preco_revenda, quantidade,
+    produtos(nome)
+  `);
+
+  if (!vendas || vendas.length === 0) return;
+}
+
+  const lucroPorDia = {};
+
+  vendas.forEach(v => {
+    const dataVenda = new Date(v.data + "T00:00:00");
+
+    if (
+      dataVenda.getMonth() !== mes ||
+      dataVenda.getFullYear() !== ano
+    ) return;
+
+    const dia = dataVenda.getDate();
+
+    const lucroSeguro =
+      v.lucro_total !== null && v.lucro_total !== undefined
+        ? Number(v.lucro_total)
+        : (Number(v.preco_revenda) - Number(v.preco_custo)) * Number(v.quantidade);
+
+    lucroPorDia[dia] = (lucroPorDia[dia] || 0) + lucroSeguro;
+  });
+
+  const diasOrdenados = Object.keys(lucroPorDia).sort((a, b) => a - b);
+
+  if (chartLucroMensal) chartLucroMensal.destroy();
+
+  chartLucroMensal = new Chart(
+    document.getElementById("grafLucroMensal"),
+    {
+      type: "line",
+      data: {
+        labels: diasOrdenados.map(d => `Dia ${d}`),
+        datasets: [{
+          label: "Lucro Diário (R$)",
+          data: diasOrdenados.map(d => lucroPorDia[d]),
+          borderColor: "#0aff9d",
+          borderWidth: 3,
+          tension: 0.3,
+          fill: false
+        }]
+      },
+      options: {
+        responsive: true,
+        plugins: {
+          legend: { display: true }
+        }
+      }
+    }
+  );
+}
+
+
+
+// ================= LUCRO MENSAL =================
+let chartLucroMensal;
+
+async function gerarGraficoLucroMensal() {
+  const mes = Number(document.getElementById("filtroMes").value);
+  const ano = Number(document.getElementById("filtroAno").value);
+
+  if (!ano) return;
+
+  const { data: vendas, error } = await supabase
+    .from("vendas")
+    .select("*");
+
+  if (error) {
+    console.error("Erro ao gerar gráfico de lucro mensal:", error);
+    return;
+  }
+
+  const lucroPorDia = {};
+
+  vendas.forEach(v => {
+    const dataVenda = new Date(v.data + "T00:00:00");
+
+    if (
+      dataVenda.getMonth() !== mes ||
+      dataVenda.getFullYear() !== ano
+    ) return;
+
+    const dia = dataVenda.getDate();
+
+    const lucroSeguro =
+      v.lucro_total !== null && v.lucro_total !== undefined
+        ? Number(v.lucro_total)
+        : (Number(v.preco_revenda) - Number(v.preco_custo)) * Number(v.quantidade);
+
+    lucroPorDia[dia] = (lucroPorDia[dia] || 0) + lucroSeguro;
+  });
+
+  const diasOrdenados = Object.keys(lucroPorDia).sort((a, b) => a - b);
+
+  if (chartLucroMensal) chartLucroMensal.destroy();
+
+  chartLucroMensal = new Chart(
+    document.getElementById("grafLucroMensal"),
+    {
+      type: "line",
+      data: {
+        labels: diasOrdenados.map(d => `Dia ${d}`),
+        datasets: [{
+          label: "Lucro Diário (R$)",
+          data: diasOrdenados.map(d => lucroPorDia[d]),
+          borderColor: "#0aff9d",
+          borderWidth: 3,
+          tension: 0.3,
+          fill: false
+        }]
+      },
+      options: {
+        responsive: true,
+        plugins: {
+          legend: { display: true }
+        }
+      }
+    }
+  );
+}
+
 
   // === SE NÃO HÁ VENDAS — EXIBE GRÁFICOS VAZIOS ===
   if (!vendas || vendas.length === 0) {
@@ -1672,6 +1832,10 @@ function imprimirGrafico(id) {
    FUNÇÃO GERAL DE ATUALIZAÇÃO
 ============================================================ */
 
+
+
+
+
 async function carregarEstoqueCriticoDashboard() {
   const { data: produtos, error } = await supabase
     .from("produtos")
@@ -1710,17 +1874,20 @@ async function atualizarTudo() {
   try {
     await carregarClientes();
     await carregarProdutos();
-    await carregarVendas();
+    await carregarVendas(); // vendas precisam carregar primeiro
     await carregarOS();
     await carregarOrcamentos();
     await carregarDashboard();
     await gerarGraficosDashboard();
-    await carregarEstoqueCriticoDashboard(); // 🔥 ESSA LINHA É OBRIGATÓRIA!
+    await carregarEstoqueCriticoDashboard();
+
+    // 🔥 ATUALIZA O LUCRO DO MÊS AUTOMATICAMENTE
+    calcularLucroPorPeriodo();
+
   } catch (e) {
     console.error("Erro ao atualizar tudo:", e);
   }
 }
-
 
 /* ============================================================
    CARREGAR USUÁRIO LOGADO
@@ -1860,6 +2027,7 @@ document.addEventListener("DOMContentLoaded", async () => {
   await atualizarTudo();
 });
 </script>
+
 
 
 
