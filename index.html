@@ -1,236 +1,1661 @@
 <!DOCTYPE html>
 <html lang="pt-br">
 <head>
-<meta charset="UTF-8">
-<title>Sistema HX — Administração</title>
-<meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
 
-<!-- Chart.js -->
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <title>Sistema HX — Administração Completa</title>
 
-<!-- Supabase -->
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <!-- Chart.js -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js/dist/chart.umd.min.js"></script>
 
-<script>
-const supabase = window.supabase.createClient(
-  "https://axfccmezfofnqfsdurqb.supabase.co",
-  "SUA_ANON_KEY_AQUI"
-);
-</script>
+  <!-- Supabase -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 
-<style>
-:root{
-  --accent:#0aff9d;
-  --bg:#0d0d0d;
-  --card:#181818;
-  --text:#eee;
-}
-body.light{
-  --bg:#f5f5f5;
-  --card:#fff;
-  --text:#111;
-}
-body{margin:0;font-family:Segoe UI;background:var(--bg);color:var(--text)}
-header{padding:15px;background:#151515;color:var(--accent);display:flex;align-items:center}
-#sidebar{width:220px;position:fixed;top:0;left:0;height:100vh;background:#151515;padding-top:70px}
-#sidebar button{width:100%;padding:12px;border:none;background:none;color:white;text-align:left;cursor:pointer}
-.menu-active{background:var(--accent);color:black!important}
-main{margin-left:240px;padding:20px}
-.card{background:var(--card);padding:15px;border-radius:10px;margin-bottom:15px}
-.btn{background:var(--accent);border:none;padding:8px 14px;border-radius:6px;cursor:pointer}
-canvas{max-height:220px}
-#loginOverlay{position:fixed;inset:0;background:#000c;display:flex;align-items:center;justify-content:center}
-.login-box{background:#111;padding:20px;border-radius:10px;width:300px}
-</style>
+  <script>
+    const { createClient } = supabase;
+
+    const supabaseClient = createClient(
+      "https://axfccmezfofnqfsdurqb.supabase.co",
+      "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImF4ZmNjbWV6Zm9mbnFmc2R1cnFiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjUwNzA1NDMsImV4cCI6MjA4MDY0NjU0M30.woGp6hBgiEa41opQxyxqqMULlDKMXm9T83bhJ7UEmb8"
+    );
+
+    window.supabase = supabaseClient;
+  </script>
+
+  <style>
+    :root {
+      --hx-dark: #0d0d0d;
+      --hx-dark2: #151515;
+      --hx-dark3: #1f1f1f;
+      --hx-accent: #0aff9d;
+      --hx-text: #eaeaea;
+      --hx-card: #181818;
+    }
+
+    body.light {
+      --hx-dark: #f5f5f5;
+      --hx-dark2: #ffffff;
+      --hx-dark3: #e0e0e0;
+      --hx-text: #111111;
+      --hx-card: #ffffff;
+    }
+
+    body {
+      margin: 0;
+      background: var(--hx-dark);
+      color: var(--hx-text);
+      font-family: "Segoe UI", sans-serif;
+    }
+
+    /* GRÁFICOS REDUZIDOS */
+    canvas {
+      max-height: 220px !important;
+      width: 100% !important;
+    }
+
+    /* LOGIN */
+    #loginOverlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.88);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 9999;
+    }
+
+    .login-card {
+      background: #111;
+      width: 340px;
+      padding: 25px;
+      border-radius: 12px;
+      color: white;
+      border: 1px solid var(--hx-accent);
+      box-shadow: 0 0 20px rgba(0,255,150,0.3);
+    }
+
+    .login-card input {
+      width: 100%;
+      padding: 10px;
+      margin-top: 6px;
+      background: #222;
+      border: 1px solid #444;
+      border-radius: 8px;
+      color: white;
+    }
+
+    .login-btn {
+      width: 100%;
+      padding: 12px;
+      margin-top: 12px;
+      border: none;
+      border-radius: 8px;
+      background: var(--hx-accent);
+      color: black;
+      font-weight: bold;
+      cursor: pointer;
+    }
+
+    header {
+      padding: 16px;
+      background: var(--hx-dark2);
+      color: var(--hx-accent);
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      font-size: 22px;
+      font-weight: bold;
+      box-shadow: 0 2px 10px #000;
+    }
+
+    #sidebar {
+      position: fixed;
+      top: 0;
+      left: 0;
+      padding-top: 80px;
+      width: 240px;
+      height: 100vh;
+      background: var(--hx-dark2);
+      overflow-y: auto;
+    }
+
+    #sidebar button {
+      width: 100%;
+      background: none;
+      border: none;
+      color: var(--hx-text);
+      padding: 14px;
+      font-size: 17px;
+      text-align: left;
+      cursor: pointer;
+      transition: 0.25s;
+    }
+
+    #sidebar button:hover {
+      background: var(--hx-dark3);
+      padding-left: 20px;
+    }
+
+    .menu-active {
+      background: var(--hx-accent) !important;
+      color: black !important;
+    }
+
+    main {
+      margin-left: 260px;
+      padding: 22px;
+    }
+
+    .card {
+      background: var(--hx-card);
+      padding: 12px;
+      border-radius: 12px;
+      margin-bottom: 20px;
+      box-shadow: 0 2px 8px #000;
+    }
+
+    h2, h3 {
+      color: var(--hx-accent);
+    }
+
+    input, select, textarea {
+      width: 100%;
+      padding: 10px;
+      border-radius: 8px;
+      border: 1px solid #333;
+      background: var(--hx-dark3);
+      color: var(--hx-text);
+      margin-bottom: 12px;
+    }
+
+    .btn {
+      background: var(--hx-accent);
+      color: black;
+      padding: 10px 16px;
+      border-radius: 8px;
+      border: none;
+      cursor: pointer;
+      font-weight: bold;
+    }
+
+    .btn.secondary {
+      background: #444;
+      color: white;
+    }
+  </style>
 </head>
 
 <body>
 
-<!-- LOGIN -->
-<div id="loginOverlay">
-  <div class="login-box">
-    <h3>Login</h3>
-    <input id="loginEmail" placeholder="Email"><br><br>
-    <input id="loginPass" type="password" placeholder="Senha"><br><br>
-    <button class="btn" onclick="login()">Entrar</button>
-    <p id="loginMsg"></p>
+  <!-- =============== LOGIN =============== -->
+  <div id="loginOverlay">
+    <div class="login-card">
+      <h2 style="color:#0aff9d; text-align:center; margin-bottom:10px;">
+        🔒 Acesso ao Sistema HX
+      </h2>
+
+      <label>Email</label>
+      <input id="loginEmail" type="email">
+
+      <label>Senha</label>
+      <input id="loginPass" type="password">
+
+      <button class="login-btn" onclick="login()">Entrar</button>
+
+      <div id="loginMsg" class="login-msg"></div>
+
+      <div style="margin-top:12px; font-size:13px; text-align:center;">
+        <a href="#" onclick="enviarRecuperacaoSenha(); return false;">Esqueci minha senha</a><br>
+        <a href="#" onclick="cadastrarUsuario(); return false;">Criar novo usuário</a>
+      </div>
+    </div>
   </div>
-</div>
 
-<header>
-  Sistema HX
-  <span id="userLabel" style="margin-left:auto"></span>
-  <button class="btn" onclick="toggleTheme()">🌙</button>
-</header>
+  <!-- =============== HEADER =============== -->
+  <header>
+    <img src="https://i.imgur.com/8Tqj0MW.png" height="40">
+    Sistema HX — Painel Administrativo
 
-<div id="sidebar">
-  <button onclick="showSection('dashboardSec',this)" class="menu-active">📊 Dashboard</button>
-  <button onclick="showSection('vendasSec',this)">💰 Vendas</button>
-  <button onclick="logout()">🚪 Sair</button>
-</div>
+    <span id="userLabel" style="margin-left:auto; color:#0aff9d;"></span>
+
+    <button id="themeToggle" class="btn secondary" onclick="toggleTheme()">🌙 / ☀️</button>
+  </header>
+
+  <!-- =============== SIDEBAR =============== -->
+  <div id="sidebar">
+    <button onclick="showSection('dashboardSec', this)" class="menu-active">📊 Dashboard</button>
+    <button onclick="showSection('clientesSec', this)">👤 Clientes</button>
+    <button onclick="showSection('produtosSec', this)">📦 Estoque</button>
+    <button onclick="showSection('vendasSec', this)">💵 Vendas</button>
+    <button onclick="showSection('osSec', this)">🛠 OS</button>
+    <button onclick="showSection('orcamentoSec', this)">📝 Orçamentos</button>
+
+    <button onclick="alterarSenha()" class="btn secondary" style="margin-top:20px;">Alterar senha</button>
+    <button onclick="logout()" class="btn secondary" style="margin-top:10px;">Sair</button>
+  </div>
 
 <main>
 
-<!-- DASHBOARD -->
-<section id="dashboardSec">
-  <h2>Dashboard</h2>
+<!-- ======================== CLIENTES ======================== -->
+<section id="clientesSec" style="display:none;">
+  <h2>👤 Clientes</h2>
 
   <div class="card">
-    <b>Faturamento Total:</b> <span id="fatTotal">R$ 0,00</span><br>
-    <b>Lucro do Mês:</b> <span id="lucroMes">R$ 0,00</span><br>
-    <b>Total de Vendas:</b> <span id="numVendas">0</span>
+    <label>Nome</label>
+    <input id="cliNome">
+
+    <label>Telefone</label>
+    <input id="cliTel">
+
+    <label>CPF</label>
+    <input id="cliCPF">
+
+    <label>Endereço</label>
+    <input id="cliEnd">
+
+    <button class="btn" onclick="salvarCliente()">Salvar Cliente</button>
   </div>
 
   <div class="card">
-    <select id="filtroMes">
-      <option value="0">Janeiro</option><option value="1">Fevereiro</option>
-      <option value="2">Março</option><option value="3">Abril</option>
-      <option value="4">Maio</option><option value="5">Junho</option>
-      <option value="6">Julho</option><option value="7">Agosto</option>
-      <option value="8">Setembro</option><option value="9">Outubro</option>
-      <option value="10">Novembro</option><option value="11">Dezembro</option>
+    <h3>Pesquisa</h3>
+    <input id="filtroClientes" placeholder="Pesquisar por nome, telefone ou CPF..." oninput="filtrarClientes()">
+  </div>
+
+  <div class="card">
+    <h3>Lista de Clientes</h3>
+    <div id="listaClientes"></div>
+  </div>
+</section>
+
+
+<!-- ======================== PRODUTOS ======================== -->
+<section id="produtosSec" style="display:none;">
+  <h2>📦 Estoque</h2>
+
+  <div class="card">
+    <label>Nome</label>
+    <input id="prodNome">
+
+    <label>Código</label>
+    <input id="prodCodigo">
+
+    <label>Marca</label>
+    <input id="prodMarca">
+
+    <label>Modelo</label>
+    <input id="prodModelo">
+
+    <label>Preço de Custo</label>
+    <input id="prodCusto" type="number" step="0.01">
+
+    <label>Preço de Revenda</label>
+    <input id="prodRevenda" type="number" step="0.01">
+
+    <label>Quantidade</label>
+    <input id="prodQtd" type="number" value="0">
+
+    <label>Estoque Mínimo</label>
+    <input id="prodMin" type="number" value="1">
+
+    <button class="btn" onclick="salvarProduto()">Salvar Produto</button>
+  </div>
+
+  <div class="card">
+    <h3>Pesquisa</h3>
+    <input id="filtroProdutos" placeholder="Pesquisar nome, código, marca, modelo..." oninput="filtrarProdutos()">
+  </div>
+
+  <div class="card">
+    <h3>Lista de Produtos</h3>
+    <div id="listaProdutos"></div>
+  </div>
+</section>
+
+
+<!-- ======================= MODAL UNIVERSAL ======================= -->
+<div id="modalOverlay" style="
+  display:none;
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.65);
+  backdrop-filter: blur(4px);
+  align-items: center;
+  justify-content: center;
+  z-index: 99999;
+">
+  <div id="modalBox" style="
+    width: 380px;
+    background: var(--hx-dark2);
+    padding: 20px;
+    border-radius: 12px;
+    box-shadow: 0 0 20px #000;
+    color: var(--hx-text);
+    border: 1px solid var(--hx-accent);
+  ">
+    <h3 id="modalTitle" style="margin-top:0; color:var(--hx-accent);"></h3>
+
+    <div id="modalContent"></div>
+
+    <div style="margin-top:20px; display:flex; justify-content: flex-end; gap:10px;">
+      <button class="btn secondary" onclick="fecharModal()">Cancelar</button>
+      <button class="btn" id="modalSaveBtn">Salvar</button>
+    </div>
+  </div>
+</div>
+
+
+<script>
+
+
+/* ======================= MODAL UNIVERSAL ======================= */
+function abrirModal(titulo, conteudoHTML, callbackSalvar) {
+  modalTitle.innerText = titulo;
+  modalContent.innerHTML = conteudoHTML;
+
+  modalSaveBtn.onclick = callbackSalvar;
+
+  modalOverlay.style.display = "flex";
+}
+
+function fecharModal() {
+  modalOverlay.style.display = "none";
+  modalContent.innerHTML = "";
+}
+
+
+/* ============================================================
+   CLIENTES — CRUD + FILTRO
+============================================================ */
+async function salvarCliente() {
+  const nome = cliNome.value.trim();
+  if (!nome) return alert("Informe o nome!");
+
+  const { error } = await supabase.from("clientes").insert({
+    nome,
+    telefone: cliTel.value.trim(),
+    cpf: cliCPF.value.trim(),
+    endereco: cliEnd.value.trim(),
+  });
+
+  if (error) return alert("Erro ao salvar: " + error.message);
+
+  cliNome.value = cliTel.value = cliCPF.value = cliEnd.value = "";
+
+  carregarClientes();
+}
+
+async function carregarClientes() {
+  const { data, error } = await supabase
+    .from("clientes")
+    .select("*")
+    .order("nome", { ascending: true });
+
+  if (error) return console.error(error);
+
+  window._clientesCache = data;
+
+  // ==========================================================
+  // 🔥 Preencher selects usados em vendas, OS e orçamento
+  // ==========================================================
+  venCliente.innerHTML = "";
+  osCliente.innerHTML = "";
+  orcCliente.innerHTML = "";
+
+  data.forEach(cli => {
+    const opt = `<option value="${cli.id}">${cli.nome}</option>`;
+    venCliente.innerHTML += opt;
+    osCliente.innerHTML += opt;
+    orcCliente.innerHTML += opt;
+  });
+  // Renderiza lista de clientes na tela
+  renderizarClientes(data);
+}
+
+
+
+
+function renderizarClientes(lista) {
+
+
+  listaClientes.innerHTML = "";
+
+  lista.forEach(cli => {
+    listaClientes.innerHTML += `
+      <div class="card">
+        <b>${cli.nome}</b><br>
+        📞 ${cli.telefone || "-"}<br>
+        🧾 ${cli.cpf || "-"}<br>
+        📍 ${cli.endereco || "-"}<br><br>
+
+        <button class="btn secondary" onclick='editarCliente(${JSON.stringify(cli)})'>✏ Editar</button>
+        <button class="btn secondary" onclick="excluirCliente(${cli.id})">🗑 Excluir</button>
+      </div>
+    `;
+  });
+}
+
+function filtrarClientes() {
+  const termo = filtroClientes.value.toLowerCase();
+
+  const filtrados = window._clientesCache.filter(c =>
+    c.nome.toLowerCase().includes(termo) ||
+    (c.telefone || "").toLowerCase().includes(termo) ||
+    (c.cpf || "").toLowerCase().includes(termo)
+  );
+
+  renderizarClientes(filtrados);
+}
+
+async function excluirCliente(id) {
+  if (!confirm("Excluir este cliente?")) return;
+
+  await supabase.from("clientes").delete().eq("id", id);
+
+  carregarClientes();
+}
+
+function editarCliente(cli) {
+  abrirModal(
+    "Editar Cliente",
+    `
+      <label>Nome</label>
+      <input id="editCliNome" value="${cli.nome}">
+
+      <label>Telefone</label>
+      <input id="editCliTel" value="${cli.telefone || ''}">
+
+      <label>CPF</label>
+      <input id="editCliCPF" value="${cli.cpf || ''}">
+
+      <label>Endereço</label>
+      <input id="editCliEnd" value="${cli.endereco || ''}">
+    `,
+    async () => {
+      await supabase.from("clientes").update({
+        nome: editCliNome.value,
+        telefone: editCliTel.value,
+        cpf: editCliCPF.value,
+        endereco: editCliEnd.value
+      }).eq("id", cli.id);
+
+      fecharModal();
+      carregarClientes();
+    }
+  );
+}
+
+
+/* ============================================================
+   PRODUTOS — CRUD + FILTRO
+============================================================ */
+async function salvarProduto() {
+  const nome = prodNome.value.trim();
+  if (!nome) return alert("Informe o nome!");
+
+  const { error } = await supabase.from("produtos").insert({
+    nome,
+    codigo: prodCodigo.value,
+    marca: prodMarca.value,
+    modelo: prodModelo.value,
+    preco_custo: Number(prodCusto.value),
+    preco_revenda: Number(prodRevenda.value),
+    qtd: Number(prodQtd.value),
+    estoque_minimo: Number(prodMin.value),
+  });
+
+  if (error) return alert("Erro ao salvar: " + error.message);
+
+  prodNome.value = prodCodigo.value = prodMarca.value = prodModelo.value = "";
+  prodCusto.value = prodRevenda.value = "";
+  prodQtd.value = "0";
+  prodMin.value = "1";
+
+  carregarProdutos();
+}
+
+async function carregarProdutos() {
+  const { data, error } = await supabase
+    .from("produtos")
+    .select("*")
+    .order("nome");
+
+  if (error) return console.error(error);
+
+  window._produtosCache = data;
+
+  // ==========================================================
+  // 🔥 Preencher select de produtos na tela de vendas
+  // ==========================================================
+  venProduto.innerHTML = "";
+
+  data.forEach(p => {
+    const opt = `<option value="${p.id}">${p.nome}</option>`;
+    venProduto.innerHTML += opt;
+  });
+
+  // Exibir lista de produtos
+  renderizarProdutos(data);
+}
+
+function renderizarProdutos(lista) {
+  listaProdutos.innerHTML = "";
+
+  lista.forEach(p => {
+    const critico = p.qtd <= p.estoque_minimo
+      ? `<span style="color:red;font-weight:bold;">⚠ Estoque crítico</span>`
+      : "";
+
+    listaProdutos.innerHTML += `
+      <div class="card">
+        <b>${p.nome}</b><br>
+        Código: ${p.codigo || "-"}<br>
+        Marca: ${p.marca || "-"}<br>
+        Modelo: ${p.modelo || "-"}<br>
+        Custo: R$ ${(p.preco_custo || 0).toFixed(2)}<br>
+        Revenda: R$ ${(p.preco_revenda || 0).toFixed(2)}<br>
+        Quantidade: ${p.qtd}<br>
+        Mínimo: ${p.estoque_minimo}<br>
+        ${critico}<br><br>
+
+        <button class="btn secondary" onclick='editarProduto(${JSON.stringify(p)})'>✏ Editar</button>
+        <button class="btn secondary" onclick="excluirProduto(${p.id})">🗑 Excluir</button>
+      </div>
+    `;
+  });
+}
+
+function filtrarProdutos() {
+  const termo = filtroProdutos.value.toLowerCase();
+
+  const filtrados = window._produtosCache.filter(p =>
+    p.nome.toLowerCase().includes(termo) ||
+    (p.codigo || "").toLowerCase().includes(termo) ||
+    (p.marca || "").toLowerCase().includes(termo) ||
+    (p.modelo || "").toLowerCase().includes(termo)
+  );
+
+  renderizarProdutos(filtrados);
+}
+
+async function excluirProduto(id) {
+  if (!confirm("Excluir este produto?")) return;
+  await supabase.from("produtos").delete().eq("id", id);
+  carregarProdutos();
+}
+
+function editarProduto(p) {
+  abrirModal(
+    "Editar Produto",
+    `
+      <label>Nome</label>
+      <input id="editProdNome" value="${p.nome}">
+
+      <label>Código</label>
+      <input id="editProdCod" value="${p.codigo || ''}">
+
+      <label>Marca</label>
+      <input id="editProdMarca" value="${p.marca || ''}">
+
+      <label>Modelo</label>
+      <input id="editProdModelo" value="${p.modelo || ''}">
+
+      <label>Preço de Custo</label>
+      <input id="editProdCusto" type="number" value="${p.preco_custo || 0}">
+
+      <label>Preço de Revenda</label>
+      <input id="editProdRev" type="number" value="${p.preco_revenda || 0}">
+
+      <label>Quantidade</label>
+      <input id="editProdQtd" type="number" value="${p.qtd || 0}">
+
+      <label>Estoque Min.</label>
+      <input id="editProdMin" type="number" value="${p.estoque_minimo || 1}">
+    `,
+    async () => {
+      await supabase.from("produtos").update({
+        nome: editProdNome.value,
+        codigo: editProdCod.value,
+        marca: editProdMarca.value,
+        modelo: editProdModelo.value,
+        preco_custo: Number(editProdCusto.value),
+        preco_revenda: Number(editProdRev.value),
+        qtd: Number(editProdQtd.value),
+        estoque_minimo: Number(editProdMin.value)
+      }).eq("id", p.id);
+
+      fecharModal();
+      carregarProdutos();
+    }
+  );
+}
+</script>
+
+<!-- ======================== VENDAS ======================== -->
+<section id="vendasSec" style="display:none;">
+  <h2>💵 Registrar Venda</h2>
+
+  <div class="card">
+
+    <label>Cliente</label>
+    <select id="venCliente"></select>
+
+    <label>Produto</label>
+    <select id="venProduto"></select>
+
+    <label>Quantidade</label>
+    <input id="venQtd" type="number" value="1">
+
+    <label>Valor Pago (R$)</label>
+    <input id="venValor" type="number" step="0.01">
+
+    <label>Tipo de Venda</label>
+    <select id="venTipo" onchange="atualizarCamposParcelas()">
+      <option value="Dinheiro">Dinheiro</option>
+      <option value="Pix">Pix</option>
+      <option value="Débito">Débito</option>
+      <option value="Crédito à vista">Crédito à vista</option>
+      <option value="Crédito parcelado">Crédito parcelado</option>
+      <option value="Boleto">Boleto</option>
+      <option value="Transferência">Transferência</option>
     </select>
-    <input id="filtroAno" type="number" placeholder="Ano">
-    <button class="btn" onclick="gerarGraficoLucroMensal()">Aplicar</button>
+
+    <div id="boxParcelas" style="display:none;">
+      <label>Número de parcelas</label>
+      <input id="venParcelas" type="number" min="1" value="1">
+    </div>
+
+    <button class="btn" onclick="registrarVenda()">Registrar Venda</button>
   </div>
 
   <div class="card">
-    <h3>Lucro Diário</h3>
+    <h3>Pesquisa de Vendas</h3>
+    <input id="filtroVendas" placeholder="Pesquisar cliente, produto, tipo de venda..." oninput="filtrarVendas()">
+  </div>
+
+  <div class="card">
+    <h3>Lista de Vendas</h3>
+    <div id="listaVendas"></div>
+  </div>
+</section>
+
+<script>
+/* ============================================================
+   EXIBIR / OCULTAR CAMPOS DE PARCELAMENTO
+============================================================ */
+function atualizarCamposParcelas() {
+  if (venTipo.value === "Crédito parcelado") {
+    boxParcelas.style.display = "block";
+  } else {
+    boxParcelas.style.display = "none";
+  }
+}
+
+/* ============================================================
+   REGISTRAR VENDA
+============================================================ */
+async function registrarVenda() {
+  const cliente = venCliente.value;
+  const produto = venProduto.value;
+  const qtd = Number(venQtd.value);
+  const valor = Number(venValor.value);
+  const tipoVenda = venTipo.value;
+
+  if (!cliente || !produto) return alert("Selecione cliente e produto!");
+  if (qtd <= 0) return alert("Quantidade inválida");
+  if (valor <= 0) return alert("Valor pago inválido");
+
+  const { data: prod } = await supabase
+    .from("produtos")
+    .select("*")
+    .eq("id", produto)
+    .single();
+
+  if (!prod) return alert("Produto não encontrado!");
+
+  const custoTotal = prod.preco_custo * qtd;
+  const lucroTotal = (prod.preco_revenda - prod.preco_custo) * qtd;
+
+  // =====================================
+  // PARCELAMENTO (OPÇÃO B — LISTA COMPLETA)
+  // =====================================
+  let parcelas = 1;
+  let listaParcelas = [];
+
+  if (tipoVenda === "Crédito parcelado") {
+    parcelas = Number(venParcelas.value);
+    const valorParcela = valor / parcelas;
+
+    // Cria lista de parcelas
+    for (let i = 1; i <= parcelas; i++) {
+      listaParcelas.push(Number(valorParcela.toFixed(2)));
+    }
+  }
+
+  // SALVAR VENDA NO SUPABASE
+  const { error } = await supabase.from("vendas").insert({
+    cliente_id: cliente,
+    produto_id: produto,
+    quantidade: qtd,
+    valor: valor,
+    preco_custo: prod.preco_custo,
+    preco_revenda: prod.preco_revenda,
+    custo_total: custoTotal,
+    lucro_total: lucroTotal,
+    data: new Date().toISOString(),
+    tipo_venda: tipoVenda,
+    parcelas: parcelas,
+    parcelas_lista: listaParcelas
+  });
+
+  if (error) {
+    alert("Erro ao registrar venda: " + error.message);
+    return;
+  }
+
+  // Atualizar estoque
+  await supabase
+    .from("produtos")
+    .update({ qtd: prod.qtd - qtd })
+    .eq("id", produto);
+
+  alert("Venda registrada com sucesso!");
+  atualizarTudo();
+}
+
+/* ============================================================
+   CARREGAR LISTA DE VENDAS
+============================================================ */
+async function carregarVendas() {
+  const { data, error } = await supabase.from("vendas").select(`
+    *,
+    clientes(nome),
+    produtos(nome)
+  `).order("id", { ascending: false });
+
+  if (error) return console.error(error);
+
+  window._vendasCache = data;
+
+  renderizarVendas(data);
+}
+
+/* ============================================================
+   EXIBIR LISTA DE VENDAS
+============================================================ */
+function renderizarVendas(lista) {
+  listaVendas.innerHTML = "";
+
+  lista.forEach(v => {
+    const parcelasHTML = v.tipo_venda === "Crédito parcelado"
+      ? `<b>Parcelas:</b> ${v.parcelas}x<br>Valores: ${JSON.stringify(v.parcelas_lista)}`
+      : "";
+
+    listaVendas.innerHTML += `
+      <div class="card">
+        <b>Venda #${v.id}</b><br>
+        Cliente: ${v.clientes?.nome}<br>
+        Produto: ${v.produtos?.nome}<br>
+        Quantidade: ${v.quantidade}<br>
+        Valor: R$ ${v.valor.toFixed(2)}<br>
+        Tipo: ${v.tipo_venda}<br>
+        ${parcelasHTML}<br>
+        Data: ${new Date(v.data).toLocaleString("pt-BR")}<br><br>
+
+        <button class="btn" onclick='imprimirCupom(${JSON.stringify(v)})'>🖨 Imprimir</button>
+        <button class="btn secondary" onclick='editarVenda(${JSON.stringify(v)})'>✏ Editar</button>
+        <button class="btn secondary" onclick="excluirVenda(${v.id})">🗑 Excluir</button>
+      </div>
+    `;
+  });
+}
+
+/* ============================================================
+   FILTRO DE VENDAS
+============================================================ */
+function filtrarVendas() {
+  const termo = filtroVendas.value.toLowerCase();
+
+  const filtradas = window._vendasCache.filter(v =>
+    (v.clientes?.nome || "").toLowerCase().includes(termo) ||
+    (v.produtos?.nome || "").toLowerCase().includes(termo) ||
+    (v.tipo_venda || "").toLowerCase().includes(termo)
+  );
+
+  renderizarVendas(filtradas);
+}
+
+/* ============================================================
+   EXCLUIR VENDA
+============================================================ */
+async function excluirVenda(id) {
+  if (!confirm("Excluir esta venda?")) return;
+  await supabase.from("vendas").delete().eq("id", id);
+  carregarVendas();
+}
+
+/* ============================================================
+   EDITAR VENDA (MODAL)
+============================================================ */
+function editarVenda(v) {
+  abrirModal(
+    "Editar Venda",
+    `
+      <label>Valor</label>
+      <input id="editVValor" type="number" value="${v.valor}">
+
+      <label>Tipo de Venda</label>
+      <select id="editVTipo">
+        <option ${v.tipo_venda === "Dinheiro" ? "selected" : ""}>Dinheiro</option>
+        <option ${v.tipo_venda === "Pix" ? "selected" : ""}>Pix</option>
+        <option ${v.tipo_venda === "Débito" ? "selected" : ""}>Débito</option>
+        <option ${v.tipo_venda === "Crédito à vista" ? "selected" : ""}>Crédito à vista</option>
+        <option ${v.tipo_venda === "Crédito parcelado" ? "selected" : ""}>Crédito parcelado</option>
+      </select>
+
+      <label>Nº Parcelas</label>
+      <input id="editVParcelas" type="number" value="${v.parcelas}">
+
+      <label>Data da Venda</label>
+      <input id="editVData" type="datetime-local" value="${new Date(v.data).toISOString().slice(0,16)}">
+    `,
+    async () => {
+      const novoValor = Number(editVValor.value);
+      const novasParcelas = Number(editVParcelas.value);
+      const novaData = new Date(editVData.value).toISOString();
+
+      let listaParcelas = [];
+      if (editVTipo.value === "Crédito parcelado") {
+        const valParc = novoValor / novasParcelas;
+        for (let i = 1; i <= novasParcelas; i++) {
+          listaParcelas.push(Number(valParc.toFixed(2)));
+        }
+      }
+
+      await supabase.from("vendas").update({
+        valor: novoValor,
+        tipo_venda: editVTipo.value,
+        parcelas: novasParcelas,
+        parcelas_lista: listaParcelas,
+        data: novaData
+      }).eq("id", v.id);
+
+      fecharModal();
+      carregarVendas();
+    }
+  );
+}
+
+/* ============================================================
+   IMPRESSÃO — CUPOM TÉRMICO MODELO 3
+============================================================ */
+function imprimirCupom(v) {
+  let texto = "";
+
+  texto += "HX Acessórios & Eletrônicos\n";
+  texto += "CNPJ: 61.331.523/0001-05\n";
+  texto += "Av. Mamede Paes Mendonça, 752\n";
+  texto += "Aracaju - Sergipe\n";
+  texto += "Tel: (79) 99819-6955\n";
+  texto += "--------------------------------\n";
+
+  texto += `RECIBO DE VENDA #${v.id}\n`;
+  texto += `Cliente: ${v.clientes?.nome}\n`;
+  texto += `Data: ${new Date(v.data).toLocaleString("pt-BR")}\n`;
+  texto += "--------------------------------\n\n";
+
+  texto += `Produto: ${v.produtos?.nome}\n`;
+  texto += `Quantidade: ${v.quantidade}\n`;
+  texto += `Valor total: R$ ${v.valor.toFixed(2)}\n`;
+  texto += `Tipo: ${v.tipo_venda}\n\n`;
+
+  if (v.tipo_venda === "Crédito parcelado") {
+    texto += `Parcelamento: ${v.parcelas}x\nParcelas:\n`;
+    v.parcelas_lista.forEach((p, index) => {
+      texto += `${index + 1}/${v.parcelas} - R$ ${p.toFixed(2)}\n`;
+    });
+  }
+
+  texto += "\nObrigado pela preferência!\n";
+  texto += "--------------------------------\n";
+
+  const janela = window.open("", "_blank");
+  janela.document.write(`<pre style="font-size:14px;">${texto}</pre>`);
+  janela.print();
+  janela.close();
+}
+
+
+</script>
+
+
+<!-- ======================== ORDEM DE SERVIÇO ======================== -->
+<section id="osSec" style="display:none;">
+  <h2>🛠 Ordens de Serviço</h2>
+
+  <div class="card">
+    <label>Cliente</label>
+    <select id="osCliente"></select>
+
+    <label>Status</label>
+    <select id="osStatus">
+      <option value="Aberta">Aberta</option>
+      <option value="Em andamento">Em andamento</option>
+      <option value="Concluída">Concluída</option>
+    </select>
+
+    <label>Descrição</label>
+    <textarea id="osDesc"></textarea>
+
+    <button class="btn" onclick="criarOS()">Criar OS</button>
+  </div>
+
+  <div class="card">
+    <h3>Pesquisa</h3>
+    <input id="filtroOS" placeholder="Pesquisar por cliente, status, ID..." oninput="filtrarOS()">
+  </div>
+
+  <div class="card">
+    <h3>Lista de OS</h3>
+    <div id="listaOS"></div>
+  </div>
+</section>
+
+<script>
+/* ============================================================
+   CRIAR OS
+============================================================ */
+async function criarOS() {
+  if (!osCliente.value || !osDesc.value.trim())
+    return alert("Preencha todos os campos!");
+
+  await supabase.from("ordens_servico").insert({
+    cliente_id: osCliente.value,
+    descricao: osDesc.value,
+    status: osStatus.value,
+    data_abertura: new Date().toISOString()
+  });
+
+  osDesc.value = "";
+  carregarOS();
+}
+
+/* ============================================================
+   CARREGAR OS
+============================================================ */
+async function carregarOS() {
+  const { data, error } = await supabase.from("ordens_servico").select(`
+    id, descricao, status, data_abertura,
+    clientes(nome)
+  `).order("id", { ascending: false });
+
+  if (error) return console.error(error);
+
+  window._osCache = data;
+  renderizarOS(data);
+}
+
+/* ============================================================
+   EXIBIR LISTA DE OS
+============================================================ */
+function renderizarOS(lista) {
+  listaOS.innerHTML = "";
+
+  lista.forEach(os => {
+    listaOS.innerHTML += `
+      <div class="card">
+        <b>OS #${os.id}</b><br>
+        Cliente: ${os.clientes?.nome}<br>
+        Status: ${os.status}<br>
+        Abertura: ${new Date(os.data_abertura).toLocaleString("pt-BR")}<br>
+        <br>
+        ${os.descricao}<br><br>
+
+        <button class="btn" onclick='imprimirOS(${JSON.stringify(os)})'>🖨 Imprimir</button>
+        <button class="btn secondary" onclick='editarOS(${JSON.stringify(os)})'>✏ Editar</button>
+        <button class="btn secondary" onclick="excluirOS(${os.id})">🗑 Excluir</button>
+      </div>
+    `;
+  });
+}
+
+/* ============================================================
+   FILTRO
+============================================================ */
+function filtrarOS() {
+  const termo = filtroOS.value.toLowerCase();
+
+  const filtrados = window._osCache.filter(os =>
+    os.clientes?.nome.toLowerCase().includes(termo) ||
+    os.status.toLowerCase().includes(termo) ||
+    String(os.id).includes(termo)
+  );
+
+  renderizarOS(filtrados);
+}
+
+/* ============================================================
+   EXCLUIR
+============================================================ */
+async function excluirOS(id) {
+  if (!confirm("Excluir esta OS?")) return;
+
+  await supabase.from("ordens_servico").delete().eq("id", id);
+  carregarOS();
+}
+
+/* ============================================================
+   EDITAR OS
+============================================================ */
+function editarOS(os) {
+  abrirModal(
+    "Editar OS",
+    `
+      <label>Status</label>
+      <select id="editOSStatus">
+        <option ${os.status === "Aberta" ? "selected" : ""}>Aberta</option>
+        <option ${os.status === "Em andamento" ? "selected" : ""}>Em andamento</option>
+        <option ${os.status === "Concluída" ? "selected" : ""}>Concluída</option>
+      </select>
+
+      <label>Descrição</label>
+      <textarea id="editOSDesc">${os.descricao}</textarea>
+
+      <label>Data de Abertura</label>
+      <input id="editOSData" type="datetime-local" value="${new Date(os.data_abertura).toISOString().slice(0,16)}">
+    `,
+    async () => {
+      await supabase.from("ordens_servico").update({
+        status: editOSStatus.value,
+        descricao: editOSDesc.value,
+        data_abertura: new Date(editOSData.value).toISOString()
+      }).eq("id", os.id);
+
+      fecharModal();
+      carregarOS();
+    }
+  );
+}
+
+
+/* ============================================================
+   IMPRESSÃO DE OS (PDF SIMPLES)
+============================================================ */
+function imprimirOS(os) {
+  const win = window.open("", "_blank");
+
+  win.document.write(`
+    <div style="font-family:Arial; padding:20px;">
+      <h1 style="margin:0; padding:0;">HX Acessórios & Eletrônicos</h1>
+      <p style="margin:4px 0;">CNPJ: 61.331.523/0001-05</p>
+      <p style="margin:4px 0;">Av. Mamede Paes Mendonça, 752 — Aracaju/SE</p>
+      <p style="margin:4px 0;">Tel: (79) 99819-6955</p>
+
+      <hr>
+
+      <h2>Ordem de Serviço #${os.id}</h2>
+
+      <p><b>Cliente:</b> ${os.clientes?.nome}</p>
+      <p><b>Status:</b> ${os.status}</p>
+      <p><b>Abertura:</b> ${new Date(os.data_abertura).toLocaleString("pt-BR")}</p>
+
+      <h3>Descrição</h3>
+      <p>${os.descricao}</p>
+
+      <br><br><br>
+      <p>__________________________________________<br>
+      Assinatura do Cliente</p>
+    </div>
+
+    <script>window.print();<\/script>
+  `);
+
+  win.document.close();
+}
+
+</script>
+
+<!-- ======================== ORÇAMENTOS ======================== -->
+<section id="orcamentoSec" style="display:none;">
+  <h2>📝 Orçamentos</h2>
+
+  <div class="card">
+    <label>Cliente</label>
+    <select id="orcCliente"></select>
+
+    <label>Descrição</label>
+    <textarea id="orcDesc"></textarea>
+
+    <button class="btn" onclick="criarOrcamento()">Criar Orçamento</button>
+  </div>
+
+  <div class="card">
+    <h3>Pesquisa</h3>
+    <input id="filtroOrc" placeholder="Pesquisar por cliente, ID..." oninput="filtrarOrc()">
+  </div>
+
+  <div class="card">
+    <h3>Lista de Orçamentos</h3>
+    <div id="listaOrcamentos"></div>
+  </div>
+</section>
+
+<script>
+/* ============================================================
+   CRIAR
+============================================================ */
+async function criarOrcamento() {
+  if (!orcCliente.value || !orcDesc.value.trim())
+    return alert("Preencha todos os dados!");
+
+  await supabase.from("orcamentos").insert({
+    cliente_id: orcCliente.value,
+    descricao: orcDesc.value,
+    data: new Date().toISOString()
+  });
+
+  orcDesc.value = "";
+  carregarOrcamentos();
+}
+
+/* ============================================================
+   CARREGAR
+============================================================ */
+async function carregarOrcamentos() {
+  const { data, error } = await supabase.from("orcamentos").select(`
+    *,
+    clientes(nome)
+  `).order("id", { ascending: false });
+
+  if (error) return console.error(error);
+
+  window._orcCache = data;
+  renderizarOrc(data);
+}
+
+/* ============================================================
+   EXIBIR
+============================================================ */
+function renderizarOrc(lista) {
+  listaOrcamentos.innerHTML = "";
+
+  lista.forEach(o => {
+    listaOrcamentos.innerHTML += `
+      <div class="card">
+        <b>Orçamento #${o.id}</b><br>
+        Cliente: ${o.clientes?.nome}<br>
+        Data: ${new Date(o.data).toLocaleString("pt-BR")}<br><br>
+        ${o.descricao}<br><br>
+
+        <button class="btn" onclick='imprimirOrcamento(${JSON.stringify(o)})'>🖨 Imprimir</button>
+        <button class="btn secondary" onclick='editarOrcamento(${JSON.stringify(o)})'>✏ Editar</button>
+        <button class="btn secondary" onclick="excluirOrcamento(${o.id})">🗑 Excluir</button>
+      </div>
+    `;
+  });
+}
+
+/* ============================================================
+   FILTRAR
+============================================================ */
+function filtrarOrc() {
+  const termo = filtroOrc.value.toLowerCase();
+
+  const filtrados = window._orcCache.filter(o =>
+    o.clientes?.nome.toLowerCase().includes(termo) ||
+    String(o.id).includes(termo)
+  );
+
+  renderizarOrc(filtrados);
+}
+
+/* ============================================================
+   EXCLUIR
+============================================================ */
+async function excluirOrcamento(id) {
+  if (!confirm("Excluir este orçamento?")) return;
+
+  await supabase.from("orcamentos").delete().eq("id", id);
+  carregarOrcamentos();
+}
+
+/* ============================================================
+   EDITAR
+============================================================ */
+function editarOrcamento(o) {
+  abrirModal(
+    "Editar Orçamento",
+    `
+      <label>Descrição</label>
+      <textarea id="editOrcDesc">${o.descricao}</textarea>
+
+      <label>Data do Orçamento</label>
+      <input id="editOrcData" type="datetime-local" value="${new Date(o.data).toISOString().slice(0,16)}">
+    `,
+    async () => {
+      await supabase.from("orcamentos").update({
+        descricao: editOrcDesc.value,
+        data: new Date(editOrcData.value).toISOString()
+      }).eq("id", o.id);
+
+      fecharModal();
+      carregarOrcamentos();
+    }
+  );
+}
+
+
+/* ============================================================
+   IMPRESSÃO — MODELO B (PROFISSIONAL)
+============================================================ */
+function imprimirOrcamento(o) {
+  const win = window.open("", "_blank");
+
+  win.document.write(`
+    <div style="font-family:Arial; padding:20px;">
+      <h1 style="margin:0;">HX Acessórios & Eletrônicos</h1>
+      <p style="margin:4px 0;">CNPJ: 61.331.523/0001-05</p>
+      <p style="margin:4px 0;">Av. Mamede Paes Mendonça, 752 — Aracaju/SE</p>
+      <p style="margin:4px 0;">Tel: (79) 99819-6955</p>
+
+      <hr>
+
+      <h2>Orçamento #${o.id}</h2>
+
+      <p><b>Cliente:</b> ${o.clientes?.nome}</p>
+      <p><b>Data:</b> ${new Date(o.data).toLocaleString("pt-BR")}</p>
+
+      <h3>Descrição do Serviço / Produto</h3>
+      <p>${o.descricao}</p>
+
+      <br><br><br>
+      <p>__________________________________________<br>
+Assinatura do Cliente</p>
+
+    </div>
+
+    <script>window.print();<\/script>
+  `);
+
+  win.document.close();
+}
+
+</script>
+<!-- ======================== DASHBOARD ======================== -->
+<section id="dashboardSec" style="display:block;">
+  <h2>📊 Dashboard Financeiro</h2>
+
+  <div class="card">
+    <h3>Resumo Geral</h3>
+    <div style="display:flex; gap:20px; flex-wrap:wrap;">
+
+      <div class="card" style="flex:1;">
+        <h3>Faturamento Total</h3>
+        <div id="fatTotal">R$ 0,00</div>
+      </div>
+
+      <div class="card" style="flex:1;">
+        <h3>Lucro do Mês</h3>
+        <div id="lucroMes">R$ 0,00</div>
+      </div>
+
+      <div class="card" style="flex:1;">
+        <h3>Total de Vendas</h3>
+        <div id="numVendas">0</div>
+      </div>
+
+      <div class="card" style="flex:1;">
+        <h3>Ordens de Serviço</h3>
+        <div id="numOS">0</div>
+      </div>
+
+    </div>
+  </div>
+
+  <div class="card">
+    <h3>📅 Filtro de Período</h3>
+    <select id="filtroMes">
+      <option value="0">Janeiro</option>
+      <option value="1">Fevereiro</option>
+      <option value="2">Março</option>
+      <option value="3">Abril</option>
+      <option value="4">Maio</option>
+      <option value="5">Junho</option>
+      <option value="6">Julho</option>
+      <option value="7">Agosto</option>
+      <option value="8">Setembro</option>
+      <option value="9">Outubro</option>
+      <option value="10">Novembro</option>
+      <option value="11">Dezembro</option>
+    </select>
+
+    <input id="filtroAno" type="number" placeholder="Ano">
+
+    <button class="btn" onclick="calcularLucroPorPeriodo()">Aplicar</button>
+  </div>
+
+  <div class="card">
+    <h3>📈 Lucro Diário</h3>
     <canvas id="grafLucroMensal"></canvas>
   </div>
 
   <div class="card">
-    <h3>Vendas Diárias</h3>
+    <h3>📊 Vendas Diárias</h3>
     <canvas id="grafVendasDiarias"></canvas>
   </div>
 </section>
 
-<!-- VENDAS -->
-<section id="vendasSec" style="display:none">
-  <h2>Registrar Venda</h2>
-  <input id="venValor" placeholder="Valor"><br><br>
-  <button class="btn" onclick="registrarVenda()">Registrar</button>
-</section>
+<script>
+let chartLucroMensal = null;
+let chartVendasDiarias = null;
 
-</main>
+/* ================= DASHBOARD ================= */
+async function carregarDashboard() {
+  const { data: vendas } = await supabase.from("vendas").select("*");
+  const { data: os } = await supabase.from("ordens_servico").select("*");
+
+  if (!Array.isArray(vendas)) return;
+
+  let faturamento = 0;
+  let lucroMes = 0;
+
+  const hoje = new Date();
+  const mesAtual = hoje.getMonth();
+  const anoAtual = hoje.getFullYear();
+
+  vendas.forEach(v => {
+    faturamento += Number(v.valor || 0);
+
+    const d = new Date(v.data.split("T")[0] + "T00:00:00");
+    if (d.getMonth() === mesAtual && d.getFullYear() === anoAtual) {
+      lucroMes += Number(v.lucro_total || 0);
+    }
+  });
+
+  fatTotal.innerText = "R$ " + faturamento.toFixed(2);
+  lucroMes.innerText = "R$ " + lucroMes.toFixed(2);
+  numVendas.innerText = vendas.length;
+  numOS.innerText = os?.length || 0;
+}
+
+/* ================= GRÁFICO LUCRO ================= */
+async function gerarGraficoLucroMensal() {
+  const mes = Number(filtroMes.value);
+  const ano = Number(filtroAno.value);
+  if (!ano) return;
+
+  const { data: vendas } = await supabase
+    .from("vendas")
+    .select("data, lucro_total");
+
+  const lucroPorDia = {};
+
+  vendas.forEach(v => {
+    const d = new Date(v.data.split("T")[0] + "T00:00:00");
+    if (d.getMonth() !== mes || d.getFullYear() !== ano) return;
+    const dia = d.getDate();
+    lucroPorDia[dia] = (lucroPorDia[dia] || 0) + Number(v.lucro_total || 0);
+  });
+
+  if (chartLucroMensal) chartLucroMensal.destroy();
+
+  chartLucroMensal = new Chart(grafLucroMensal, {
+    type: "line",
+    data: {
+      labels: Object.keys(lucroPorDia).map(d => `Dia ${d}`),
+      datasets: [{
+        label: "Lucro (R$)",
+        data: Object.values(lucroPorDia),
+        borderColor: "#0aff9d",
+        tension: 0.3
+      }]
+    }
+  });
+}
+
+/* ================= GRÁFICO VENDAS ================= */
+async function gerarGraficoVendasDiarias() {
+  const { data: vendas } = await supabase.from("vendas").select("data, valor");
+
+  const totalPorDia = {};
+  vendas.forEach(v => {
+    const d = new Date(v.data).toLocaleDateString("pt-BR");
+    totalPorDia[d] = (totalPorDia[d] || 0) + Number(v.valor);
+  });
+
+  if (chartVendasDiarias) chartVendasDiarias.destroy();
+
+  chartVendasDiarias = new Chart(grafVendasDiarias, {
+    type: "bar",
+    data: {
+      labels: Object.keys(totalPorDia),
+      datasets: [{
+        label: "Vendas (R$)",
+        data: Object.values(totalPorDia),
+        backgroundColor: "#0aff9d88"
+      }]
+    }
+  });
+}
+
+function calcularLucroPorPeriodo() {
+  gerarGraficoLucroMensal();
+}
+</script>
+
+
+<!-- ============================================================
+     PARTE 6 — FINALIZAÇÃO DO SISTEMA HX
+============================================================ -->
 
 <script>
-let chartLucroMensal=null, chartVendasDiarias=null;
+/* ============================================================
+   FUNÇÃO GERAL DE ATUALIZAÇÃO
+============================================================ */
 
-/* ===== LOGIN ===== */
-async function login(){
-  const {error}=await supabase.auth.signInWithPassword({
-    email:loginEmail.value,password:loginPass.value
-  });
-  if(error){loginMsg.innerText=error.message;return}
-  loginOverlay.style.display="none";
-  carregarUsuario(); atualizarTudo();
+
+
+
+
+async function carregarEstoqueCriticoDashboard() {
+  const { data: produtos, error } = await supabase
+    .from("produtos")
+    .select("*");
+
+  if (error) {
+    console.error("Erro ao carregar produtos:", error);
+    return;
+  }
+
+  // Filtrar itens críticos
+  const criticos = produtos.filter(p => p.qtd <= p.estoque_minimo);
+
+  const box = document.getElementById("estoqueCritico");
+  box.innerHTML = "";
+
+ if (criticos.length === 0) {
+  box.innerHTML = `<p style="color:#0aff9d;">Nenhum produto em estoque crítico 🎉</p>`;
+  return;
 }
 
-async function logout(){
+  criticos.forEach(p => {
+    box.innerHTML += `
+      <div class="card" style="margin-bottom:10px;">
+        <b>${p.nome}</b><br>
+        Quantidade: ${p.qtd}<br>
+        Mínimo: ${p.estoque_minimo}<br>
+        <span style="color:red;font-weight:bold;">⚠ Estoque crítico</span>
+      </div>
+    `;
+  });
+}
+
+
+async function atualizarTudo() {
+  try {
+    await carregarClientes();
+    await carregarProdutos();
+    await carregarVendas(); // vendas precisam carregar primeiro
+    await carregarOS();
+    await carregarOrcamentos();
+    await carregarDashboard();
+    await carregarEstoqueCriticoDashboard();
+
+    // 🔥 ATUALIZA O LUCRO DO MÊS AUTOMATICAMENTE
+    calcularLucroPorPeriodo();
+
+  } catch (e) {
+    console.error("Erro ao atualizar tudo:", e);
+  }
+}
+
+/* ============================================================
+   CARREGAR USUÁRIO LOGADO
+============================================================ */
+async function carregarUsuario() {
+  try {
+    const { data } = await supabase.auth.getUser();
+    if (data?.user) {
+      userLabel.innerText = data.user.email;
+    }
+  } catch (e) {
+    console.error("Erro ao carregar usuário:", e);
+  }
+}
+
+/* ============================================================
+   LOGIN
+============================================================ */
+async function login() {
+  const email = loginEmail.value.trim();
+  const senha = loginPass.value.trim();
+
+  if (!email || !senha) {
+    loginMsg.innerText = "Preencha email e senha!";
+    loginMsg.style.color = "red";
+    return;
+  }
+
+  const { data, error } = await supabase.auth.signInWithPassword({
+    email,
+    password: senha
+  });
+
+  if (error) {
+    loginMsg.innerText = "Erro: " + error.message;
+    loginMsg.style.color = "red";
+    return;
+  }
+
+  loginMsg.innerText = "";
+  loginOverlay.style.display = "none";
+
+  await carregarUsuario();
+  await atualizarTudo();
+}
+
+/* ============================================================
+   LOGOUT
+============================================================ */
+async function logout() {
   await supabase.auth.signOut();
-  location.reload();
+  userLabel.innerText = "";
+  loginOverlay.style.display = "flex";
 }
 
-async function carregarUsuario(){
-  const {data}=await supabase.auth.getUser();
-  if(data?.user) userLabel.innerText=data.user.email;
+/* ============================================================
+   RECUPERAR SENHA
+============================================================ */
+async function enviarRecuperacaoSenha() {
+  const email = loginEmail.value.trim();
+  if (!email) return alert("Digite seu email!");
+
+  const { error } = await supabase.auth.resetPasswordForEmail(email);
+  alert(error ? error.message : "Email de recuperação enviado!");
 }
 
-/* ===== DASHBOARD ===== */
-async function carregarDashboard(){
-  const {data:vendas}=await supabase.from("vendas").select("*");
-  if(!vendas) return;
+/* ============================================================
+   CADASTRAR NOVO USUÁRIO
+============================================================ */
+async function cadastrarUsuario() {
+  const email = prompt("Email do novo usuário:");
+  const senha = prompt("Senha:");
 
-  let fat=0,lucro=0;
-  const hoje=new Date();
+  if (!email || !senha) return;
 
-  vendas.forEach(v=>{
-    fat+=Number(v.valor||0);
-    const d=new Date(v.data);
-    if(d.getMonth()===hoje.getMonth()&&d.getFullYear()===hoje.getFullYear())
-      lucro+=Number(v.lucro_total||0);
-  });
-
-  fatTotal.innerText=`R$ ${fat.toFixed(2)}`;
-  lucroMes.innerText=`R$ ${lucro.toFixed(2)}`;
-  numVendas.innerText=vendas.length;
+  const { error } = await supabase.auth.signUp({ email, password: senha });
+  alert(error ? error.message : "Usuário criado!");
 }
 
-async function gerarGraficoLucroMensal(){
-  const mes=Number(filtroMes.value), ano=Number(filtroAno.value);
-  if(!ano)return;
+/* ============================================================
+   ALTERAR SENHA DO USUÁRIO LOGADO
+============================================================ */
+async function alterarSenha() {
+  const nova = prompt("Digite a nova senha:");
+  if (!nova) return;
 
-  const {data:vendas}=await supabase.from("vendas").select("data,lucro_total");
-  const porDia={};
-
-  vendas.forEach(v=>{
-    const d=new Date(v.data);
-    if(d.getMonth()!==mes||d.getFullYear()!==ano)return;
-    porDia[d.getDate()]=(porDia[d.getDate()]||0)+Number(v.lucro_total||0);
-  });
-
-  chartLucroMensal?.destroy();
-  chartLucroMensal=new Chart(grafLucroMensal,{
-    type:"line",
-    data:{labels:Object.keys(porDia),datasets:[{data:Object.values(porDia),borderColor:"#0aff9d"}]}
-  });
+  const { error } = await supabase.auth.updateUser({ password: nova });
+  alert(error ? error.message : "Senha alterada!");
 }
 
-async function gerarGraficoVendasDiarias(){
-  const {data:vendas}=await supabase.from("vendas").select("data,valor");
-  const porDia={};
-
-  vendas.forEach(v=>{
-    const d=new Date(v.data).toLocaleDateString("pt-BR");
-    porDia[d]=(porDia[d]||0)+Number(v.valor||0);
-  });
-
-  chartVendasDiarias?.destroy();
-  chartVendasDiarias=new Chart(grafVendasDiarias,{
-    type:"bar",
-    data:{labels:Object.keys(porDia),datasets:[{data:Object.values(porDia),backgroundColor:"#0aff9d88"}]}
-  });
+/* ============================================================
+   TEMA (DARK/LIGHT)
+============================================================ */
+function toggleTheme() {
+  document.body.classList.toggle("light");
+  localStorage.setItem(
+    "hxTheme",
+  
+    document.body.classList.contains("light") ? "light" : "dark"
+  );
 }
 
-/* ===== VENDAS ===== */
-async function registrarVenda(){
-  const valor=Number(venValor.value);
-  if(valor<=0)return alert("Valor inválido");
-  await supabase.from("vendas").insert({
-    valor, lucro_total:valor*0.3, data:new Date().toISOString()
-  });
-  venValor.value="";
-  atualizarTudo();
-}
+/* ============================================================
+   TROCAR SEÇÃO VISÍVEL NO MENU
+============================================================ */
+function showSection(id, btn) {
+  document.querySelectorAll("main section").forEach(sec => sec.style.display = "none");
+  document.getElementById(id).style.display = "block";
 
-/* ===== GERAL ===== */
-function showSection(id,btn){
-  document.querySelectorAll("section").forEach(s=>s.style.display="none");
-  document.getElementById(id).style.display="block";
-  document.querySelectorAll("#sidebar button").forEach(b=>b.classList.remove("menu-active"));
+  document.querySelectorAll("#sidebar button").forEach(b => b.classList.remove("menu-active"));
   btn.classList.add("menu-active");
 }
 
-function toggleTheme(){
-  document.body.classList.toggle("light");
-}
+/* ============================================================
+   INICIALIZAÇÃO FINAL DO SISTEMA
+============================================================ */
+document.addEventListener("DOMContentLoaded", async () => {
 
-async function atualizarTudo(){
-  await carregarDashboard();
-  await gerarGraficoVendasDiarias();
-  gerarGraficoLucroMensal();
-}
+  // 🌙 Carregar tema salvo
+  const theme = localStorage.getItem("hxTheme");
+  if (theme === "light") document.body.classList.add("light");
 
-document.addEventListener("DOMContentLoaded",async()=>{
-  const {data}=await supabase.auth.getSession();
-  if(!data.session)return;
-  loginOverlay.style.display="none";
-  carregarUsuario();
-  atualizarTudo();
+  // 📊 Tela inicial = Dashboard
+  showSection("dashboardSec", document.querySelector("#sidebar button"));
+
+  // Verifica sessão
+  const sessionResp = await supabase.auth.getSession();
+  const session = sessionResp.data.session;
+
+  if (!session) {
+    loginOverlay.style.display = "flex";
+    return;
+  }
+
+  loginOverlay.style.display = "none";
+
+  await carregarUsuario();
+  await atualizarTudo();
 });
 </script>
 
-</body>
-</html>
+
+
+
+
+
+
+
+
+
 
