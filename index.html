@@ -1457,12 +1457,89 @@ async function gerarGraficosDashboard() {
 let chartLucroMensal = null;
 
 async function gerarGraficoLucroMensal() {
+  const canvas = document.getElementById("grafLucroMensal");
+  if (!canvas) {
+    console.warn("Canvas grafLucroMensal ainda não existe.");
+    return;
+  }
+
   const mes = Number(document.getElementById("filtroMes").value);
   const ano = Number(document.getElementById("filtroAno").value);
 
-  if (!ano) {
-    alert("Informe o ano");
+  if (!ano) return;
+
+  let chartLucroMensal = null;
+
+async function gerarGraficoLucroMensal() {
+  const canvas = document.getElementById("grafLucroMensal");
+  if (!canvas) {
+    console.warn("Canvas grafLucroMensal ainda não existe.");
     return;
+  }
+
+  const mes = Number(document.getElementById("filtroMes").value);
+  const ano = Number(document.getElementById("filtroAno").value);
+
+  if (!ano) return;
+
+  const { data: vendas, error } = await supabase
+    .from("vendas")
+    .select("data, lucro_total, preco_custo, preco_revenda, quantidade");
+
+  if (error) {
+    console.error("Erro ao gerar gráfico:", error);
+    return;
+  }
+
+  const lucroPorDia = {};
+
+  vendas.forEach(v => {
+    const dataVenda = new Date(v.data);
+
+    if (
+      dataVenda.getMonth() !== mes ||
+      dataVenda.getFullYear() !== ano
+    ) return;
+
+    const dia = dataVenda.getDate();
+
+    const lucro =
+      v.lucro_total != null
+        ? Number(v.lucro_total)
+        : (Number(v.preco_revenda) - Number(v.preco_custo)) * Number(v.quantidade);
+
+    lucroPorDia[dia] = (lucroPorDia[dia] || 0) + lucro;
+  });
+
+  const dias = Object.keys(lucroPorDia).sort((a, b) => a - b);
+
+  if (chartLucroMensal) {
+    chartLucroMensal.destroy();
+  }
+
+  chartLucroMensal = new Chart(canvas, {
+    type: "line",
+    data: {
+      labels: dias.map(d => `Dia ${d}`),
+      datasets: [{
+        label: "Lucro Diário (R$)",
+        data: dias.map(d => lucroPorDia[d]),
+        borderColor: "#0aff9d",
+        borderWidth: 3,
+        tension: 0.3,
+        fill: false
+      }]
+    },
+    options: {
+      responsive: true,
+      plugins: {
+        legend: { display: true }
+      }
+    }
+  });
+}
+
+
   }
 
   const { data: vendas, error } = await supabase
@@ -1959,6 +2036,7 @@ document.addEventListener("DOMContentLoaded", async () => {
   await atualizarTudo();
 });
 </script>
+
 
 
 
