@@ -1453,37 +1453,31 @@ async function gerarGraficosDashboard() {
   `);
 
   if (!vendas || vendas.length === 0) return;
-// ================= LUCRO MENSAL =================
-let chartLucroMensal;
+// ================= LUCRO DIÁRIO NO MÊS =================
+let chartLucroMensal = null;
 
 async function gerarGraficoLucroMensal() {
   const mes = Number(document.getElementById("filtroMes").value);
   const ano = Number(document.getElementById("filtroAno").value);
 
-  if (!ano) return;
-
-  const { data: vendas, error } = await supabase
-    .from("vendas")
-    .select("*");
-
-  if (error) {
-    console.error("Erro ao gerar gráfico de lucro mensal:", error);
+  if (!ano) {
+    alert("Informe o ano");
     return;
   }
 
-async function gerarGraficosDashboard() {
-  const { data: vendas } = await supabase.from("vendas").select(`
-    id, data, valor, lucro_total, preco_custo, preco_revenda, quantidade,
-    produtos(nome)
-  `);
+  const { data: vendas, error } = await supabase
+    .from("vendas")
+    .select("data, lucro_total, preco_custo, preco_revenda, quantidade");
 
-  if (!vendas || vendas.length === 0) return;
-}
+  if (error) {
+    console.error("Erro ao gerar gráfico:", error);
+    return;
+  }
 
   const lucroPorDia = {};
 
   vendas.forEach(v => {
-    const dataVenda = new Date(v.data + "T00:00:00");
+    const dataVenda = new Date(v.data);
 
     if (
       dataVenda.getMonth() !== mes ||
@@ -1492,15 +1486,15 @@ async function gerarGraficosDashboard() {
 
     const dia = dataVenda.getDate();
 
-    const lucroSeguro =
-      v.lucro_total !== null && v.lucro_total !== undefined
+    const lucro =
+      v.lucro_total != null
         ? Number(v.lucro_total)
         : (Number(v.preco_revenda) - Number(v.preco_custo)) * Number(v.quantidade);
 
-    lucroPorDia[dia] = (lucroPorDia[dia] || 0) + lucroSeguro;
+    lucroPorDia[dia] = (lucroPorDia[dia] || 0) + lucro;
   });
 
-  const diasOrdenados = Object.keys(lucroPorDia).sort((a, b) => a - b);
+  const dias = Object.keys(lucroPorDia).sort((a, b) => a - b);
 
   if (chartLucroMensal) chartLucroMensal.destroy();
 
@@ -1509,10 +1503,10 @@ async function gerarGraficosDashboard() {
     {
       type: "line",
       data: {
-        labels: diasOrdenados.map(d => `Dia ${d}`),
+        labels: dias.map(d => `Dia ${d}`),
         datasets: [{
           label: "Lucro Diário (R$)",
-          data: diasOrdenados.map(d => lucroPorDia[d]),
+          data: dias.map(d => lucroPorDia[d]),
           borderColor: "#0aff9d",
           borderWidth: 3,
           tension: 0.3,
@@ -1597,7 +1591,9 @@ async function gerarGraficoLucroMensal() {
     }
   );
 }
-
+function calcularLucroPorPeriodo() {
+  gerarGraficoLucroMensal();
+}
 
   // === SE NÃO HÁ VENDAS — EXIBE GRÁFICOS VAZIOS ===
   if (!vendas || vendas.length === 0) {
@@ -2031,6 +2027,7 @@ document.addEventListener("DOMContentLoaded", async () => {
   await atualizarTudo();
 });
 </script>
+
 
 
 
