@@ -1401,30 +1401,72 @@ Assinatura do Cliente</p>
   <canvas id="grafVendasDiarias"></canvas>
 </div>
 
-
-
-
 </section>
+  
 
 
 
 <script>
 let chartDiarias, chartSemanal, chartMensal, chartAnual, chartLucro, chartCustoRevenda, chartRanking;
 
+// ================= LUCRO DIÁRIO NO MÊS =================
+let chartLucroMensal = null;
+
+async function gerarGraficoLucroMensal() {
+  const canvas = document.getElementById("grafLucroMensal");
+  if (!canvas) return;
+
+  const mes = Number(document.getElementById("filtroMes").value);
+  const ano = Number(document.getElementById("filtroAno").value);
+  if (!ano) return;
+
+  const { data: vendas, error } = await supabase
+    .from("vendas")
+    .select("data, lucro_total, preco_custo, preco_revenda, quantidade");
+
+  if (error || !Array.isArray(vendas)) return;
+
+  const lucroPorDia = {};
+  vendas.forEach(v => {
+    const d = new Date(v.data.split("T")[0] + "T00:00:00");
+    if (d.getMonth() !== mes || d.getFullYear() !== ano) return;
+
+    const lucro =
+      v.lucro_total != null
+        ? Number(v.lucro_total)
+        : (Number(v.preco_revenda) - Number(v.preco_custo)) * Number(v.quantidade);
+
+    const dia = d.getDate();
+    lucroPorDia[dia] = (lucroPorDia[dia] || 0) + lucro;
+  });
+
+  const dias = Object.keys(lucroPorDia).sort((a, b) => a - b);
+  if (chartLucroMensal) chartLucroMensal.destroy();
+
+  chartLucroMensal = new Chart(canvas, {
+    type: "line",
+    data: {
+      labels: dias.map(d => `Dia ${d}`),
+      datasets: [{
+        label: "Lucro Diário (R$)",
+        data: dias.map(d => lucroPorDia[d]),
+        borderColor: "#0aff9d",
+        borderWidth: 3,
+        tension: 0.3
+      }]
+    }
+  });
+}
+
 /* ============================================================
 /* ============================================================
    RESUMO DO DASHBOARD
 ============================================================ */
 async function carregarDashboard() {
-  const { data: vendas, error: errV } = await supabase
-    .from("vendas")
-    .select("*");
+  const { data: vendas, error: errV } = await supabase.from("vendas").select("*");
+  const { data: os, error: errOS } = await supabase.from("ordens_servico").select("*");
 
-  const { data: os, error: errOS } = await supabase
-    .from("ordens_servico")
-    .select("*");
-
-  if (errV || errOS || !vendas) {
+  if (errV || errOS || !Array.isArray(vendas)) {
     console.error("Erro ao carregar dashboard", errV || errOS);
     return;
   }
@@ -1435,6 +1477,31 @@ async function carregarDashboard() {
   const agora = new Date();
   const mesAtual = agora.getMonth();
   const anoAtual = agora.getFullYear();
+
+  vendas.forEach(v => {
+    faturamentoTotal += Number(v.valor || 0);
+
+    const dataVenda = new Date(v.data.split("T")[0] + "T00:00:00");
+
+    const lucroSeguro =
+      v.lucro_total != null
+        ? Number(v.lucro_total)
+        : (Number(v.preco_revenda) - Number(v.preco_custo)) * Number(v.quantidade);
+
+    if (
+      dataVenda.getMonth() === mesAtual &&
+      dataVenda.getFullYear() === anoAtual
+    ) {
+      lucroMesAtual += lucroSeguro;
+    }
+  });
+
+  fatTotal.innerText = "R$ " + faturamentoTotal.toFixed(2);
+  lucroMes.innerText = "R$ " + lucroMesAtual.toFixed(2);
+  numVendas.innerText = vendas.length;
+  numOS.innerText = os.length;
+}
+
 
   vendas.forEach(v => {
     faturamentoTotal += Number(v.valor || 0);
@@ -1480,41 +1547,6 @@ async function atualizarTudo() {
   }
 }
 
-
-
-/* ============================================================
-   GERAÇÃO DOS GRÁFICOS
-============================================================ */
-async function gerarGraficosDashboard() {
-  const { data: vendas } = await supabase.from("vendas").select(`
-    id, data, valor, lucro_total, preco_custo, preco_revenda, quantidade,
-    produtos(nome)
-  `);
-
-  if (!vendas || vendas.length === 0) return;
-// ================= LUCRO DIÁRIO NO MÊS =================
-let chartLucroMensal = null;
-
-async function gerarGraficoLucroMensal() {
-  const canvas = document.getElementById("grafLucroMensal");
-  if (!canvas) {
-    console.warn("Canvas grafLucroMensal ainda não existe.");
-    return;
-  }
-
-  const mes = Number(document.getElementById("filtroMes").value);
-  const ano = Number(document.getElementById("filtroAno").value);
-
-  if (!ano) return;
-
-  let chartLucroMensal = null;
-
-async function gerarGraficoLucroMensal() {
-  const canvas = document.getElementById("grafLucroMensal");
-  if (!canvas) {
-    console.warn("Canvas grafLucroMensal ainda não existe.");
-    return;
-  }
 
   const mes = Number(document.getElementById("filtroMes").value);
   const ano = Number(document.getElementById("filtroAno").value);
@@ -2075,6 +2107,7 @@ document.addEventListener("DOMContentLoaded", async () => {
   await atualizarTudo();
 });
 </script>
+
 
 
 
