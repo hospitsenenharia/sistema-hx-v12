@@ -1505,11 +1505,19 @@ async function atualizarTudo() {
   try {
     await carregarClientes();
     await carregarProdutos();
-    await carregarVendas(); // vendas precisam carregar primeiro
+    await carregarVendas();
     await carregarOS();
     await carregarOrcamentos();
     await carregarDashboard();
-    await carregarEstoqueCriticoDashboard();
+
+    gerarGraficoVendasDiarias();   // ✅ FALTAVA ISSO
+    gerarGraficoLucroMensal();     // opcional (se já quiser carregar)
+
+  } catch (e) {
+    console.error("Erro ao atualizar tudo:", e);
+  }
+}
+
 
     // 🔥 ATUALIZA O LUCRO DO MÊS AUTOMATICAMENTE
     calcularLucroPorPeriodo();
@@ -1658,6 +1666,7 @@ document.addEventListener("DOMContentLoaded", async () => {
   await atualizarTudo();
 });
 </script>
+
 
 
 
