@@ -1412,11 +1412,22 @@ Assinatura do Cliente</p>
 let chartDiarias, chartSemanal, chartMensal, chartAnual, chartLucro, chartCustoRevenda, chartRanking;
 
 /* ============================================================
+/* ============================================================
    RESUMO DO DASHBOARD
 ============================================================ */
 async function carregarDashboard() {
-  const { data: vendas } = await supabase.from("vendas").select("*");
-  const { data: os } = await supabase.from("ordens_servico").select("*");
+  const { data: vendas, error: errV } = await supabase
+    .from("vendas")
+    .select("*");
+
+  const { data: os, error: errOS } = await supabase
+    .from("ordens_servico")
+    .select("*");
+
+  if (errV || errOS || !vendas) {
+    console.error("Erro ao carregar dashboard", errV || errOS);
+    return;
+  }
 
   let faturamentoTotal = 0;
   let lucroMesAtual = 0;
@@ -1428,17 +1439,18 @@ async function carregarDashboard() {
   vendas.forEach(v => {
     faturamentoTotal += Number(v.valor || 0);
 
-    // 🔥 CONVERSÃO SEGURA (ignora fuso)
+    // conversão segura da data
     const dataVenda = new Date(v.data.split("T")[0] + "T00:00:00");
-    const mesVenda = dataVenda.getMonth();
-    const anoVenda = dataVenda.getFullYear();
 
     const lucroSeguro =
-      v.lucro_total !== null && v.lucro_total !== undefined
+      v.lucro_total != null
         ? Number(v.lucro_total)
         : (Number(v.preco_revenda) - Number(v.preco_custo)) * Number(v.quantidade);
 
-    if (mesVenda === mesAtual && anoVenda === anoAtual) {
+    if (
+      dataVenda.getMonth() === mesAtual &&
+      dataVenda.getFullYear() === anoAtual
+    ) {
       lucroMesAtual += lucroSeguro;
     }
   });
@@ -1448,6 +1460,26 @@ async function carregarDashboard() {
   numVendas.innerText = vendas.length;
   numOS.innerText = os.length;
 }
+
+/* ============================================================
+   FUNÇÃO GERAL DE ATUALIZAÇÃO
+============================================================ */
+async function atualizarTudo() {
+  try {
+    await carregarClientes();
+    await carregarProdutos();
+    await carregarVendas();
+    await carregarOS();
+    await carregarOrcamentos();
+    await carregarDashboard();      // ✅ agora existe
+    await gerarGraficosDashboard();
+    await carregarEstoqueCriticoDashboard();
+    calcularLucroPorPeriodo();
+  } catch (e) {
+    console.error("Erro ao atualizar tudo:", e);
+  }
+}
+
 
 
 /* ============================================================
@@ -2043,6 +2075,7 @@ document.addEventListener("DOMContentLoaded", async () => {
   await atualizarTudo();
 });
 </script>
+
 
 
 
