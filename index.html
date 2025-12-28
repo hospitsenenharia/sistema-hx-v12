@@ -2,169 +2,235 @@
 <html lang="pt-br">
 <head>
 <meta charset="UTF-8">
-<title>Sistema HX — Dashboard</title>
+<title>Sistema HX — Administração</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
 
+<!-- Chart.js -->
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<!-- Supabase -->
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
+<script>
+const supabase = window.supabase.createClient(
+  "https://axfccmezfofnqfsdurqb.supabase.co",
+  "SUA_ANON_KEY_AQUI"
+);
+</script>
+
 <style>
-body { background:#0d0d0d; color:#eaeaea; font-family:Arial }
-.card { background:#181818; padding:15px; border-radius:10px; margin-bottom:15px }
-h2,h3 { color:#0aff9d }
-canvas { max-height:240px }
-.menu-active { background:#0aff9d; color:black }
-.btn { padding:8px 14px; border-radius:8px; border:none; cursor:pointer }
+:root{
+  --accent:#0aff9d;
+  --bg:#0d0d0d;
+  --card:#181818;
+  --text:#eee;
+}
+body.light{
+  --bg:#f5f5f5;
+  --card:#fff;
+  --text:#111;
+}
+body{margin:0;font-family:Segoe UI;background:var(--bg);color:var(--text)}
+header{padding:15px;background:#151515;color:var(--accent);display:flex;align-items:center}
+#sidebar{width:220px;position:fixed;top:0;left:0;height:100vh;background:#151515;padding-top:70px}
+#sidebar button{width:100%;padding:12px;border:none;background:none;color:white;text-align:left;cursor:pointer}
+.menu-active{background:var(--accent);color:black!important}
+main{margin-left:240px;padding:20px}
+.card{background:var(--card);padding:15px;border-radius:10px;margin-bottom:15px}
+.btn{background:var(--accent);border:none;padding:8px 14px;border-radius:6px;cursor:pointer}
+canvas{max-height:220px}
+#loginOverlay{position:fixed;inset:0;background:#000c;display:flex;align-items:center;justify-content:center}
+.login-box{background:#111;padding:20px;border-radius:10px;width:300px}
 </style>
 </head>
 
 <body>
 
-<h2>📊 Dashboard Financeiro</h2>
-
-<div class="card">
-  <h3>Resumo Geral</h3>
-  <div>Faturamento Total: <b id="fatTotal">R$ 0,00</b></div>
-  <div>Lucro do Mês: <b id="lucroMes">R$ 0,00</b></div>
-  <div>Lucro Mês Anterior: <b id="lucroMesAnteriorEl">R$ 0,00</b></div>
-  <div>Variação: <b id="variacaoLucro">R$ 0,00</b></div>
-  <div>Total de Vendas: <b id="numVendas">0</b></div>
-  <div>Ordens de Serviço: <b id="numOS">0</b></div>
+<!-- LOGIN -->
+<div id="loginOverlay">
+  <div class="login-box">
+    <h3>Login</h3>
+    <input id="loginEmail" placeholder="Email"><br><br>
+    <input id="loginPass" type="password" placeholder="Senha"><br><br>
+    <button class="btn" onclick="login()">Entrar</button>
+    <p id="loginMsg"></p>
+  </div>
 </div>
 
-<div class="card">
-  <h3>📅 Filtro</h3>
-  <select id="filtroMes">
-    <option value="0">Janeiro</option><option value="1">Fevereiro</option>
-    <option value="2">Março</option><option value="3">Abril</option>
-    <option value="4">Maio</option><option value="5">Junho</option>
-    <option value="6">Julho</option><option value="7">Agosto</option>
-    <option value="8">Setembro</option><option value="9">Outubro</option>
-    <option value="10">Novembro</option><option value="11">Dezembro</option>
-  </select>
-  <input id="filtroAno" type="number" placeholder="Ano">
-  <button class="btn" onclick="gerarGraficoLucroMensal()">Aplicar</button>
+<header>
+  Sistema HX
+  <span id="userLabel" style="margin-left:auto"></span>
+  <button class="btn" onclick="toggleTheme()">🌙</button>
+</header>
+
+<div id="sidebar">
+  <button onclick="showSection('dashboardSec',this)" class="menu-active">📊 Dashboard</button>
+  <button onclick="showSection('vendasSec',this)">💰 Vendas</button>
+  <button onclick="logout()">🚪 Sair</button>
 </div>
 
-<div class="card">
-  <h3>📈 Lucro Diário</h3>
-  <canvas id="grafLucroMensal"></canvas>
-</div>
+<main>
 
-<div class="card">
-  <h3>📊 Vendas Diárias</h3>
-  <canvas id="grafVendasDiarias"></canvas>
-</div>
+<!-- DASHBOARD -->
+<section id="dashboardSec">
+  <h2>Dashboard</h2>
+
+  <div class="card">
+    <b>Faturamento Total:</b> <span id="fatTotal">R$ 0,00</span><br>
+    <b>Lucro do Mês:</b> <span id="lucroMes">R$ 0,00</span><br>
+    <b>Total de Vendas:</b> <span id="numVendas">0</span>
+  </div>
+
+  <div class="card">
+    <select id="filtroMes">
+      <option value="0">Janeiro</option><option value="1">Fevereiro</option>
+      <option value="2">Março</option><option value="3">Abril</option>
+      <option value="4">Maio</option><option value="5">Junho</option>
+      <option value="6">Julho</option><option value="7">Agosto</option>
+      <option value="8">Setembro</option><option value="9">Outubro</option>
+      <option value="10">Novembro</option><option value="11">Dezembro</option>
+    </select>
+    <input id="filtroAno" type="number" placeholder="Ano">
+    <button class="btn" onclick="gerarGraficoLucroMensal()">Aplicar</button>
+  </div>
+
+  <div class="card">
+    <h3>Lucro Diário</h3>
+    <canvas id="grafLucroMensal"></canvas>
+  </div>
+
+  <div class="card">
+    <h3>Vendas Diárias</h3>
+    <canvas id="grafVendasDiarias"></canvas>
+  </div>
+</section>
+
+<!-- VENDAS -->
+<section id="vendasSec" style="display:none">
+  <h2>Registrar Venda</h2>
+  <input id="venValor" placeholder="Valor"><br><br>
+  <button class="btn" onclick="registrarVenda()">Registrar</button>
+</section>
+
+</main>
 
 <script>
-// ================= SUPABASE =================
-const supabase = supabase.createClient(
-  "https://axfccmezfofnqfsdurqb.supabase.co",
-  "SUA_CHAVE_ANON_AQUI"
-);
+let chartLucroMensal=null, chartVendasDiarias=null;
 
-// ================= VARIÁVEIS =================
-let chartLucroMensal = null;
-let chartVendasDiarias = null;
-
-// ================= DASHBOARD =================
-async function carregarDashboard() {
-  const { data: vendas } = await supabase
-    .from("vendas")
-    .select("valor, lucro_total, preco_custo, preco_revenda, quantidade, data");
-
-  const { data: os } = await supabase
-    .from("ordens_servico")
-    .select("id");
-
-  if (!Array.isArray(vendas)) return;
-
-  let faturamento = 0;
-  let lucroAtual = 0;
-  let lucroAnterior = 0;
-
-  const hoje = new Date();
-  const mesAtual = hoje.getMonth();
-  const anoAtual = hoje.getFullYear();
-  const mesAnterior = mesAtual === 0 ? 11 : mesAtual - 1;
-  const anoAnterior = mesAtual === 0 ? anoAtual - 1 : anoAtual;
-
-  vendas.forEach(v => {
-    faturamento += Number(v.valor || 0);
-
-    const d = new Date(v.data.split("T")[0] + "T00:00:00");
-    const lucro =
-      v.lucro_total != null
-        ? Number(v.lucro_total)
-        : (v.preco_revenda - v.preco_custo) * v.quantidade;
-
-    if (d.getMonth() === mesAtual && d.getFullYear() === anoAtual)
-      lucroAtual += lucro;
-
-    if (d.getMonth() === mesAnterior && d.getFullYear() === anoAnterior)
-      lucroAnterior += lucro;
+/* ===== LOGIN ===== */
+async function login(){
+  const {error}=await supabase.auth.signInWithPassword({
+    email:loginEmail.value,password:loginPass.value
   });
-
-  fatTotal.innerText = "R$ " + faturamento.toFixed(2);
-  lucroMes.innerText = "R$ " + lucroAtual.toFixed(2);
-  lucroMesAnteriorEl.innerText = "R$ " + lucroAnterior.toFixed(2);
-  variacaoLucro.innerText = "R$ " + (lucroAtual - lucroAnterior).toFixed(2);
-  numVendas.innerText = vendas.length;
-  numOS.innerText = os?.length || 0;
+  if(error){loginMsg.innerText=error.message;return}
+  loginOverlay.style.display="none";
+  carregarUsuario(); atualizarTudo();
 }
 
-// ================= GRÁFICO LUCRO =================
-async function gerarGraficoLucroMensal() {
-  const mes = Number(filtroMes.value);
-  const ano = Number(filtroAno.value);
-  if (!ano) return;
-
-  const { data: vendas } = await supabase
-    .from("vendas")
-    .select("data, lucro_total");
-
-  const dados = {};
-  vendas.forEach(v => {
-    const d = new Date(v.data.split("T")[0] + "T00:00:00");
-    if (d.getMonth() !== mes || d.getFullYear() !== ano) return;
-    const dia = d.getDate();
-    dados[dia] = (dados[dia] || 0) + Number(v.lucro_total || 0);
-  });
-
-  if (chartLucroMensal) chartLucroMensal.destroy();
-  chartLucroMensal = new Chart(grafLucroMensal, {
-    type:"line",
-    data:{
-      labels:Object.keys(dados).map(d=>"Dia "+d),
-      datasets:[{ label:"Lucro", data:Object.values(dados), borderColor:"#0aff9d" }]
-    }
-  });
+async function logout(){
+  await supabase.auth.signOut();
+  location.reload();
 }
 
-// ================= GRÁFICO VENDAS =================
-async function gerarGraficoVendasDiarias() {
-  const { data: vendas } = await supabase
-    .from("vendas")
-    .select("data, valor");
+async function carregarUsuario(){
+  const {data}=await supabase.auth.getUser();
+  if(data?.user) userLabel.innerText=data.user.email;
+}
 
-  const dados = {};
+/* ===== DASHBOARD ===== */
+async function carregarDashboard(){
+  const {data:vendas}=await supabase.from("vendas").select("*");
+  if(!vendas) return;
+
+  let fat=0,lucro=0;
+  const hoje=new Date();
+
   vendas.forEach(v=>{
-    const d = new Date(v.data).toLocaleDateString("pt-BR");
-    dados[d]=(dados[d]||0)+Number(v.valor||0);
+    fat+=Number(v.valor||0);
+    const d=new Date(v.data);
+    if(d.getMonth()===hoje.getMonth()&&d.getFullYear()===hoje.getFullYear())
+      lucro+=Number(v.lucro_total||0);
   });
 
-  if (chartVendasDiarias) chartVendasDiarias.destroy();
-  chartVendasDiarias = new Chart(grafVendasDiarias,{
-    type:"bar",
-    data:{ labels:Object.keys(dados), datasets:[{data:Object.values(dados)}] }
+  fatTotal.innerText=`R$ ${fat.toFixed(2)}`;
+  lucroMes.innerText=`R$ ${lucro.toFixed(2)}`;
+  numVendas.innerText=vendas.length;
+}
+
+async function gerarGraficoLucroMensal(){
+  const mes=Number(filtroMes.value), ano=Number(filtroAno.value);
+  if(!ano)return;
+
+  const {data:vendas}=await supabase.from("vendas").select("data,lucro_total");
+  const porDia={};
+
+  vendas.forEach(v=>{
+    const d=new Date(v.data);
+    if(d.getMonth()!==mes||d.getFullYear()!==ano)return;
+    porDia[d.getDate()]=(porDia[d.getDate()]||0)+Number(v.lucro_total||0);
+  });
+
+  chartLucroMensal?.destroy();
+  chartLucroMensal=new Chart(grafLucroMensal,{
+    type:"line",
+    data:{labels:Object.keys(porDia),datasets:[{data:Object.values(porDia),borderColor:"#0aff9d"}]}
   });
 }
 
-// ================= INICIALIZAÇÃO =================
-document.addEventListener("DOMContentLoaded", async () => {
+async function gerarGraficoVendasDiarias(){
+  const {data:vendas}=await supabase.from("vendas").select("data,valor");
+  const porDia={};
+
+  vendas.forEach(v=>{
+    const d=new Date(v.data).toLocaleDateString("pt-BR");
+    porDia[d]=(porDia[d]||0)+Number(v.valor||0);
+  });
+
+  chartVendasDiarias?.destroy();
+  chartVendasDiarias=new Chart(grafVendasDiarias,{
+    type:"bar",
+    data:{labels:Object.keys(porDia),datasets:[{data:Object.values(porDia),backgroundColor:"#0aff9d88"}]}
+  });
+}
+
+/* ===== VENDAS ===== */
+async function registrarVenda(){
+  const valor=Number(venValor.value);
+  if(valor<=0)return alert("Valor inválido");
+  await supabase.from("vendas").insert({
+    valor, lucro_total:valor*0.3, data:new Date().toISOString()
+  });
+  venValor.value="";
+  atualizarTudo();
+}
+
+/* ===== GERAL ===== */
+function showSection(id,btn){
+  document.querySelectorAll("section").forEach(s=>s.style.display="none");
+  document.getElementById(id).style.display="block";
+  document.querySelectorAll("#sidebar button").forEach(b=>b.classList.remove("menu-active"));
+  btn.classList.add("menu-active");
+}
+
+function toggleTheme(){
+  document.body.classList.toggle("light");
+}
+
+async function atualizarTudo(){
   await carregarDashboard();
   await gerarGraficoVendasDiarias();
+  gerarGraficoLucroMensal();
+}
+
+document.addEventListener("DOMContentLoaded",async()=>{
+  const {data}=await supabase.auth.getSession();
+  if(!data.session)return;
+  loginOverlay.style.display="none";
+  carregarUsuario();
+  atualizarTudo();
 });
 </script>
 
 </body>
 </html>
+
