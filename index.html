@@ -1351,26 +1351,57 @@ let chartVendasDiarias = null;
 
 /* ================= DASHBOARD ================= */
 async function carregarDashboard() {
-  const { data: vendas } = await supabase.from("vendas").select("*");
-  const { data: os } = await supabase.from("ordens_servico").select("*");
+  const { data: vendas, error: errV } = await supabase
+    .from("vendas")
+    .select("valor, lucro_total, data");
 
-  if (!Array.isArray(vendas)) return;
+  const { data: os } = await supabase
+    .from("ordens_servico")
+    .select("id");
 
-  let faturamento = 0;
-  let lucroMes = 0;
+  if (errV || !Array.isArray(vendas)) {
+    console.error("Erro ao carregar vendas", errV);
+    return;
+  }
+
+  let faturamentoTotal = 0;
+  let lucroDoMes = 0;
 
   const hoje = new Date();
   const mesAtual = hoje.getMonth();
   const anoAtual = hoje.getFullYear();
 
   vendas.forEach(v => {
-    faturamento += Number(v.valor || 0);
+    const valor = Number(v.valor || 0);
+    const lucro = Number(v.lucro_total || 0);
 
-    const d = new Date(v.data.split("T")[0] + "T00:00:00");
-    if (d.getMonth() === mesAtual && d.getFullYear() === anoAtual) {
-      lucroMes += Number(v.lucro_total || 0);
+    faturamentoTotal += valor;
+
+    if (v.data) {
+      const dataVenda = new Date(v.data);
+      if (
+        dataVenda.getMonth() === mesAtual &&
+        dataVenda.getFullYear() === anoAtual
+      ) {
+        lucroDoMes += lucro;
+      }
     }
   });
+
+  fatTotal.innerText = `R$ ${faturamentoTotal.toFixed(2)}`;
+  lucroMes.innerText = `R$ ${lucroDoMes.toFixed(2)}`;
+  numVendas.innerText = vendas.length;
+  numOS.innerText = os?.length || 0;
+}
+
+
+  // ✅ Atualiza os cards
+  fatTotal.innerText = `R$ ${faturamentoTotal.toFixed(2)}`;
+  lucroMes.innerText = `R$ ${lucroDoMes.toFixed(2)}`;
+  numVendas.innerText = vendas.length;
+  numOS.innerText = os?.length || 0;
+}
+
 
   fatTotal.innerText = "R$ " + faturamento.toFixed(2);
   lucroMes.innerText = "R$ " + lucroMes.toFixed(2);
