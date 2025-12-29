@@ -1369,10 +1369,6 @@ function imprimirOrcamento(o) {
   <canvas id="grafVendasAnual"></canvas>
 </div>
 
-<div class="card">
-  <h3>Lucro Diário</h3>
-  <canvas id="grafLucro"></canvas>
-</div>
 
 <div class="card">
   <h3>Custo x Revenda x Lucro</h3>
@@ -1589,34 +1585,57 @@ async function carregarDashboard() {
 ============================================================ */
 async function gerarGraficosDashboard() {
   const { data: vendas } = await supabase.from("vendas").select(`
-    id, data, valor, lucro_total, preco_custo, preco_revenda, quantidade,
+    data, valor, lucro_total, preco_custo, preco_revenda, quantidade,
     produtos(nome)
   `);
 
   if (!vendas || vendas.length === 0) return;
 
-  // Destruir gráficos antigos para evitar erro
+  // destruir gráficos antigos
   [chartDiarias, chartSemanal, chartMensal, chartAnual, chartLucro, chartCustoRevenda, chartRanking]
     .forEach(c => c && c.destroy());
 
-  /* ========= Vendas por Dia ========= */
-  const dias = {};
+  /* ========= Lucro por dia ========= */
+  const lucroPorDia = {};
+
   vendas.forEach(v => {
     const d = new Date(v.data).toLocaleDateString("pt-BR");
-    dias[d] = (dias[d] || 0) + Number(v.valor);
+    lucroPorDia[d] = (lucroPorDia[d] || 0) + Number(v.lucro_total || 0);
   });
 
-  chartDiarias = new Chart(document.getElementById("grafVendasDiarias"), {
-    type: "bar",
+  chartLucro = new Chart(document.getElementById("grafLucro"), {
+    type: "line",
     data: {
-      labels: Object.keys(dias),
+      labels: Object.keys(lucroPorDia),
       datasets: [{
-        label: "Vendas Diárias",
-        data: Object.values(dias),
-        backgroundColor: "#0aff9d66"
+        label: "Lucro Diário (R$)",
+        data: Object.values(lucroPorDia),
+        borderColor: "#00cfff",
+        backgroundColor: "#00cfff33",
+        tension: 0.3,
+        fill: true
       }]
+    },
+    options: {
+      responsive: true,
+      plugins: {
+        legend: {
+          labels: { color: "#eaeaea" }
+        }
+      },
+      scales: {
+        x: { ticks: { color: "#aaa" } },
+        y: {
+          ticks: {
+            color: "#aaa",
+            callback: v => "R$ " + v
+          }
+        }
+      }
     }
   });
+}
+
 
   /* ========= Vendas Semanais ========= */
   const semanas = {};
@@ -1682,25 +1701,48 @@ async function gerarGraficosDashboard() {
     }
   });
 
-  /* ========= Lucro por dia ========= */
-  const lucro = {};
-  vendas.forEach(v => {
-    const d = new Date(v.data).toLocaleDateString("pt-BR");
-    lucro[d] = (lucro[d] || 0) + Number(v.lucro_total);
-  });
+/* ========= Lucro por dia ========= */
+const lucroPorDia = {};
 
-  chartLucro = new Chart(document.getElementById("grafLucro"), {
-    type: "line",
-    data: {
-      labels: Object.keys(lucro),
-      datasets: [{
-        label: "Lucro Diário",
-        data: Object.values(lucro),
-        borderColor: "#0aff9d",
-        borderWidth: 2
-      }]
+vendas.forEach(v => {
+  const d = new Date(v.data).toLocaleDateString("pt-BR");
+  lucroPorDia[d] = (lucroPorDia[d] || 0) + Number(v.lucro_total || 0);
+});
+
+chartLucro = new Chart(document.getElementById("grafLucro"), {
+  type: "line",
+  data: {
+    labels: Object.keys(lucroPorDia),
+    datasets: [{
+      label: "Lucro Diário (R$)",
+      data: Object.values(lucroPorDia),
+      borderColor: "#00cfff",
+      backgroundColor: "#00cfff33",
+      tension: 0.3,
+      fill: true
+    }]
+  },
+  options: {
+    responsive: true,
+    plugins: {
+      legend: {
+        labels: { color: "#eaeaea" }
+      }
+    },
+    scales: {
+      x: {
+        ticks: { color: "#aaa" }
+      },
+      y: {
+        ticks: {
+          color: "#aaa",
+          callback: v => "R$ " + v
+        }
+      }
     }
-  });
+  }
+});
+
 
   /* ========= Custo x Revenda x Lucro ========= */
   chartCustoRevenda = new Chart(document.getElementById("grafCustoRevenda"), {
@@ -1908,6 +1950,7 @@ document.addEventListener("DOMContentLoaded", async () => {
   await atualizarTudo();
 });
 </script>
+
 
 
 
