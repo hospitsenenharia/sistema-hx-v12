@@ -1347,32 +1347,191 @@ function imprimirOrcamento(o) {
 
     </div>
   </div>
+<!-- ===== GRÁFICOS ===== -->
 
-  <!-- ===== GRÁFICOS ===== -->
+<div class="card">
+  <h3>Vendas Diárias</h3>
+  <canvas id="grafVendasDiarias"></canvas>
+</div>
+
+<div class="card">
+  <h3>Vendas Semanais</h3>
+  <canvas id="grafVendasSemanal"></canvas>
+</div>
+
+<div class="card">
+  <h3>Vendas Mensais</h3>
+  <canvas id="grafVendasMensal"></canvas>
+</div>
+
+<div class="card">
+  <h3>Vendas Anuais</h3>
+  <canvas id="grafVendasAnual"></canvas>
+</div>
+
+<div class="card">
+  <h3>Lucro Diário</h3>
+  <canvas id="grafLucro"></canvas>
+</div>
+
+<div class="card">
+  <h3>Custo x Revenda x Lucro</h3>
+  <canvas id="grafCustoRevenda"></canvas>
+</div>
+
+<div class="card">
+  <h3>Ranking de Produtos</h3>
+  <canvas id="grafRankingProdutos"></canvas>
+</div>
+
+<!-- ======================== DASHBOARD ======================== -->
+<section id="dashboardSec" style="display:block;">
+  <h2>📊 Dashboard Financeiro</h2>
+
+  <!-- ===== RESUMO GERAL ===== -->
   <div class="card">
-    <h3>Vendas Diárias</h3>
-    <canvas id="grafVendasDiarias"></canvas>
+    <h3>Resumo Geral</h3>
+
+    <div style="display:flex; gap:20px; flex-wrap:wrap;">
+
+      <div class="card" style="flex:1;">
+        <h3>Faturamento Total</h3>
+        <div id="fatTotal" style="font-size:28px; color:var(--hx-accent);">
+          R$ 0,00
+        </div>
+      </div>
+
+      <div class="card" style="flex:1;">
+        <h3>Lucro do Mês</h3>
+        <div id="lucroMes" style="font-size:28px; color:#00cfff;">
+          R$ 0,00
+        </div>
+      </div>
+
+      <div class="card" style="flex:1;">
+        <h3>Total de Vendas</h3>
+        <div id="numVendas" style="font-size:28px; color:var(--hx-accent);">
+          0
+        </div>
+      </div>
+
+      <div class="card" style="flex:1;">
+        <h3>Ordens de Serviço</h3>
+        <div id="numOS" style="font-size:28px; color:var(--hx-accent);">
+          0
+        </div>
+      </div>
+
+    </div>
   </div>
+<!-- ===== GRÁFICOS ===== -->
 
+<div class="card">
+  <h3>Vendas Diárias</h3>
+  <canvas id="grafVendasDiarias"></canvas>
+</div>
+
+<div class="card">
+  <h3>Vendas Semanais</h3>
+  <canvas id="grafVendasSemanal"></canvas>
+</div>
+
+<div class="card">
+  <h3>Vendas Mensais</h3>
+  <canvas id="grafVendasMensal"></canvas>
+</div>
+
+<div class="card">
+  <h3>Vendas Anuais</h3>
+  <canvas id="grafVendasAnual"></canvas>
+</div>
+
+<div class="card">
+  <h3>Lucro Diário</h3>
+  <canvas id="grafLucro"></canvas>
+</div>
+
+<div class="card">
+  <h3>Custo x Revenda x Lucro</h3>
+  <canvas id="grafCustoRevenda"></canvas>
+</div>
+
+<!-- ======================== DASHBOARD ======================== -->
+<section id="dashboardSec" style="display:block;">
+  <h2>📊 Dashboard Financeiro</h2>
+
+  <!-- ===== RESUMO GERAL ===== -->
   <div class="card">
-    <h3>Vendas Semanais</h3>
-    <canvas id="grafVendasSemanal"></canvas>
+    <h3>Resumo Geral</h3>
+
+    <div style="display:flex; gap:20px; flex-wrap:wrap;">
+
+      <div class="card" style="flex:1;">
+        <h3>Faturamento Total</h3>
+        <div id="fatTotal" style="font-size:28px; color:var(--hx-accent);">
+          R$ 0,00
+        </div>
+      </div>
+
+      <div class="card" style="flex:1;">
+        <h3>Lucro do Mês</h3>
+        <div id="lucroMes" style="font-size:28px; color:#00cfff;">
+          R$ 0,00
+        </div>
+      </div>
+
+      <div class="card" style="flex:1;">
+        <h3>Total de Vendas</h3>
+        <div id="numVendas" style="font-size:28px; color:var(--hx-accent);">
+          0
+        </div>
+      </div>
+
+      <div class="card" style="flex:1;">
+        <h3>Ordens de Serviço</h3>
+        <div id="numOS" style="font-size:28px; color:var(--hx-accent);">
+          0
+        </div>
+      </div>
+
+    </div>
   </div>
+<!-- ===== GRÁFICOS ===== -->
 
-  <div class="card">
-    <h3>Vendas Mensais</h3>
-    <canvas id="grafVendasMensal"></canvas>
-  </div>
+<div class="card">
+  <h3>Vendas Diárias</h3>
+  <canvas id="grafVendasDiarias"></canvas>
+</div>
 
-  <div class="card">
-    <h3>Vendas Anuais</h3>
-    <canvas id="grafVendasAnual"></canvas>
-  </div>
+<div class="card">
+  <h3>Vendas Semanais</h3>
+  <canvas id="grafVendasSemanal"></canvas>
+</div>
 
-  <div class="card">
-    <h3>Lucro por D
+<div class="card">
+  <h3>Vendas Mensais</h3>
+  <canvas id="grafVendasMensal"></canvas>
+</div>
 
+<div class="card">
+  <h3>Vendas Anuais</h3>
+  <canvas id="grafVendasAnual"></canvas>
+</div>
 
+<div class="card">
+  <h3>Lucro Diário</h3>
+  <canvas id="grafLucro"></canvas>
+</div>
+
+<div class="card">
+  <h3>Custo x Revenda x Lucro</h3>
+  <canvas id="grafCustoRevenda"></canvas>
+</div>
+
+<div class="card">
+  <h3>Ranking de Produtos</h3>
+  <canvas id="grafRankingProdutos"></canvas>
+</div>
 
 <script>
 let chartDiarias, chartSemanal, chartMensal, chartAnual, chartLucro, chartCustoRevenda, chartRanking;
@@ -1749,6 +1908,7 @@ document.addEventListener("DOMContentLoaded", async () => {
   await atualizarTudo();
 });
 </script>
+
 
 
 
