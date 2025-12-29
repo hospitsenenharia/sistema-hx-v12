@@ -1448,9 +1448,6 @@ async function gerarGraficoVendasDiarias() {
   });
 }
 
-function calcularLucroPorPeriodo() {
-  gerarGraficoLucroMensal();
-}
 </script>
 
 
@@ -1510,8 +1507,8 @@ async function atualizarTudo() {
     await carregarOrcamentos();
     await carregarDashboard();
 
-    gerarGraficoVendasDiarias();   // ✅ FALTAVA ISSO
-    gerarGraficoLucroMensal();     // opcional (se já quiser carregar)
+    gerarGraficoVendasDiarias();
+    gerarGraficoLucroMensal();
 
   } catch (e) {
     console.error("Erro ao atualizar tudo:", e);
@@ -1519,13 +1516,6 @@ async function atualizarTudo() {
 }
 
 
-    // 🔥 ATUALIZA O LUCRO DO MÊS AUTOMATICAMENTE
-    calcularLucroPorPeriodo();
-
-  } catch (e) {
-    console.error("Erro ao atualizar tudo:", e);
-  }
-}
 
 /* ============================================================
    CARREGAR USUÁRIO LOGADO
@@ -1554,7 +1544,7 @@ async function login() {
     return;
   }
 
-  const { data, error } = await supabase.auth.signInWithPassword({
+  const { error } = await supabase.auth.signInWithPassword({
     email,
     password: senha
   });
@@ -1571,6 +1561,7 @@ async function login() {
   await carregarUsuario();
   await atualizarTudo();
 }
+
 
 /* ============================================================
    LOGOUT
@@ -1666,6 +1657,7 @@ document.addEventListener("DOMContentLoaded", async () => {
   await atualizarTudo();
 });
 </script>
+
 
 
 
