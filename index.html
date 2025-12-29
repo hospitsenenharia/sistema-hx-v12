@@ -1318,87 +1318,87 @@ function imprimirOrcamento(o) {
 
       <div class="card" style="flex:1;">
         <h3>Faturamento Total</h3>
-        <div id="fatTotal" style="font-size:28px; color:var(--hx-accent);">R$ 0,00</div>
+        <div id="fatTotal" style="font-size:28px; color:var(--hx-accent);">
+          R$ 0,00
+        </div>
+      </div>
+
+      <div class="card" style="flex:1;">
+        <h3>Lucro do Mês</h3>
+        <div id="lucroMes" style="font-size:28px; color:#00cfff;">
+          R$ 0,00
+        </div>
       </div>
 
       <div class="card" style="flex:1;">
         <h3>Total de Vendas</h3>
-        <div id="numVendas" style="font-size:28px; color:var(--hx-accent);">0</div>
+        <div id="numVendas" style="font-size:28px; color:var(--hx-accent);">
+          0
+        </div>
       </div>
 
       <div class="card" style="flex:1;">
         <h3>Ordens de Serviço</h3>
-        <div id="numOS" style="font-size:28px; color:var(--hx-accent);">0</div>
+        <div id="numOS" style="font-size:28px; color:var(--hx-accent);">
+          0
+        </div>
       </div>
 
     </div>
   </div>
-
-  <div class="card">
-    <h3>Vendas Diárias</h3>
-    <button class="btn secondary" onclick="imprimirGrafico('grafVendasDiarias')">🖨 Imprimir</button>
-    <canvas id="grafVendasDiarias"></canvas>
-  </div>
-
-  <div class="card">
-    <h3>Vendas Semanais</h3>
-    <button class="btn secondary" onclick="imprimirGrafico('grafVendasSemanal')">🖨 Imprimir</button>
-    <canvas id="grafVendasSemanal"></canvas>
-  </div>
-
-  <div class="card">
-    <h3>Vendas Mensais</h3>
-    <button class="btn secondary" onclick="imprimirGrafico('grafVendasMensal')">🖨 Imprimir</button>
-    <canvas id="grafVendasMensal"></canvas>
-  </div>
-
-  <div class="card">
-    <h3>Vendas Anuais</h3>
-    <button class="btn secondary" onclick="imprimirGrafico('grafVendasAnual')">🖨 Imprimir</button>
-    <canvas id="grafVendasAnual"></canvas>
-  </div>
-
-  <div class="card">
-    <h3>Lucro Total por Dia</h3>
-    <button class="btn secondary" onclick="imprimirGrafico('grafLucro')">🖨 Imprimir</button>
-    <canvas id="grafLucro"></canvas>
-  </div>
-
-  <div class="card">
-    <h3>Custo × Revenda × Lucro</h3>
-    <button class="btn secondary" onclick="imprimirGrafico('grafCustoRevenda')">🖨 Imprimir</button>
-    <canvas id="grafCustoRevenda"></canvas>
-  </div>
-
-  <div class="card">
-    <h3>Ranking dos Produtos Mais Vendidos</h3>
-    <button class="btn secondary" onclick="imprimirGrafico('grafRankingProdutos')">🖨 Imprimir</button>
-    <canvas id="grafRankingProdutos"></canvas>
-  </div>
-
-  <div class="card">
-    <h3>Estoque Crítico</h3>
-    <div id="estoqueCritico"></div>
-  </div>
 </section>
+
 
 <script>
 let chartDiarias, chartSemanal, chartMensal, chartAnual, chartLucro, chartCustoRevenda, chartRanking;
 
 /* ============================================================
-   RESUMO DO DASHBOARD
+   RESUMO DO DASHBOARD (COM LUCRO DO MÊS)
 ============================================================ */
 async function carregarDashboard() {
-  const { data: vendas } = await supabase.from("vendas").select("*");
-  const { data: os } = await supabase.from("ordens_servico").select("*");
+  const { data: vendas, error: errV } = await supabase
+    .from("vendas")
+    .select("valor, lucro_total, data");
 
-  let total = 0;
-  vendas.forEach(v => total += Number(v.valor || 0));
+  const { data: os } = await supabase
+    .from("ordens_servico")
+    .select("id");
 
-  fatTotal.innerText = "R$ " + total.toFixed(2);
-  numVendas.innerText = vendas.length;
-  numOS.innerText = os.length;
+  if (errV || !Array.isArray(vendas)) {
+    console.error("Erro ao carregar vendas", errV);
+    return;
+  }
+
+  let faturamentoTotal = 0;
+  let lucroMes = 0;
+
+  const hoje = new Date();
+  const mesAtual = hoje.getMonth();
+  const anoAtual = hoje.getFullYear();
+
+  vendas.forEach(v => {
+    const valor = Number(v.valor || 0);
+    const lucro = Number(v.lucro_total || 0);
+
+    faturamentoTotal += valor;
+
+    const d = new Date(v.data);
+    if (d.getMonth() === mesAtual && d.getFullYear() === anoAtual) {
+      lucroMes += lucro;
+    }
+  });
+
+  // Atualiza cards
+  document.getElementById("fatTotal").innerText =
+    "R$ " + faturamentoTotal.toFixed(2);
+
+  document.getElementById("numVendas").innerText = vendas.length;
+  document.getElementById("numOS").innerText = os.length;
+
+  document.getElementById("lucroMes").innerText =
+    "R$ " + lucroMes.toFixed(2);
 }
+
 
 /* ============================================================
    GERAÇÃO DOS GRÁFICOS
