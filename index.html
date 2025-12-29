@@ -3,336 +3,205 @@
 <head>
 <meta charset="UTF-8">
 <title>Sistema HX</title>
-<meta name="viewport" content="width=device-width, initial-scale=1">
 
-<!-- SUPABASE -->
+<!-- SUPABASE + CHART -->
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
-  <script>
-  const supabase = window.supabase.createClient(
-    "https://axfccmezfofnqfsdurqb.supabase.co",
-    "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImF4ZmNjbWV6Zm9mbnFmc2R1cnFiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjUwNzA1NDMsImV4cCI6MjA4MDY0NjU0M30.woGp6hBgiEa41opQxyxqqMULlDKMXm9T83bhJ7UEmb8"
-  );
-</script>
-
-
 <style>
-body{
-  margin:0;
-  font-family:Segoe UI, Arial;
-  background:#0b0b0b;
-  color:#eaeaea;
+:root{
+  --bg:#0d0d0d;--bg2:#151515;--card:#181818;
+  --txt:#eee;--accent:#0aff9d
 }
-header{
-  padding:16px;
-  font-size:22px;
-  font-weight:bold;
-  color:#00ff9d;
-}
-main{padding:20px}
-.card{
-  background:#151515;
-  border-radius:14px;
-  padding:18px;
-  margin-bottom:20px;
-  box-shadow:0 0 18px rgba(0,0,0,.7);
-}
-.grid{
-  display:grid;
-  grid-template-columns:repeat(auto-fit,minmax(200px,1fr));
-  gap:18px;
-}
-.valor{
-  font-size:28px;
-  font-weight:bold;
-}
-input,select,button{
-  width:100%;
-  padding:12px;
-  border-radius:8px;
-  border:none;
-  margin-top:10px;
-}
-button{
-  background:#00ff9d;
-  font-weight:bold;
-  cursor:pointer;
-}
-#loginOverlay{
-  position:fixed;
-  inset:0;
-  background:rgba(0,0,0,.9);
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  z-index:999;
-}
-.login-card{
-  width:340px;
-  padding:26px;
-  border-radius:16px;
-  background:#111;
-  border:1px solid #00ff9d;
-}
-#loginMsg{margin-top:10px;color:red}
+body{margin:0;font-family:Segoe UI;background:var(--bg);color:var(--txt)}
+header{padding:14px;background:#111;color:var(--accent);font-size:20px}
+#sidebar{width:220px;position:fixed;top:0;bottom:0;background:var(--bg2);padding-top:60px}
+#sidebar button{width:100%;padding:12px;background:none;border:none;color:var(--txt);text-align:left;cursor:pointer}
+#sidebar button:hover{background:#222}
+main{margin-left:230px;padding:20px}
+.card{background:var(--card);padding:15px;border-radius:10px;margin-bottom:15px}
+h2,h3{color:var(--accent)}
+input,select,textarea{width:100%;padding:8px;border-radius:6px;border:none;margin-bottom:8px}
+button{padding:8px 14px;border:none;border-radius:6px;background:var(--accent);cursor:pointer}
+canvas{max-height:250px}
 </style>
 </head>
 
 <body>
 
-<!-- LOGIN -->
-<div id="loginOverlay">
-  <div class="login-card">
-    <h2>🔒 Sistema HX</h2>
-    <input id="loginEmail" type="email" placeholder="Email">
-    <input id="loginPass" type="password" placeholder="Senha">
-    <button onclick="login()">Entrar</button>
-    <div id="loginMsg"></div>
-  </div>
-</div>
+<header>
+Sistema HX
+<span id="userLabel" style="float:right"></span>
+</header>
 
-<header>📊 Dashboard Financeiro</header>
+<div id="sidebar">
+<button onclick="showSection('dashboardSec')">📊 Dashboard</button>
+<button onclick="showSection('vendasSec')">💰 Vendas</button>
+<button onclick="showSection('produtosSec')">📦 Estoque</button>
+<button onclick="showSection('orcamentoSec')">📝 Orçamento</button>
+<button onclick="showSection('osSec')">🛠 O.S</button>
+</div>
 
 <main>
 
-<div class="card">
-  <h3>Resumo Geral</h3>
-  <div class="grid">
-    <div><b>Faturamento Total</b><div id="fatTotal" class="valor">R$ 0,00</div></div>
-    <div><b>Lucro do Mês</b><div id="lucroMes" class="valor">R$ 0,00</div></div>
-    <div><b>Lucro Mês Anterior</b><div id="lucroMesAnterior" class="valor">R$ 0,00</div></div>
-    <div><b>Variação</b><div id="variacaoLucro" class="valor">0%</div></div>
-    <div><b>Total de Vendas</b><div id="numVendas" class="valor">0</div></div>
-    <div><b>Ordens de Serviço</b><div id="numOS" class="valor">0</div></div>
-  </div>
-</div>
+<!-- ================= DASHBOARD ================= -->
+<section id="dashboardSec">
+<h2>Dashboard</h2>
 
 <div class="card">
-  <h3>Filtro de Período</h3>
-  <select id="filtroMes">
-    <option value="0">Janeiro</option><option value="1">Fevereiro</option>
-    <option value="2">Março</option><option value="3">Abril</option>
-    <option value="4">Maio</option><option value="5">Junho</option>
-    <option value="6">Julho</option><option value="7">Agosto</option>
-    <option value="8">Setembro</option><option value="9">Outubro</option>
-    <option value="10">Novembro</option><option value="11">Dezembro</option>
-  </select>
-  <input id="filtroAno" type="number" placeholder="Ano">
-  <button onclick="aplicarFiltro()">Aplicar</button>
+<select id="filtroMes"></select>
+<input id="filtroAno" type="number">
+<button onclick="aplicarFiltro()">Aplicar</button>
+<button onclick="imprimirDashboard()">🖨 Imprimir</button>
 </div>
+
+<div class="card"><canvas id="grafLucroDiario"></canvas></div>
+<div class="card"><canvas id="grafVendasDiarias"></canvas></div>
+<div class="card"><h3>Estoque Crítico</h3><div id="estoqueCritico"></div></div>
+</section>
+
+<!-- ================= VENDAS ================= -->
+<section id="vendasSec" style="display:none">
+<h2>Vendas</h2>
 
 <div class="card">
-  <h3>📈 Lucro Diário</h3>
-  <canvas id="grafLucroDiario"></canvas>
+<select id="venProduto"></select>
+<input id="venQtd" type="number" placeholder="Quantidade">
+<input id="venValor" type="number" placeholder="Valor">
+<button onclick="registrarVenda()">Salvar Venda</button>
 </div>
+
+<div id="listaVendas"></div>
+</section>
+
+<!-- ================= ESTOQUE ================= -->
+<section id="produtosSec" style="display:none">
+<h2>Estoque</h2>
 
 <div class="card">
-  <h3>📊 Vendas Diárias</h3>
-  <canvas id="grafVendasDiarias"></canvas>
+<input id="pNome" placeholder="Produto">
+<input id="pQtd" type="number" placeholder="Qtd">
+<input id="pMin" type="number" placeholder="Mínimo">
+<button onclick="salvarProduto()">Salvar</button>
 </div>
 
-<div class="card">
-  <h3>⚠️ Estoque Crítico</h3>
-  <div id="estoqueCritico">Carregando...</div>
-</div>
+<div id="listaProdutos"></div>
+</section>
 
+<!-- ================= ORÇAMENTO ================= -->
+<section id="orcamentoSec" style="display:none">
+<h2>Orçamento</h2>
+<textarea id="orcDesc"></textarea>
+<button onclick="salvarOrcamento()">Salvar</button>
+<button onclick="imprimirOrcamento()">🖨 Imprimir</button>
+</section>
 
-<button onclick="logout()">Sair</button>
+<!-- ================= OS ================= -->
+<section id="osSec" style="display:none">
+<h2>Ordem de Serviço</h2>
+<textarea id="osDesc"></textarea>
+<select id="osStatus">
+<option>Aberta</option><option>Em andamento</option><option>Concluída</option>
+</select>
+<button onclick="salvarOS()">Salvar</button>
+<button onclick="imprimirOS()">🖨 Imprimir</button>
+</section>
 
 </main>
 
 <script>
-console.log("SCRIPT CARREGADO");
-
-/* ===== SUPABASE ===== */
-const { createClient } = supabase;
-const supabaseClient = createClient(
-  "https://axfccmezfofnqfsdurqb.supabase.co",
-  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImF4ZmNjbWV6Zm9mbnFmc2R1cnFiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjUwNzA1NDMsImV4cCI6MjA4MDY0NjU0M30.woGp6hBgiEa41opQxyxqqMULlDKMXm9T83bhJ7UEmb8"
+/* SUPABASE */
+const supabase = window.supabase.createClient(
+ "https://axfccmezfofnqfsdurqb.supabase.co",
+ "SUA_ANON_PUBLIC_KEY"
 );
-window.supabase = supabaseClient;
 
-/* ===== LOGIN ===== */
-async function login(){
-  const email = loginEmail.value.trim();
-  const senha = loginPass.value.trim();
-  loginMsg.innerText="";
-  if(!email||!senha){loginMsg.innerText="Preencha email e senha";return;}
-  const {data,error}=await supabase.auth.signInWithPassword({email,password:senha});
-  if(error){loginMsg.innerText=error.message;return;}
-  loginOverlay.style.display="none";
-  carregarDashboard();
+/* NAVEGAÇÃO */
+function showSection(id){
+ document.querySelectorAll("main section").forEach(s=>s.style.display="none");
+ document.getElementById(id).style.display="block";
 }
 
-/* ===== LOGOUT ===== */
-async function logout(){
-  await supabase.auth.signOut();
-  loginOverlay.style.display="flex";
+/* DASHBOARD / GRÁFICOS */
+let c1,c2;
+async function gerarGraficos(m,a){
+ const {data:v}=await supabase.from("vendas").select("*");
+ const l={},vd={};
+ v?.forEach(x=>{
+  const d=new Date(x.data);
+  if(d.getMonth()!=m||d.getFullYear()!=a)return;
+  const dia=d.getDate();
+  l[dia]=(l[dia]||0)+Number(x.lucro||0);
+  vd[dia]=(vd[dia]||0)+Number(x.valor||0);
+ });
+ if(c1)c1.destroy();
+ c1=new Chart(grafLucroDiario,{type:"line",data:{labels:Object.keys(l),datasets:[{data:Object.values(l),borderColor:"#0aff9d"}]}});
+ if(c2)c2.destroy();
+ c2=new Chart(grafVendasDiarias,{type:"bar",data:{labels:Object.keys(vd),datasets:[{data:Object.values(vd),backgroundColor:"#0aff9d88"}]}});
 }
 
-/* ===== DASHBOARD ===== */
-async function carregarDashboard(mes=null,ano=null){
-  const hoje=new Date();
-  mes=mes??hoje.getMonth();
-  ano=ano??hoje.getFullYear();
-  const mesAnt=mes===0?11:mes-1;
-  const anoAnt=mes===0?ano-1:ano;
-
-  const {data:vendas}=await supabase.from("vendas").select("valor,lucro_total,data");
-  const {data:os}=await supabase.from("ordens_servico").select("id");
-
-  let fat=0,lm=0,lma=0,tv=0;
-  vendas?.forEach(v=>{
-    const d=new Date(v.data);
-    fat+=Number(v.valor||0);
-    if(d.getMonth()===mes&&d.getFullYear()===ano){lm+=Number(v.lucro_total||0);tv++}
-    if(d.getMonth()===mesAnt&&d.getFullYear()===anoAnt){lma+=Number(v.lucro_total||0)}
-  });
-
-  let varp=lma>0?((lm-lma)/lma)*100:0;
-
-  fatTotal.innerText=`R$ ${fat.toFixed(2)}`;
-  lucroMes.innerText=`R$ ${lm.toFixed(2)}`;
-  lucroMesAnterior.innerText=`R$ ${lma.toFixed(2)}`;
-  variacaoLucro.innerText=`${varp.toFixed(1)}%`;
-  numVendas.innerText=tv;
-  numOS.innerText=os?.length||0;
+/* ESTOQUE CRÍTICO */
+async function carregarEstoqueCritico(){
+ const {data:p}=await supabase.from("produtos").select("*");
+ estoqueCritico.innerHTML="";
+ p?.filter(x=>x.qtd<=x.min).forEach(x=>{
+  estoqueCritico.innerHTML+=`<div>${x.nome} (${x.qtd})</div>`;
+ });
 }
 
-/* ===== FILTRO ===== */
-async function aplicarFiltro() {
-  const m = Number(filtroMes.value);
-  const a = Number(filtroAno.value);
-
-  if (!a) {
-    alert("Informe o ano");
-    return;
-  }
-
-  await carregarDashboard(m, a);
-  await gerarGraficos(m, a);
-  await carregarEstoqueCritico();
+/* ESTOQUE CRUD */
+async function salvarProduto(){
+ await supabase.from("produtos").insert({nome:pNome.value,qtd:pQtd.value,min:pMin.value});
 }
 
-/* ===== INIT ===== */
-document.addEventListener("DOMContentLoaded", async () => {
-  console.log("📦 DOM carregado");
+/* VENDAS + BAIXA ESTOQUE */
+async function registrarVenda(){
+ await supabase.from("vendas").insert({
+  produto:venProduto.value,
+  qtd:venQtd.value,
+  valor:venValor.value,
+  data:new Date()
+ });
+ await supabase.rpc("baixa_estoque",{produto_id:venProduto.value,qtd:venQtd.value});
+ imprimirRecibo();
+}
 
-  const { data } = await supabase.auth.getSession();
+/* IMPRESSÕES */
+function imprimirRecibo(){
+ const w=window.open();
+ w.document.write("<h2>RECIBO HX</h2><p>Venda registrada</p>");
+ w.print();
+}
 
-  if (data.session) {
-    loginOverlay.style.display = "none";
+function imprimirOrcamento(){
+ const w=window.open();
+ w.document.write("<h2>ORÇAMENTO HX</h2>"+orcDesc.value);
+ w.print();
+}
 
-    const hoje = new Date();
-    const mesAtual = hoje.getMonth();
-    const anoAtual = hoje.getFullYear();
+function imprimirOS(){
+ const w=window.open();
+ w.document.write("<h2>ORDEM DE SERVIÇO</h2>"+osDesc.value);
+ w.print();
+}
 
-    // Dashboard principal
-    await carregarDashboard(mesAtual, anoAtual);
+function imprimirDashboard(){
+ const w=window.open();
+ w.document.write("<h2>DASHBOARD HX</h2>");
+ w.print();
+}
 
-    // Gráficos
-    await gerarGraficos(mesAtual, anoAtual);
-
-    // Estoque crítico
-    await carregarEstoqueCritico();
-
-  } else {
-    loginOverlay.style.display = "flex";
-  }
+/* INIT */
+document.addEventListener("DOMContentLoaded",()=>{
+ const d=new Date();
+ filtroMes.innerHTML=[...Array(12)].map((_,i)=>`<option value="${i}">${i+1}</option>`).join("");
+ filtroMes.value=d.getMonth();
+ filtroAno.value=d.getFullYear();
+ showSection("dashboardSec");
+ gerarGraficos(d.getMonth(),d.getFullYear());
+ carregarEstoqueCritico();
 });
-
-/* ============================================================
-   GRÁFICOS
-============================================================ */
-let chartLucro = null;
-let chartVendas = null;
-
-async function gerarGraficos(mes, ano) {
-  const { data: vendas } = await supabase
-    .from("vendas")
-    .select("data, valor, lucro_total");
-
-  if (!vendas) return;
-
-  const lucroPorDia = {};
-  const vendasPorDia = {};
-
-  vendas.forEach(v => {
-    const d = new Date(v.data);
-    if (d.getMonth() !== mes || d.getFullYear() !== ano) return;
-
-    const dia = d.getDate();
-    lucroPorDia[dia] = (lucroPorDia[dia] || 0) + Number(v.lucro_total || 0);
-    vendasPorDia[dia] = (vendasPorDia[dia] || 0) + Number(v.valor || 0);
-  });
-
-  // Lucro
-  if (chartLucro) chartLucro.destroy();
-  chartLucro = new Chart(grafLucroDiario, {
-    type: "line",
-    data: {
-      labels: Object.keys(lucroPorDia),
-      datasets: [{
-        label: "Lucro (R$)",
-        data: Object.values(lucroPorDia),
-        borderColor: "#00ff9d",
-        tension: 0.3
-      }]
-    }
-  });
-
-  // Vendas
-  if (chartVendas) chartVendas.destroy();
-  chartVendas = new Chart(grafVendasDiarias, {
-    type: "bar",
-    data: {
-      labels: Object.keys(vendasPorDia),
-      datasets: [{
-        label: "Vendas (R$)",
-        data: Object.values(vendasPorDia),
-        backgroundColor: "#00ff9d88"
-      }]
-    }
-  });
-}
-
-/* ============================================================
-   ESTOQUE CRÍTICO
-============================================================ */
-async function carregarEstoqueCritico() {
-  const { data: produtos } = await supabase
-    .from("produtos")
-    .select("nome, qtd, estoque_minimo");
-
-  const box = document.getElementById("estoqueCritico");
-  box.innerHTML = "";
-
-  if (!produtos || produtos.length === 0) {
-    box.innerHTML = "<i>Nenhum produto encontrado</i>";
-    return;
-  }
-
-  const criticos = produtos.filter(p => p.qtd <= p.estoque_minimo);
-
-  if (criticos.length === 0) {
-    box.innerHTML = "<span style='color:#00ff9d'>Nenhum produto crítico 🎉</span>";
-    return;
-  }
-
-  criticos.forEach(p => {
-    box.innerHTML += `
-      <div style="margin-bottom:10px">
-        <b>${p.nome}</b><br>
-        Quantidade: ${p.qtd} | Mínimo: ${p.estoque_minimo}
-      </div>
-    `;
-  });
-}
-
-
 </script>
 
 </body>
 </html>
-
