@@ -1,68 +1,74 @@
 <!DOCTYPE html>
 <html lang="pt-br">
 <head>
-  <meta charset="utf-8">
-  <title>Sistema HX</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1">
+<meta charset="UTF-8">
+<title>Sistema HX</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
 
-  <!-- SUPABASE -->
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<!-- SUPABASE -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
-  <style>
-    body {
-      margin: 0;
-      font-family: Arial, sans-serif;
-      background: #0d0d0d;
-      color: #fff;
-    }
-
-    header {
-      background: #151515;
-      color: #0aff9d;
-      padding: 15px;
-      font-size: 20px;
-    }
-
-    main {
-      padding: 20px;
-    }
-
-    #loginOverlay {
-      position: fixed;
-      inset: 0;
-      background: rgba(0,0,0,0.85);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-    }
-
-    .login-card {
-      background: #111;
-      padding: 25px;
-      width: 320px;
-      border-radius: 12px;
-      border: 1px solid #0aff9d;
-    }
-
-    input, button {
-      width: 100%;
-      padding: 10px;
-      margin-top: 10px;
-      border-radius: 6px;
-      border: none;
-    }
-
-    button {
-      background: #0aff9d;
-      font-weight: bold;
-      cursor: pointer;
-    }
-
-    #loginMsg {
-      margin-top: 10px;
-      font-size: 14px;
-    }
-  </style>
+<style>
+body{
+  margin:0;
+  font-family:Segoe UI, Arial;
+  background:#0b0b0b;
+  color:#eaeaea;
+}
+header{
+  padding:16px;
+  font-size:22px;
+  font-weight:bold;
+  color:#00ff9d;
+}
+main{padding:20px}
+.card{
+  background:#151515;
+  border-radius:14px;
+  padding:18px;
+  margin-bottom:20px;
+  box-shadow:0 0 18px rgba(0,0,0,.7);
+}
+.grid{
+  display:grid;
+  grid-template-columns:repeat(auto-fit,minmax(200px,1fr));
+  gap:18px;
+}
+.valor{
+  font-size:28px;
+  font-weight:bold;
+}
+input,select,button{
+  width:100%;
+  padding:12px;
+  border-radius:8px;
+  border:none;
+  margin-top:10px;
+}
+button{
+  background:#00ff9d;
+  font-weight:bold;
+  cursor:pointer;
+}
+#loginOverlay{
+  position:fixed;
+  inset:0;
+  background:rgba(0,0,0,.9);
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  z-index:999;
+}
+.login-card{
+  width:340px;
+  padding:26px;
+  border-radius:16px;
+  background:#111;
+  border:1px solid #00ff9d;
+}
+#loginMsg{margin-top:10px;color:red}
+</style>
 </head>
 
 <body>
@@ -71,104 +77,253 @@
 <div id="loginOverlay">
   <div class="login-card">
     <h2>🔒 Sistema HX</h2>
-
     <input id="loginEmail" type="email" placeholder="Email">
     <input id="loginPass" type="password" placeholder="Senha">
-
     <button onclick="login()">Entrar</button>
-
     <div id="loginMsg"></div>
   </div>
 </div>
 
-<header>
-  Sistema HX
-  <span id="userLabel" style="float:right;"></span>
-</header>
+<header>📊 Dashboard Financeiro</header>
 
 <main>
-  <h2>Sistema carregado com sucesso ✅</h2>
-  <p>Login funcionando. Código limpo. Console sem erros.</p>
 
-  <button onclick="logout()">Sair</button>
+<div class="card">
+  <h3>Resumo Geral</h3>
+  <div class="grid">
+    <div><b>Faturamento Total</b><div id="fatTotal" class="valor">R$ 0,00</div></div>
+    <div><b>Lucro do Mês</b><div id="lucroMes" class="valor">R$ 0,00</div></div>
+    <div><b>Lucro Mês Anterior</b><div id="lucroMesAnterior" class="valor">R$ 0,00</div></div>
+    <div><b>Variação</b><div id="variacaoLucro" class="valor">0%</div></div>
+    <div><b>Total de Vendas</b><div id="numVendas" class="valor">0</div></div>
+    <div><b>Ordens de Serviço</b><div id="numOS" class="valor">0</div></div>
+  </div>
+</div>
+
+<div class="card">
+  <h3>Filtro de Período</h3>
+  <select id="filtroMes">
+    <option value="0">Janeiro</option><option value="1">Fevereiro</option>
+    <option value="2">Março</option><option value="3">Abril</option>
+    <option value="4">Maio</option><option value="5">Junho</option>
+    <option value="6">Julho</option><option value="7">Agosto</option>
+    <option value="8">Setembro</option><option value="9">Outubro</option>
+    <option value="10">Novembro</option><option value="11">Dezembro</option>
+  </select>
+  <input id="filtroAno" type="number" placeholder="Ano">
+  <button onclick="aplicarFiltro()">Aplicar</button>
+</div>
+
+<div class="card">
+  <h3>📈 Lucro Diário</h3>
+  <canvas id="grafLucroDiario"></canvas>
+</div>
+
+<div class="card">
+  <h3>📊 Vendas Diárias</h3>
+  <canvas id="grafVendasDiarias"></canvas>
+</div>
+
+<div class="card">
+  <h3>⚠️ Estoque Crítico</h3>
+  <div id="estoqueCritico">Carregando...</div>
+</div>
+
+
+<button onclick="logout()">Sair</button>
+
 </main>
 
-<!-- SCRIPT ÚNICO -->
 <script>
-console.log("✅ SCRIPT PRINCIPAL CARREGADO");
+console.log("SCRIPT CARREGADO");
 
-/* ================= SUPABASE ================= */
+/* ===== SUPABASE ===== */
 const { createClient } = supabase;
-
 const supabaseClient = createClient(
   "https://axfccmezfofnqfsdurqb.supabase.co",
   "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImF4ZmNjbWV6Zm9mbnFmc2R1cnFiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjUwNzA1NDMsImV4cCI6MjA4MDY0NjU0M30.woGp6hBgiEa41opQxyxqqMULlDKMXm9T83bhJ7UEmb8"
 );
-
 window.supabase = supabaseClient;
 
+/* ===== LOGIN ===== */
+async function login(){
+  const email = loginEmail.value.trim();
+  const senha = loginPass.value.trim();
+  loginMsg.innerText="";
+  if(!email||!senha){loginMsg.innerText="Preencha email e senha";return;}
+  const {data,error}=await supabase.auth.signInWithPassword({email,password:senha});
+  if(error){loginMsg.innerText=error.message;return;}
+  loginOverlay.style.display="none";
+  carregarDashboard();
+}
 
-/* ================= LOGIN ================= */
-async function login() {
-  console.log("👉 LOGIN CHAMADO");
+/* ===== LOGOUT ===== */
+async function logout(){
+  await supabase.auth.signOut();
+  loginOverlay.style.display="flex";
+}
 
-  const email = document.getElementById("loginEmail").value.trim();
-  const senha = document.getElementById("loginPass").value.trim();
-  const msg   = document.getElementById("loginMsg");
+/* ===== DASHBOARD ===== */
+async function carregarDashboard(mes=null,ano=null){
+  const hoje=new Date();
+  mes=mes??hoje.getMonth();
+  ano=ano??hoje.getFullYear();
+  const mesAnt=mes===0?11:mes-1;
+  const anoAnt=mes===0?ano-1:ano;
 
-  if (!email || !senha) {
-    msg.innerText = "Preencha email e senha!";
-    msg.style.color = "red";
-    return;
-  }
+  const {data:vendas}=await supabase.from("vendas").select("valor,lucro_total,data");
+  const {data:os}=await supabase.from("ordens_servico").select("id");
 
-  const { error } = await supabase.auth.signInWithPassword({
-    email,
-    password: senha
+  let fat=0,lm=0,lma=0,tv=0;
+  vendas?.forEach(v=>{
+    const d=new Date(v.data);
+    fat+=Number(v.valor||0);
+    if(d.getMonth()===mes&&d.getFullYear()===ano){lm+=Number(v.lucro_total||0);tv++}
+    if(d.getMonth()===mesAnt&&d.getFullYear()===anoAnt){lma+=Number(v.lucro_total||0)}
   });
 
-  if (error) {
-    msg.innerText = error.message;
-    msg.style.color = "red";
+  let varp=lma>0?((lm-lma)/lma)*100:0;
+
+  fatTotal.innerText=`R$ ${fat.toFixed(2)}`;
+  lucroMes.innerText=`R$ ${lm.toFixed(2)}`;
+  lucroMesAnterior.innerText=`R$ ${lma.toFixed(2)}`;
+  variacaoLucro.innerText=`${varp.toFixed(1)}%`;
+  numVendas.innerText=tv;
+  numOS.innerText=os?.length||0;
+}
+
+/* ===== FILTRO ===== */
+async function aplicarFiltro() {
+  const m = Number(filtroMes.value);
+  const a = Number(filtroAno.value);
+
+  if (!a) {
+    alert("Informe o ano");
     return;
   }
 
-  msg.innerText = "";
-  document.getElementById("loginOverlay").style.display = "none";
-
-  await carregarUsuario();
+  await carregarDashboard(m, a);
+  await gerarGraficos(m, a);
+  await carregarEstoqueCritico();
 }
 
-/* ================= USUÁRIO ================= */
-async function carregarUsuario() {
-  const { data } = await supabase.auth.getUser();
-  if (data?.user) {
-    document.getElementById("userLabel").innerText = data.user.email;
-  }
-}
-
-/* ================= LOGOUT ================= */
-async function logout() {
-  await supabase.auth.signOut();
-  document.getElementById("loginOverlay").style.display = "flex";
-  document.getElementById("userLabel").innerText = "";
-}
-
-/* ================= INIT ================= */
+/* ===== INIT ===== */
 document.addEventListener("DOMContentLoaded", async () => {
-  console.log("📦 DOM CARREGADO");
+  console.log("📦 DOM carregado");
 
   const { data } = await supabase.auth.getSession();
 
   if (data.session) {
-    document.getElementById("loginOverlay").style.display = "none";
-    await carregarUsuario();
+    loginOverlay.style.display = "none";
+
+    const hoje = new Date();
+    const mesAtual = hoje.getMonth();
+    const anoAtual = hoje.getFullYear();
+
+    // Dashboard principal
+    await carregarDashboard(mesAtual, anoAtual);
+
+    // Gráficos
+    await gerarGraficos(mesAtual, anoAtual);
+
+    // Estoque crítico
+    await carregarEstoqueCritico();
+
   } else {
-    document.getElementById("loginOverlay").style.display = "flex";
+    loginOverlay.style.display = "flex";
   }
 });
+
+/* ============================================================
+   GRÁFICOS
+============================================================ */
+let chartLucro = null;
+let chartVendas = null;
+
+async function gerarGraficos(mes, ano) {
+  const { data: vendas } = await supabase
+    .from("vendas")
+    .select("data, valor, lucro_total");
+
+  if (!vendas) return;
+
+  const lucroPorDia = {};
+  const vendasPorDia = {};
+
+  vendas.forEach(v => {
+    const d = new Date(v.data);
+    if (d.getMonth() !== mes || d.getFullYear() !== ano) return;
+
+    const dia = d.getDate();
+    lucroPorDia[dia] = (lucroPorDia[dia] || 0) + Number(v.lucro_total || 0);
+    vendasPorDia[dia] = (vendasPorDia[dia] || 0) + Number(v.valor || 0);
+  });
+
+  // Lucro
+  if (chartLucro) chartLucro.destroy();
+  chartLucro = new Chart(grafLucroDiario, {
+    type: "line",
+    data: {
+      labels: Object.keys(lucroPorDia),
+      datasets: [{
+        label: "Lucro (R$)",
+        data: Object.values(lucroPorDia),
+        borderColor: "#00ff9d",
+        tension: 0.3
+      }]
+    }
+  });
+
+  // Vendas
+  if (chartVendas) chartVendas.destroy();
+  chartVendas = new Chart(grafVendasDiarias, {
+    type: "bar",
+    data: {
+      labels: Object.keys(vendasPorDia),
+      datasets: [{
+        label: "Vendas (R$)",
+        data: Object.values(vendasPorDia),
+        backgroundColor: "#00ff9d88"
+      }]
+    }
+  });
+}
+
+/* ============================================================
+   ESTOQUE CRÍTICO
+============================================================ */
+async function carregarEstoqueCritico() {
+  const { data: produtos } = await supabase
+    .from("produtos")
+    .select("nome, qtd, estoque_minimo");
+
+  const box = document.getElementById("estoqueCritico");
+  box.innerHTML = "";
+
+  if (!produtos || produtos.length === 0) {
+    box.innerHTML = "<i>Nenhum produto encontrado</i>";
+    return;
+  }
+
+  const criticos = produtos.filter(p => p.qtd <= p.estoque_minimo);
+
+  if (criticos.length === 0) {
+    box.innerHTML = "<span style='color:#00ff9d'>Nenhum produto crítico 🎉</span>";
+    return;
+  }
+
+  criticos.forEach(p => {
+    box.innerHTML += `
+      <div style="margin-bottom:10px">
+        <b>${p.nome}</b><br>
+        Quantidade: ${p.qtd} | Mínimo: ${p.estoque_minimo}
+      </div>
+    `;
+  });
+}
+
+
 </script>
 
 </body>
 </html>
-
