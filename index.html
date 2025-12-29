@@ -5,7 +5,7 @@
   <title>Sistema HX</title>
   <meta name="viewport" content="width=device-width, initial-scale=1">
 
-  <!-- Supabase -->
+  <!-- SUPABASE -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 
   <style>
@@ -14,6 +14,17 @@
       font-family: Arial, sans-serif;
       background: #0d0d0d;
       color: #fff;
+    }
+
+    header {
+      background: #151515;
+      color: #0aff9d;
+      padding: 15px;
+      font-size: 20px;
+    }
+
+    main {
+      padding: 20px;
     }
 
     #loginOverlay {
@@ -47,15 +58,9 @@
       cursor: pointer;
     }
 
-    header {
-      padding: 15px;
-      background: #151515;
-      color: #0aff9d;
-      font-size: 20px;
-    }
-
-    main {
-      padding: 20px;
+    #loginMsg {
+      margin-top: 10px;
+      font-size: 14px;
     }
   </style>
 </head>
@@ -65,14 +70,14 @@
 <!-- LOGIN -->
 <div id="loginOverlay">
   <div class="login-card">
-    <h2>🔒 Login Sistema HX</h2>
+    <h2>🔒 Sistema HX</h2>
 
     <input id="loginEmail" type="email" placeholder="Email">
     <input id="loginPass" type="password" placeholder="Senha">
 
     <button onclick="login()">Entrar</button>
 
-    <div id="loginMsg" style="margin-top:10px;"></div>
+    <div id="loginMsg"></div>
   </div>
 </div>
 
@@ -82,12 +87,13 @@
 </header>
 
 <main>
-  <h2>Bem-vindo ao Sistema HX</h2>
-  <p>Login funcionando corretamente ✅</p>
+  <h2>Sistema carregado com sucesso ✅</h2>
+  <p>Login funcionando. Código limpo. Console sem erros.</p>
+
   <button onclick="logout()">Sair</button>
 </main>
 
-<!-- SCRIPT ÚNICO E FINAL -->
+<!-- SCRIPT ÚNICO -->
 <script>
 console.log("✅ SCRIPT PRINCIPAL CARREGADO");
 
