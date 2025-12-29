@@ -29,6 +29,28 @@ canvas{max-height:250px}
 
 <body>
 
+<!-- LOGIN -->
+<div id="loginOverlay" style="
+  position:fixed;
+  inset:0;
+  background:#000c;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  z-index:9999;
+">
+  <div style="background:#111;padding:20px;border-radius:10px;width:320px">
+    <h2 style="color:#0aff9d">Login HX</h2>
+
+    <input id="loginEmail" placeholder="Email">
+    <input id="loginPass" type="password" placeholder="Senha">
+
+    <button onclick="login()">Entrar</button>
+
+    <div id="loginMsg" style="margin-top:10px;color:#f66"></div>
+  </div>
+</div>
+  
 <header>
 Sistema HX
 <span id="userLabel" style="float:right"></span>
@@ -205,3 +227,4 @@ document.addEventListener("DOMContentLoaded",()=>{
 
 </body>
 </html>
+
