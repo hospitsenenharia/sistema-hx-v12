@@ -102,10 +102,11 @@ const { createClient } = supabase;
 
 const supabaseClient = createClient(
   "https://axfccmezfofnqfsdurqb.supabase.co",
-  "SUA_CHAVE_ANON_AQUI"
+  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImF4ZmNjbWV6Zm9mbnFmc2R1cnFiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjUwNzA1NDMsImV4cCI6MjA4MDY0NjU0M30.woGp6hBgiEa41opQxyxqqMULlDKMXm9T83bhJ7UEmb8"
 );
 
 window.supabase = supabaseClient;
+
 
 /* ================= LOGIN ================= */
 async function login() {
@@ -170,3 +171,4 @@ document.addEventListener("DOMContentLoaded", async () => {
 
 </body>
 </html>
+
