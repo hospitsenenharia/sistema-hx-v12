@@ -1311,6 +1311,7 @@ function imprimirOrcamento(o) {
 <section id="dashboardSec" style="display:block;">
   <h2>📊 Dashboard Financeiro</h2>
 
+  <!-- ===== RESUMO GERAL ===== -->
   <div class="card">
     <h3>Resumo Geral</h3>
 
@@ -1346,7 +1347,31 @@ function imprimirOrcamento(o) {
 
     </div>
   </div>
-</section>
+
+  <!-- ===== GRÁFICOS ===== -->
+  <div class="card">
+    <h3>Vendas Diárias</h3>
+    <canvas id="grafVendasDiarias"></canvas>
+  </div>
+
+  <div class="card">
+    <h3>Vendas Semanais</h3>
+    <canvas id="grafVendasSemanal"></canvas>
+  </div>
+
+  <div class="card">
+    <h3>Vendas Mensais</h3>
+    <canvas id="grafVendasMensal"></canvas>
+  </div>
+
+  <div class="card">
+    <h3>Vendas Anuais</h3>
+    <canvas id="grafVendasAnual"></canvas>
+  </div>
+
+  <div class="card">
+    <h3>Lucro por D
+
 
 
 <script>
@@ -1724,5 +1749,6 @@ document.addEventListener("DOMContentLoaded", async () => {
   await atualizarTudo();
 });
 </script>
+
 
 
