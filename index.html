@@ -12,17 +12,17 @@
   <!-- Supabase -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 
-  <!-- SUPABASE CLIENT -->
   <script>
-    const { createClient } = window.supabase;
+    const { createClient } = supabase;
 
-    window.supabase = createClient(
+    const supabaseClient = createClient(
       "https://axfccmezfofnqfsdurqb.supabase.co",
-      "SUA_CHAVE_AQUI"
+      "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImF4ZmNjbWV6Zm9mbnFmc2R1cnFiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjUwNzA1NDMsImV4cCI6MjA4MDY0NjU0M30.woGp6hBgiEa41opQxyxqqMULlDKMXm9T83bhJ7UEmb8"
     );
+
+    window.supabase = supabaseClient;
   </script>
 
-  <!-- CSS -->
   <style>
     :root {
       --hx-dark: #0d0d0d;
@@ -33,47 +33,161 @@
       --hx-card: #181818;
     }
 
+    body.light {
+      --hx-dark: #f5f5f5;
+      --hx-dark2: #ffffff;
+      --hx-dark3: #e0e0e0;
+      --hx-text: #111111;
+      --hx-card: #ffffff;
+    }
+
     body {
       margin: 0;
       background: var(--hx-dark);
       color: var(--hx-text);
       font-family: "Segoe UI", sans-serif;
-      overflow-x: hidden;
+    }
+
+    /* GRÁFICOS REDUZIDOS */
+    canvas {
+      max-height: 220px !important;
+      width: 100% !important;
+    }
+
+    /* LOGIN */
+    #loginOverlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.88);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 9999;
+    }
+
+    .login-card {
+      background: #111;
+      width: 340px;
+      padding: 25px;
+      border-radius: 12px;
+      color: white;
+      border: 1px solid var(--hx-accent);
+      box-shadow: 0 0 20px rgba(0,255,150,0.3);
+    }
+
+    .login-card input {
+      width: 100%;
+      padding: 10px;
+      margin-top: 6px;
+      background: #222;
+      border: 1px solid #444;
+      border-radius: 8px;
+      color: white;
+    }
+
+    .login-btn {
+      width: 100%;
+      padding: 12px;
+      margin-top: 12px;
+      border: none;
+      border-radius: 8px;
+      background: var(--hx-accent);
+      color: black;
+      font-weight: bold;
+      cursor: pointer;
+    }
+
+    header {
+      padding: 16px;
+      background: var(--hx-dark2);
+      color: var(--hx-accent);
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      font-size: 22px;
+      font-weight: bold;
+      box-shadow: 0 2px 10px #000;
     }
 
     #sidebar {
-      width: 240px;
       position: fixed;
-      left: 0;
       top: 0;
+      left: 0;
+      padding-top: 80px;
+      width: 240px;
       height: 100vh;
+      background: var(--hx-dark2);
+      overflow-y: auto;
+    }
+
+    #sidebar button {
+      width: 100%;
+      background: none;
+      border: none;
+      color: var(--hx-text);
+      padding: 14px;
+      font-size: 17px;
+      text-align: left;
+      cursor: pointer;
+      transition: 0.25s;
+    }
+
+    #sidebar button:hover {
+      background: var(--hx-dark3);
+      padding-left: 20px;
+    }
+
+    .menu-active {
+      background: var(--hx-accent) !important;
+      color: black !important;
     }
 
     main {
-      margin-left: 240px;
-      width: calc(100vw - 240px);
+      margin-left: 260px;
       padding: 22px;
-      box-sizing: border-box;
+    }
+
+    .card {
+      background: var(--hx-card);
+      padding: 12px;
+      border-radius: 12px;
+      margin-bottom: 20px;
+      box-shadow: 0 2px 8px #000;
+    }
+
+    h2, h3 {
+      color: var(--hx-accent);
+    }
+
+    input, select, textarea {
+      width: 100%;
+      padding: 10px;
+      border-radius: 8px;
+      border: 1px solid #333;
+      background: var(--hx-dark3);
+      color: var(--hx-text);
+      margin-bottom: 12px;
+    }
+
+    .btn {
+      background: var(--hx-accent);
+      color: black;
+      padding: 10px 16px;
+      border-radius: 8px;
+      border: none;
+      cursor: pointer;
+      font-weight: bold;
+    }
+
+    .btn.secondary {
+      background: #444;
+      color: white;
     }
   </style>
 </head>
 
 <body>
 
-
-
-<body>
-
-<script>
-// ================= VARIÁVEIS GLOBAIS =================
-let userLabel;
-let loginOverlay;
-let venCliente;
-let venProduto;
-let osCliente;
-let orcCliente;
-</script>
-  
   <!-- =============== LOGIN =============== -->
   <div id="loginOverlay">
     <div class="login-card">
@@ -121,75 +235,7 @@ let orcCliente;
     <button onclick="logout()" class="btn secondary" style="margin-top:10px;">Sair</button>
   </div>
 
- <main>
-
-<!-- ======================== DASHBOARD ======================== -->
-<section id="dashboardSec" style="display:block;">
-
-  <h2>📊 Dashboard Financeiro</h2>
-
-  <div class="card">
-    <div style="display:flex;gap:20px;flex-wrap:wrap">
-
-      <div class="card" style="flex:1">
-        <h3>Faturamento Total</h3>
-        <div id="fatTotal" style="font-size:26px;color:#0aff9d">R$ 0,00</div>
-      </div>
-
-      <div class="card" style="flex:1">
-        <h3>Lucro do Mês</h3>
-        <div id="lucroMes" style="font-size:26px;color:#ffaa00">R$ 0,00</div>
-      </div>
-
-      <div class="card" style="flex:1">
-        <h3>Total de Vendas</h3>
-        <div id="numVendas" style="font-size:26px;color:#0aff9d">0</div>
-      </div>
-
-      <div class="card" style="flex:1">
-        <h3>Ordens de Serviço</h3>
-        <div id="numOS" style="font-size:26px;color:#0aff9d">0</div>
-      </div>
-
-    </div>
-  </div>
-
-
-
-    <!-- ===== GRÁFICOS ===== -->
-
-  <div class="card">
-    <h3>Vendas Semanais</h3>
-    <canvas id="grafVendasSemanal"></canvas>
-  </div>
-
-  <div class="card">
-    <h3>Vendas Mensais</h3>
-    <canvas id="grafVendasMensal"></canvas>
-  </div>
-
-  <div class="card">
-    <h3>Vendas Anuais</h3>
-    <canvas id="grafVendasAnual"></canvas>
-  </div>
-
-  <div class="card">
-    <h3>Lucro Diário</h3>
-    <canvas id="grafLucro"></canvas>
-  </div>
-
-  <div class="card">
-    <h3>Custo x Revenda x Lucro</h3>
-    <canvas id="grafCustoRevenda"></canvas>
-  </div>
-
-  <div class="card">
-    <h3>Ranking de Produtos</h3>
-    <canvas id="grafRankingProdutos"></canvas>
-  </div>
-
-</section>
-
+<main>
 
 <!-- ======================== CLIENTES ======================== -->
 <section id="clientesSec" style="display:none;">
@@ -297,8 +343,7 @@ let orcCliente;
     </div>
   </div>
 </div>
- </main>
-  
+
 
 <script>
 /* ============================================================
@@ -311,22 +356,21 @@ function toggleTheme() {
   );
 }
 
-function showSection(id, btn) {
-  document.querySelectorAll("main section")
-    .forEach(sec => sec.style.display = "none");
+function showSection(secId, btn) {
+  document.querySelectorAll("main section").forEach(s => s.style.display = "none");
+  document.getElementById(secId).style.display = "block";
 
-  document.getElementById(id).style.display = "block";
-
-  document.querySelectorAll("#sidebar button")
-    .forEach(b => b.classList.remove("menu-active"));
+  document.querySelectorAll("#sidebar button").forEach(b =>
+    b.classList.remove("menu-active")
+  );
 
   if (btn) btn.classList.add("menu-active");
+}
 
-  // 🔥 Gera dashboard somente quando abrir
-  if (id === "dashboardSec") {
-    carregarDashboard();
-    gerarGraficosDashboard();
-  }
+async function logout() {
+  await supabase.auth.signOut();
+  userLabel.innerText = "";
+  loginOverlay.style.display = "flex";
 }
 
 
@@ -1263,12 +1307,50 @@ function imprimirOrcamento(o) {
 
 </script>
 
+<!-- ======================== DASHBOARD ======================== -->
+<section id="dashboardSec" style="display:block;">
+  <h2>📊 Dashboard Financeiro</h2>
 
+  <div class="card">
+    <h3>Resumo Geral</h3>
+
+    <div style="display:flex; gap:20px; flex-wrap:wrap;">
+
+      <div class="card" style="flex:1;">
+        <h3>Faturamento Total</h3>
+        <div id="fatTotal" style="font-size:28px; color:var(--hx-accent);">
+          R$ 0,00
+        </div>
+      </div>
+
+      <div class="card" style="flex:1;">
+        <h3>Lucro do Mês</h3>
+        <div id="lucroMes" style="font-size:28px; color:#00cfff;">
+          R$ 0,00
+        </div>
+      </div>
+
+      <div class="card" style="flex:1;">
+        <h3>Total de Vendas</h3>
+        <div id="numVendas" style="font-size:28px; color:var(--hx-accent);">
+          0
+        </div>
+      </div>
+
+      <div class="card" style="flex:1;">
+        <h3>Ordens de Serviço</h3>
+        <div id="numOS" style="font-size:28px; color:var(--hx-accent);">
+          0
+        </div>
+      </div>
+
+    </div>
+  </div>
+</section>
 
 
 <script>
-let chartSemanal, chartMensal, chartAnual, chartLucro, chartCustoRevenda, chartRanking;
-
+let chartDiarias, chartSemanal, chartMensal, chartAnual, chartLucro, chartCustoRevenda, chartRanking;
 
 /* ============================================================
    RESUMO DO DASHBOARD (COM LUCRO DO MÊS)
@@ -1295,14 +1377,18 @@ async function carregarDashboard() {
   const anoAtual = hoje.getFullYear();
 
   vendas.forEach(v => {
-    faturamentoTotal += Number(v.valor || 0);
+    const valor = Number(v.valor || 0);
+    const lucro = Number(v.lucro_total || 0);
+
+    faturamentoTotal += valor;
 
     const d = new Date(v.data);
     if (d.getMonth() === mesAtual && d.getFullYear() === anoAtual) {
-      lucroMes += Number(v.lucro_total || 0);
+      lucroMes += lucro;
     }
   });
 
+  // Atualiza cards
   document.getElementById("fatTotal").innerText =
     "R$ " + faturamentoTotal.toFixed(2);
 
@@ -1314,147 +1400,155 @@ async function carregarDashboard() {
 }
 
 
-
 /* ============================================================
    GERAÇÃO DOS GRÁFICOS
 ============================================================ */
 async function gerarGraficosDashboard() {
-  const { data: vendas } = await supabase
-    .from("vendas")
-    .select(`
-      data, valor, lucro_total,
-      preco_custo, preco_revenda, quantidade,
-      produtos(nome)
-    `);
+  const { data: vendas } = await supabase.from("vendas").select(`
+    id, data, valor, lucro_total, preco_custo, preco_revenda, quantidade,
+    produtos(nome)
+  `);
 
   if (!vendas || vendas.length === 0) return;
 
-  [chartSemanal, chartMensal, chartAnual, chartLucro, chartCustoRevenda, chartRanking]
+  // Destruir gráficos antigos para evitar erro
+  [chartDiarias, chartSemanal, chartMensal, chartAnual, chartLucro, chartCustoRevenda, chartRanking]
     .forEach(c => c && c.destroy());
 
-  /* ===== VENDAS SEMANAIS ===== */
+  /* ========= Vendas por Dia ========= */
+  const dias = {};
+  vendas.forEach(v => {
+    const d = new Date(v.data).toLocaleDateString("pt-BR");
+    dias[d] = (dias[d] || 0) + Number(v.valor);
+  });
+
+  chartDiarias = new Chart(document.getElementById("grafVendasDiarias"), {
+    type: "bar",
+    data: {
+      labels: Object.keys(dias),
+      datasets: [{
+        label: "Vendas Diárias",
+        data: Object.values(dias),
+        backgroundColor: "#0aff9d66"
+      }]
+    }
+  });
+
+  /* ========= Vendas Semanais ========= */
   const semanas = {};
   vendas.forEach(v => {
     const d = new Date(v.data);
     const ano = d.getFullYear();
-    const inicio = new Date(ano, 0, 1);
-    const diff = Math.floor((d - inicio) / 86400000);
-    const semana = Math.ceil((diff + inicio.getDay() + 1) / 7);
-    semanas[`Sem ${semana}/${ano}`] =
-      (semanas[`Sem ${semana}/${ano}`] || 0) + Number(v.valor);
+    const start = new Date(ano, 0, 1);
+    const diff = Math.floor((d - start) / 86400000);
+    const semana = Math.ceil((diff + start.getDay() + 1) / 7);
+    semanas[`Semana ${semana}/${ano}`] = (semanas[`Semana ${semana}/${ano}`] || 0) + Number(v.valor);
   });
 
-const ctxSemanal = document
-  .getElementById("grafVendasSemanal")
-  .getContext("2d");
+  chartSemanal = new Chart(document.getElementById("grafVendasSemanal"), {
+    type: "line",
+    data: {
+      labels: Object.keys(semanas),
+      datasets: [{
+        label: "Vendas Semanais",
+        data: Object.values(semanas),
+        borderColor: "#0aff9d",
+        borderWidth: 2
+      }]
+    }
+  });
 
-chartSemanal = new Chart(ctxSemanal, {
-  type: "line",
-  data: {
-    labels: Object.keys(semanas),
-    datasets: [{
-      label: "Vendas Semanais",
-      data: Object.values(semanas),
-      borderColor: "#0aff9d"
-    }]
-  },
-  options: {
-    responsive: true,
-    maintainAspectRatio: false
-  }
-});
-
-
-  /* ===== VENDAS MENSAIS ===== */
+  /* ========= Vendas Mensais ========= */
   const meses = {};
   vendas.forEach(v => {
     const d = new Date(v.data);
-    const k = `${d.getMonth()+1}/${d.getFullYear()}`;
-    meses[k] = (meses[k] || 0) + Number(v.valor);
+    const m = `${String(d.getMonth() + 1).padStart(2, "0")}/${d.getFullYear()}`;
+    meses[m] = (meses[m] || 0) + Number(v.valor);
   });
 
-  chartMensal = new Chart(grafVendasMensal, {
+  chartMensal = new Chart(document.getElementById("grafVendasMensal"), {
     type: "line",
     data: {
       labels: Object.keys(meses),
       datasets: [{
         label: "Vendas Mensais",
         data: Object.values(meses),
-        borderColor: "#00cfff"
+        borderColor: "#0aff9d",
+        borderWidth: 2
       }]
     }
   });
 
-  /* ===== VENDAS ANUAIS ===== */
+  /* ========= Vendas Anuais ========= */
   const anos = {};
   vendas.forEach(v => {
     const a = new Date(v.data).getFullYear();
     anos[a] = (anos[a] || 0) + Number(v.valor);
   });
 
-  chartAnual = new Chart(grafVendasAnual, {
+  chartAnual = new Chart(document.getElementById("grafVendasAnual"), {
     type: "bar",
     data: {
       labels: Object.keys(anos),
       datasets: [{
         label: "Vendas Anuais",
         data: Object.values(anos),
-        backgroundColor: "#0aff9d88"
+        backgroundColor: "#0aff9d66"
       }]
     }
   });
 
-  /* ===== LUCRO DIÁRIO ===== */
-  const lucroDia = {};
+  /* ========= Lucro por dia ========= */
+  const lucro = {};
   vendas.forEach(v => {
     const d = new Date(v.data).toLocaleDateString("pt-BR");
-    lucroDia[d] = (lucroDia[d] || 0) + Number(v.lucro_total || 0);
+    lucro[d] = (lucro[d] || 0) + Number(v.lucro_total);
   });
 
-  chartLucro = new Chart(grafLucro, {
+  chartLucro = new Chart(document.getElementById("grafLucro"), {
     type: "line",
     data: {
-      labels: Object.keys(lucroDia),
+      labels: Object.keys(lucro),
       datasets: [{
-        label: "Lucro Diário (R$)",
-        data: Object.values(lucroDia),
-        borderColor: "#ffaa00",
-        fill: true
+        label: "Lucro Diário",
+        data: Object.values(lucro),
+        borderColor: "#0aff9d",
+        borderWidth: 2
       }]
     }
   });
 
-  /* ===== CUSTO x REVENDA ===== */
-  chartCustoRevenda = new Chart(grafCustoRevenda, {
+  /* ========= Custo x Revenda x Lucro ========= */
+  chartCustoRevenda = new Chart(document.getElementById("grafCustoRevenda"), {
     type: "bar",
     data: {
       labels: vendas.map(v => v.produtos?.nome || "Produto"),
       datasets: [
-        { label: "Custo", data: vendas.map(v => v.preco_custo) },
-        { label: "Revenda", data: vendas.map(v => v.preco_revenda) },
-        { label: "Lucro", data: vendas.map(v => v.lucro_total) }
+        { label: "Custo", data: vendas.map(v => v.preco_custo), backgroundColor: "#ff444455" },
+        { label: "Revenda", data: vendas.map(v => v.preco_revenda), backgroundColor: "#0aff9d55" },
+        { label: "Lucro", data: vendas.map(v => v.lucro_total), backgroundColor: "#0099ff55" }
       ]
     }
   });
 
-  /* ===== RANKING ===== */
+  /* ========= Ranking ========= */
   const ranking = {};
   vendas.forEach(v => {
     const nome = v.produtos?.nome || "Produto";
     ranking[nome] = (ranking[nome] || 0) + Number(v.quantidade);
   });
 
-  chartRanking = new Chart(grafRankingProdutos, {
+  chartRanking = new Chart(document.getElementById("grafRankingProdutos"), {
     type: "pie",
     data: {
       labels: Object.keys(ranking),
       datasets: [{
-        data: Object.values(ranking)
+        data: Object.values(ranking),
+        backgroundColor: ["#0aff9d88","#33bbff88","#ffaa0088","#ff556688","#8844ff88"]
       }]
     }
   });
 }
-
 
 /* ============================================================
    IMPRESSÃO DE GRÁFICOS
@@ -1486,7 +1580,8 @@ async function atualizarTudo() {
     await carregarOS();
     await carregarOrcamentos();
     await carregarDashboard();
-     } catch (e) {
+    await gerarGraficosDashboard();
+  } catch (e) {
     console.error("Erro ao atualizar tudo:", e);
   }
 }
@@ -1580,55 +1675,54 @@ async function alterarSenha() {
   alert(error ? error.message : "Senha alterada!");
 }
 
+/* ============================================================
+   TEMA (DARK/LIGHT)
+============================================================ */
+function toggleTheme() {
+  document.body.classList.toggle("light");
+  localStorage.setItem(
+    "hxTheme",
+    document.body.classList.contains("light") ? "light" : "dark"
+  );
+}
+
+/* ============================================================
+   TROCAR SEÇÃO VISÍVEL NO MENU
+============================================================ */
+function showSection(id, btn) {
+  document.querySelectorAll("main section").forEach(sec => sec.style.display = "none");
+  document.getElementById(id).style.display = "block";
+
+  document.querySelectorAll("#sidebar button").forEach(b => b.classList.remove("menu-active"));
+  btn.classList.add("menu-active");
+}
 
 /* ============================================================
    INICIALIZAÇÃO FINAL DO SISTEMA
 ============================================================ */
 document.addEventListener("DOMContentLoaded", async () => {
 
-  // 🔗 REFERÊNCIAS DO DOM
-  userLabel    = document.getElementById("userLabel");
-  loginOverlay = document.getElementById("loginOverlay");
-  venCliente   = document.getElementById("venCliente");
-  venProduto   = document.getElementById("venProduto");
-  osCliente    = document.getElementById("osCliente");
-  orcCliente   = document.getElementById("orcCliente");
-
-
   // 🌙 Carregar tema salvo
   const theme = localStorage.getItem("hxTheme");
   if (theme === "light") document.body.classList.add("light");
 
-  // 🔐 Verificar sessão
-  const { data } = await supabase.auth.getSession();
-  const session = data.session;
+  // 📊 Tela inicial = Dashboard
+  showSection("dashboardSec", document.querySelector("#sidebar button"));
+
+  // Verifica sessão
+  const sessionResp = await supabase.auth.getSession();
+  const session = sessionResp.data.session;
 
   if (!session) {
     loginOverlay.style.display = "flex";
     return;
   }
 
-  // ✅ Usuário logado
   loginOverlay.style.display = "none";
 
   await carregarUsuario();
-
-  // 🔄 Carregar dados (SEM gerar gráficos aqui)
   await atualizarTudo();
-
-  // 📊 Abrir Dashboard (gera gráficos dentro do showSection)
-  showSection("dashboardSec", document.querySelector("#sidebar button"));
 });
-
 </script>
-
-
-
-
-
-
-
-
-
 
 
