@@ -12,193 +12,54 @@
   <!-- Supabase -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 
- <script>
-<script>
-  const { createClient } = window.supabase;
+  <!-- SUPABASE CLIENT -->
+  <script>
+    const { createClient } = window.supabase;
 
-  const supabaseClient = createClient(
-    "https://axfccmezfofnqfsdurqb.supabase.co",
-    "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImF4ZmNjbWV6Zm9mbnFmc2R1cnFiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjUwNzA1NDMsImV4cCI6MjA4MDY0NjU0M30.woGp6hBgiEa41opQxyxqqMULlDKMXm9T83bhJ7UEmb8"
+    window.supabase = createClient(
+      "https://axfccmezfofnqfsdurqb.supabase.co",
+      "SUA_CHAVE_AQUI"
+    );
+  </script>
 
-  );
+  <!-- CSS -->
+  <style>
+    :root {
+      --hx-dark: #0d0d0d;
+      --hx-dark2: #151515;
+      --hx-dark3: #1f1f1f;
+      --hx-accent: #0aff9d;
+      --hx-text: #eaeaea;
+      --hx-card: #181818;
+    }
 
-  window.supabase = supabaseClient;
-</script>
+    body {
+      margin: 0;
+      background: var(--hx-dark);
+      color: var(--hx-text);
+      font-family: "Segoe UI", sans-serif;
+      overflow-x: hidden;
+    }
 
+    #sidebar {
+      width: 240px;
+      position: fixed;
+      left: 0;
+      top: 0;
+      height: 100vh;
+    }
 
-  :root {
-  --hx-dark: #0d0d0d;
-  --hx-dark2: #151515;
-  --hx-dark3: #1f1f1f;
-  --hx-accent: #0aff9d;
-  --hx-text: #eaeaea;
-  --hx-card: #181818;
-}
+    main {
+      margin-left: 240px;
+      width: calc(100vw - 240px);
+      padding: 22px;
+      box-sizing: border-box;
+    }
+  </style>
+</head>
 
-body.light {
-  --hx-dark: #f5f5f5;
-  --hx-dark2: #ffffff;
-  --hx-dark3: #e0e0e0;
-  --hx-text: #111111;
-  --hx-card: #ffffff;
-}
+<body>
 
-body {
-  margin: 0;
-  background: var(--hx-dark);
-  color: var(--hx-text);
-  font-family: "Segoe UI", sans-serif;
-  overflow-x: hidden; /* 🔥 impede scroll lateral */
-}
-
-/* GRÁFICOS */
-canvas {
-  max-height: 220px !important;
-  width: 100% !important;
-}
-
-/* LOGIN */
-#loginOverlay {
-  position: fixed;
-  inset: 0;
-  background: rgba(0,0,0,0.88);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 9999;
-}
-
-.login-card {
-  background: #111;
-  width: 340px;
-  padding: 25px;
-  border-radius: 12px;
-  color: white;
-  border: 1px solid var(--hx-accent);
-  box-shadow: 0 0 20px rgba(0,255,150,0.3);
-}
-
-.login-card input {
-  width: 100%;
-  padding: 10px;
-  margin-top: 6px;
-  background: #222;
-  border: 1px solid #444;
-  border-radius: 8px;
-  color: white;
-}
-
-.login-btn {
-  width: 100%;
-  padding: 12px;
-  margin-top: 12px;
-  border: none;
-  border-radius: 8px;
-  background: var(--hx-accent);
-  color: black;
-  font-weight: bold;
-  cursor: pointer;
-}
-
-/* HEADER */
-header {
-  padding: 16px;
-  background: var(--hx-dark2);
-  color: var(--hx-accent);
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  font-size: 22px;
-  font-weight: bold;
-  box-shadow: 0 2px 10px #000;
-}
-
-/* SIDEBAR */
-#sidebar {
-  position: fixed;
-  top: 0;
-  left: 0;
-  padding-top: 80px;
-  width: 240px;
-  height: 100vh;
-  background: var(--hx-dark2);
-  overflow-y: auto;
-}
-
-#sidebar button {
-  width: 100%;
-  background: none;
-  border: none;
-  color: var(--hx-text);
-  padding: 14px;
-  font-size: 17px;
-  text-align: left;
-  cursor: pointer;
-  transition: 0.25s;
-}
-
-#sidebar button:hover {
-  background: var(--hx-dark3);
-  padding-left: 20px;
-}
-
-.menu-active {
-  background: var(--hx-accent) !important;
-  color: black !important;
-}
-
-/* 🔥 MAIN CORRIGIDO */
-main {
-  margin-left: 240px;                 /* igual à sidebar */
-  padding: 22px;
-  min-height: 100vh;
-  width: calc(100vw - 240px);         /* 🔥 evita corte */
-  box-sizing: border-box;
-  overflow-x: hidden;
-}
-
-/* CARDS */
-.card {
-  background: var(--hx-card);
-  padding: 12px;
-  border-radius: 12px;
-  margin-bottom: 20px;
-  box-shadow: 0 2px 8px #000;
-}
-
-/* TÍTULOS */
-h2, h3 {
-  color: var(--hx-accent);
-}
-
-/* FORMULÁRIOS */
-input,
-select,
-textarea {
-  width: 100%;
-  padding: 10px;
-  border-radius: 8px;
-  border: 1px solid #333;
-  background: var(--hx-dark3);
-  color: var(--hx-text);
-  margin-bottom: 12px;
-}
-
-/* BOTÕES */
-.btn {
-  background: var(--hx-accent);
-  color: black;
-  padding: 10px 16px;
-  border-radius: 8px;
-  border: none;
-  cursor: pointer;
-  font-weight: bold;
-}
-
-.btn.secondary {
-  background: #444;
-  color: white;
-}
 
 
 <body>
@@ -1760,6 +1621,7 @@ document.addEventListener("DOMContentLoaded", async () => {
 });
 
 </script>
+
 
 
 
