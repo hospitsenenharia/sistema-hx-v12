@@ -12,16 +12,19 @@
   <!-- Supabase -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 
-  <script>
-    const { createClient } = supabase;
+ <script>
+<script>
+  const { createClient } = window.supabase;
 
-    const supabaseClient = createClient(
-      "https://axfccmezfofnqfsdurqb.supabase.co",
-      "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImF4ZmNjbWV6Zm9mbnFmc2R1cnFiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjUwNzA1NDMsImV4cCI6MjA4MDY0NjU0M30.woGp6hBgiEa41opQxyxqqMULlDKMXm9T83bhJ7UEmb8"
-    );
+  const supabaseClient = createClient(
+    "https://axfccmezfofnqfsdurqb.supabase.co",
+    "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImF4ZmNjbWV6Zm9mbnFmc2R1cnFiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjUwNzA1NDMsImV4cCI6MjA4MDY0NjU0M30.woGp6hBgiEa41opQxyxqqMULlDKMXm9T83bhJ7UEmb8"
 
-    window.supabase = supabaseClient;
-  </script>
+  );
+
+  window.supabase = supabaseClient;
+</script>
+
 
   <style>
     :root {
@@ -1391,7 +1394,8 @@ function imprimirOrcamento(o) {
 
 
 <script>
-let chartDiarias, chartSemanal, chartMensal, chartAnual, chartLucro, chartCustoRevenda, chartRanking;
+let chartSemanal, chartMensal, chartAnual, chartLucro, chartCustoRevenda, chartRanking;
+
 
 /* ============================================================
    RESUMO DO DASHBOARD (COM LUCRO DO MÊS)
@@ -1467,17 +1471,26 @@ async function gerarGraficosDashboard() {
       (semanas[`Sem ${semana}/${ano}`] || 0) + Number(v.valor);
   });
 
-  chartSemanal = new Chart(grafVendasSemanal, {
-    type: "line",
-    data: {
-      labels: Object.keys(semanas),
-      datasets: [{
-        label: "Vendas Semanais",
-        data: Object.values(semanas),
-        borderColor: "#0aff9d"
-      }]
-    }
-  });
+const ctxSemanal = document
+  .getElementById("grafVendasSemanal")
+  .getContext("2d");
+
+chartSemanal = new Chart(ctxSemanal, {
+  type: "line",
+  data: {
+    labels: Object.keys(semanas),
+    datasets: [{
+      label: "Vendas Semanais",
+      data: Object.values(semanas),
+      borderColor: "#0aff9d"
+    }]
+  },
+  options: {
+    responsive: true,
+    maintainAspectRatio: false
+  }
+});
+
 
   /* ===== VENDAS MENSAIS ===== */
   const meses = {};
@@ -1735,6 +1748,7 @@ document.addEventListener("DOMContentLoaded", async () => {
 });
 
 </script>
+
 
 
 
