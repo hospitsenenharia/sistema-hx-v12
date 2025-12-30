@@ -188,6 +188,16 @@
 
 <body>
 
+<script>
+// ================= VARIÁVEIS GLOBAIS =================
+let userLabel;
+let loginOverlay;
+let venCliente;
+let venProduto;
+let osCliente;
+let orcCliente;
+</script>
+  
   <!-- =============== LOGIN =============== -->
   <div id="loginOverlay">
     <div class="login-card">
@@ -235,10 +245,7 @@
     <button onclick="logout()" class="btn secondary" style="margin-top:10px;">Sair</button>
   </div>
 
-<main>
-
-
-  <main>
+ <main>
 
 <!-- ======================== DASHBOARD ======================== -->
 <section id="dashboardSec" style="display:block;">
@@ -414,7 +421,8 @@
     </div>
   </div>
 </div>
-
+ </main>
+  
 
 <script>
 /* ============================================================
@@ -427,21 +435,22 @@ function toggleTheme() {
   );
 }
 
-function showSection(secId, btn) {
-  document.querySelectorAll("main section").forEach(s => s.style.display = "none");
-  document.getElementById(secId).style.display = "block";
+function showSection(id, btn) {
+  document.querySelectorAll("main section")
+    .forEach(sec => sec.style.display = "none");
 
-  document.querySelectorAll("#sidebar button").forEach(b =>
-    b.classList.remove("menu-active")
-  );
+  document.getElementById(id).style.display = "block";
+
+  document.querySelectorAll("#sidebar button")
+    .forEach(b => b.classList.remove("menu-active"));
 
   if (btn) btn.classList.add("menu-active");
-}
 
-async function logout() {
-  await supabase.auth.signOut();
-  userLabel.innerText = "";
-  loginOverlay.style.display = "flex";
+  // 🔥 Gera dashboard somente quando abrir
+  if (id === "dashboardSec") {
+    carregarDashboard();
+    gerarGraficosDashboard();
+  }
 }
 
 
@@ -1378,37 +1387,7 @@ function imprimirOrcamento(o) {
 
 </script>
 
-<!-- ===== GRÁFICOS (ÚNICOS) ===== -->
 
-<div class="card">
-  <h3>Vendas Semanais</h3>
-  <canvas id="grafVendasSemanal"></canvas>
-</div>
-
-<div class="card">
-  <h3>Vendas Mensais</h3>
-  <canvas id="grafVendasMensal"></canvas>
-</div>
-
-<div class="card">
-  <h3>Vendas Anuais</h3>
-  <canvas id="grafVendasAnual"></canvas>
-</div>
-
-<div class="card">
-  <h3>Lucro Diário</h3>
-  <canvas id="grafLucro"></canvas>
-</div>
-
-<div class="card">
-  <h3>Custo x Revenda x Lucro</h3>
-  <canvas id="grafCustoRevenda"></canvas>
-</div>
-
-<div class="card">
-  <h3>Ranking de Produtos</h3>
-  <canvas id="grafRankingProdutos"></canvas>
-</div>
 
 
 <script>
@@ -1621,8 +1600,7 @@ async function atualizarTudo() {
     await carregarOS();
     await carregarOrcamentos();
     await carregarDashboard();
-    await gerarGraficosDashboard();
-  } catch (e) {
+     } catch (e) {
     console.error("Erro ao atualizar tudo:", e);
   }
 }
@@ -1716,55 +1694,48 @@ async function alterarSenha() {
   alert(error ? error.message : "Senha alterada!");
 }
 
-/* ============================================================
-   TEMA (DARK/LIGHT)
-============================================================ */
-function toggleTheme() {
-  document.body.classList.toggle("light");
-  localStorage.setItem(
-    "hxTheme",
-    document.body.classList.contains("light") ? "light" : "dark"
-  );
-}
-
-/* ============================================================
-   TROCAR SEÇÃO VISÍVEL NO MENU
-============================================================ */
-function showSection(id, btn) {
-  document.querySelectorAll("main section").forEach(sec => sec.style.display = "none");
-  document.getElementById(id).style.display = "block";
-
-  document.querySelectorAll("#sidebar button").forEach(b => b.classList.remove("menu-active"));
-  btn.classList.add("menu-active");
-}
 
 /* ============================================================
    INICIALIZAÇÃO FINAL DO SISTEMA
 ============================================================ */
 document.addEventListener("DOMContentLoaded", async () => {
 
+  // 🔗 REFERÊNCIAS DO DOM
+  userLabel    = document.getElementById("userLabel");
+  loginOverlay = document.getElementById("loginOverlay");
+  venCliente   = document.getElementById("venCliente");
+  venProduto   = document.getElementById("venProduto");
+  osCliente    = document.getElementById("osCliente");
+  orcCliente   = document.getElementById("orcCliente");
+
+
   // 🌙 Carregar tema salvo
   const theme = localStorage.getItem("hxTheme");
   if (theme === "light") document.body.classList.add("light");
 
-  // 📊 Tela inicial = Dashboard
-  showSection("dashboardSec", document.querySelector("#sidebar button"));
-
-  // Verifica sessão
-  const sessionResp = await supabase.auth.getSession();
-  const session = sessionResp.data.session;
+  // 🔐 Verificar sessão
+  const { data } = await supabase.auth.getSession();
+  const session = data.session;
 
   if (!session) {
     loginOverlay.style.display = "flex";
     return;
   }
 
+  // ✅ Usuário logado
   loginOverlay.style.display = "none";
 
   await carregarUsuario();
+
+  // 🔄 Carregar dados (SEM gerar gráficos aqui)
   await atualizarTudo();
+
+  // 📊 Abrir Dashboard (gera gráficos dentro do showSection)
+  showSection("dashboardSec", document.querySelector("#sidebar button"));
 });
+
 </script>
+
 
 
 
