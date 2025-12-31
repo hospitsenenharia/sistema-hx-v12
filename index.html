@@ -3,23 +3,25 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-
   <title>Sistema HX — Administração Completa</title>
 
   <!-- Chart.js -->
   <script src="https://cdn.jsdelivr.net/npm/chart.js/dist/chart.umd.min.js"></script>
 
-  <!-- Supabase -->
+  <!-- Supabase (TEM QUE VIR ANTES) -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 
- <script>
-  const { createClient } = window.supabase;
+  <!-- Criar o cliente Supabase (UMA ÚNICA VEZ) -->
+  <script>
+    const { createClient } = window.supabase;
 
-  const db = createClient(
-    "https://axfccmezfofnqfsdurqb.supabase.co",
-    "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImF4ZmNjbWV6Zm9mbnFmc2R1cnFiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjUwNzA1NDMsImV4cCI6MjA4MDY0NjU0M30.woGp6hBgiEa41opQxyxqqMULlDKMXm9T83bhJ7UEmb8"
-  );
-</script>
+    const db = createClient(
+      "https://axfccmezfofnqfsdurqb.supabase.co",
+      "SUA_ANON_KEY_AQUI"
+    );
+  </script>
+</head>
+
 
 
   <style>
@@ -1315,20 +1317,18 @@ function imprimirOrcamento(o) {
 </script>
 
 <!-- ======================== DASHBOARD ======================== -->
+
 <section id="dashboardSec" style="display:block;">
   <h2>📊 Dashboard Financeiro</h2>
 
+  <!-- RESUMO -->
   <div class="card">
     <h3>Resumo Geral</h3>
 
     <div style="display:flex; gap:20px; flex-wrap:wrap;">
-
-      <div class="card" style="flex:1;">
-        <h3>Faturamento Total</h3>
-        <div id="fatTotal" style="font-size:28px; color:var(--hx-accent);">
-          R$ 0,00
-        </div>
-      </div>
+      ...
+    </div>
+  </div>
 
       <div class="card" style="flex:1;">
         <h3>Lucro do Mês</h3>
@@ -1410,7 +1410,7 @@ async function carregarDashboard() {
 /* ============================================================
    GERAÇÃO DOS GRÁFICOS
 ============================================================ */
- async function gerarGraficosDashboard() {
+async function gerarGraficosDashboard() {
   const { data: vendas, error } = await db.from("vendas").select(`
     data, valor, lucro_total, quantidade,
     produtos(nome)
@@ -1429,7 +1429,7 @@ async function carregarDashboard() {
   });
 
   Chart.getChart("grafVendasDiarias")?.destroy();
-  new Chart(grafVendasDiarias, {
+  new Chart(document.getElementById("grafVendasDiarias"), {
     type: "bar",
     data: {
       labels: Object.keys(dias),
@@ -1441,7 +1441,7 @@ async function carregarDashboard() {
     }
   });
 
-  // ===== LUCRO DIÁRIO =====
+  // ===== LUCRO =====
   const lucro = {};
   vendas.forEach(v => {
     const d = new Date(v.data).toLocaleDateString("pt-BR");
@@ -1449,7 +1449,7 @@ async function carregarDashboard() {
   });
 
   Chart.getChart("grafLucro")?.destroy();
-  new Chart(grafLucro, {
+  new Chart(document.getElementById("grafLucro"), {
     type: "line",
     data: {
       labels: Object.keys(lucro),
@@ -1470,7 +1470,7 @@ async function carregarDashboard() {
   });
 
   Chart.getChart("grafRankingProdutos")?.destroy();
-  new Chart(grafRankingProdutos, {
+  new Chart(document.getElementById("grafRankingProdutos"), {
     type: "pie",
     data: {
       labels: Object.keys(ranking),
@@ -1482,6 +1482,7 @@ async function carregarDashboard() {
       }]
     }
   });
+}
 }
 
 
@@ -1520,11 +1521,12 @@ async function atualizarTudo() {
 
     await gerarGraficosDashboard();
 
-    console.log("✅ Sistema atualizado com sucesso");
+    console.log("✅ Sistema HX atualizado");
   } catch (e) {
-    console.error("❌ Erro ao atualizar sistema:", e);
+    console.error("❌ Erro geral:", e);
   }
 }
+
 
 
 const { createClient } = window.supabase;
@@ -1727,6 +1729,7 @@ document.addEventListener("DOMContentLoaded", async () => {
 });
 
 </script>
+
 
 
 
