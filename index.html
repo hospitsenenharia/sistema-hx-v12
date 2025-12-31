@@ -1410,152 +1410,80 @@ async function carregarDashboard() {
 /* ============================================================
    GERAÇÃO DOS GRÁFICOS
 ============================================================ */
-async function gerarGraficosDashboard() {
-  const { data: vendas } = await supabase.from("vendas").select(`
-    id, data, valor, lucro_total, preco_custo, preco_revenda, quantidade,
+ async function gerarGraficosDashboard() {
+  const { data: vendas, error } = await db.from("vendas").select(`
+    data, valor, lucro_total, quantidade,
     produtos(nome)
   `);
 
-  if (!vendas || vendas.length === 0) return;
+  if (error || !vendas || vendas.length === 0) {
+    console.warn("Sem dados para gráficos");
+    return;
+  }
 
-  // Destruir gráficos antigos para evitar erro
-  [chartDiarias, chartSemanal, chartMensal, chartAnual, chartLucro, chartCustoRevenda, chartRanking]
-    .forEach(c => c && c.destroy());
-
-  /* ========= Vendas por Dia ========= */
+  // ===== VENDAS DIÁRIAS =====
   const dias = {};
   vendas.forEach(v => {
     const d = new Date(v.data).toLocaleDateString("pt-BR");
     dias[d] = (dias[d] || 0) + Number(v.valor);
   });
 
-  chartDiarias = new Chart(document.getElementById("grafVendasDiarias"), {
+  Chart.getChart("grafVendasDiarias")?.destroy();
+  new Chart(grafVendasDiarias, {
     type: "bar",
     data: {
       labels: Object.keys(dias),
       datasets: [{
         label: "Vendas Diárias",
         data: Object.values(dias),
-        backgroundColor: "#0aff9d66"
+        backgroundColor: "#0aff9d88"
       }]
     }
   });
 
-  /* ========= Vendas Semanais ========= */
-  const semanas = {};
-  vendas.forEach(v => {
-    const d = new Date(v.data);
-    const ano = d.getFullYear();
-    const start = new Date(ano, 0, 1);
-    const diff = Math.floor((d - start) / 86400000);
-    const semana = Math.ceil((diff + start.getDay() + 1) / 7);
-    semanas[`Semana ${semana}/${ano}`] = (semanas[`Semana ${semana}/${ano}`] || 0) + Number(v.valor);
-  });
-
-  chartSemanal = new Chart(document.getElementById("grafVendasSemanal"), {
-    type: "line",
-    data: {
-      labels: Object.keys(semanas),
-      datasets: [{
-        label: "Vendas Semanais",
-        data: Object.values(semanas),
-        borderColor: "#0aff9d",
-        borderWidth: 2
-      }]
-    }
-  });
-
-  /* ========= Vendas Mensais ========= */
-  const meses = {};
-  vendas.forEach(v => {
-    const d = new Date(v.data);
-    const m = `${String(d.getMonth() + 1).padStart(2, "0")}/${d.getFullYear()}`;
-    meses[m] = (meses[m] || 0) + Number(v.valor);
-  });
-
-  chartMensal = new Chart(document.getElementById("grafVendasMensal"), {
-    type: "line",
-    data: {
-      labels: Object.keys(meses),
-      datasets: [{
-        label: "Vendas Mensais",
-        data: Object.values(meses),
-        borderColor: "#0aff9d",
-        borderWidth: 2
-      }]
-    }
-  });
-
-  /* ========= Vendas Anuais ========= */
-  const anos = {};
-  vendas.forEach(v => {
-    const a = new Date(v.data).getFullYear();
-    anos[a] = (anos[a] || 0) + Number(v.valor);
-  });
-
-  chartAnual = new Chart(document.getElementById("grafVendasAnual"), {
-    type: "bar",
-    data: {
-      labels: Object.keys(anos),
-      datasets: [{
-        label: "Vendas Anuais",
-        data: Object.values(anos),
-        backgroundColor: "#0aff9d66"
-      }]
-    }
-  });
-
-  /* ========= Lucro por dia ========= */
+  // ===== LUCRO DIÁRIO =====
   const lucro = {};
   vendas.forEach(v => {
     const d = new Date(v.data).toLocaleDateString("pt-BR");
     lucro[d] = (lucro[d] || 0) + Number(v.lucro_total);
   });
 
-  chartLucro = new Chart(document.getElementById("grafLucro"), {
+  Chart.getChart("grafLucro")?.destroy();
+  new Chart(grafLucro, {
     type: "line",
     data: {
       labels: Object.keys(lucro),
       datasets: [{
         label: "Lucro Diário",
         data: Object.values(lucro),
-        borderColor: "#0aff9d",
-        borderWidth: 2
+        borderColor: "#00cfff",
+        tension: 0.3
       }]
     }
   });
 
-  /* ========= Custo x Revenda x Lucro ========= */
-  chartCustoRevenda = new Chart(document.getElementById("grafCustoRevenda"), {
-    type: "bar",
-    data: {
-      labels: vendas.map(v => v.produtos?.nome || "Produto"),
-      datasets: [
-        { label: "Custo", data: vendas.map(v => v.preco_custo), backgroundColor: "#ff444455" },
-        { label: "Revenda", data: vendas.map(v => v.preco_revenda), backgroundColor: "#0aff9d55" },
-        { label: "Lucro", data: vendas.map(v => v.lucro_total), backgroundColor: "#0099ff55" }
-      ]
-    }
-  });
-
-  /* ========= Ranking ========= */
+  // ===== RANKING =====
   const ranking = {};
   vendas.forEach(v => {
     const nome = v.produtos?.nome || "Produto";
     ranking[nome] = (ranking[nome] || 0) + Number(v.quantidade);
   });
 
-  chartRanking = new Chart(document.getElementById("grafRankingProdutos"), {
+  Chart.getChart("grafRankingProdutos")?.destroy();
+  new Chart(grafRankingProdutos, {
     type: "pie",
     data: {
       labels: Object.keys(ranking),
       datasets: [{
         data: Object.values(ranking),
-        backgroundColor: ["#0aff9d88","#33bbff88","#ffaa0088","#ff556688","#8844ff88"]
+        backgroundColor: [
+          "#0aff9d","#33bbff","#ffaa00","#ff5566","#8844ff"
+        ]
       }]
     }
   });
 }
+
 
 /* ============================================================
    IMPRESSÃO DE GRÁFICOS
@@ -1799,6 +1727,7 @@ document.addEventListener("DOMContentLoaded", async () => {
 });
 
 </script>
+
 
 
 
