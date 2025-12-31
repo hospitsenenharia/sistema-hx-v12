@@ -12,16 +12,15 @@
   <!-- Supabase -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 
-  <script>
-    const { createClient } = supabase;
+ <script>
+  const { createClient } = window.supabase;
 
-    const supabaseClient = createClient(
-      "https://axfccmezfofnqfsdurqb.supabase.co",
-      "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImF4ZmNjbWV6Zm9mbnFmc2R1cnFiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjUwNzA1NDMsImV4cCI6MjA4MDY0NjU0M30.woGp6hBgiEa41opQxyxqqMULlDKMXm9T83bhJ7UEmb8"
-    );
+  const db = createClient(
+    "https://axfccmezfofnqfsdurqb.supabase.co",
+    "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImF4ZmNjbWV6Zm9mbnFmc2R1cnFiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjUwNzA1NDMsImV4cCI6MjA4MDY0NjU0M30.woGp6hBgiEa41opQxyxqqMULlDKMXm9T83bhJ7UEmb8"
+  );
+</script>
 
-    window.supabase = supabaseClient;
-  </script>
 
   <style>
     :root {
@@ -368,8 +367,16 @@ function showSection(secId, btn) {
 }
 
 async function logout() {
-  await supabase.auth.signOut();
-  userLabel.innerText = "";
+  try {
+    await db.auth.signOut();
+  } catch (e) {
+    console.error("Erro ao sair:", e);
+  }
+
+  if (typeof userLabel !== "undefined") {
+    userLabel.innerText = "";
+  }
+
   loginOverlay.style.display = "flex";
 }
 
@@ -1574,31 +1581,52 @@ function imprimirGrafico(id) {
 ============================================================ */
 async function atualizarTudo() {
   try {
-    await carregarClientes();
-    await carregarProdutos();
-    await carregarVendas();
-    await carregarOS();
-    await carregarOrcamentos();
-    await carregarDashboard();
+    await Promise.all([
+      carregarClientes(),
+      carregarProdutos(),
+      carregarVendas(),
+      carregarOS(),
+      carregarOrcamentos(),
+      carregarDashboard()
+    ]);
+
     await gerarGraficosDashboard();
+
+    console.log("✅ Sistema atualizado com sucesso");
   } catch (e) {
-    console.error("Erro ao atualizar tudo:", e);
+    console.error("❌ Erro ao atualizar sistema:", e);
   }
 }
 
+
+const { createClient } = window.supabase;
+
+const db = createClient(
+  "https://axfccmezfofnqfsdurqb.supabase.co",
+  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImF4ZmNjbWV6Zm9mbnFmc2R1cnFiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjUwNzA1NDMsImV4cCI6MjA4MDY0NjU0M30.woGp6hBgiEa41opQxyxqqMULlDKMXm9T83bhJ7UEmb8"
+);
+
+  
 /* ============================================================
    CARREGAR USUÁRIO LOGADO
 ============================================================ */
 async function carregarUsuario() {
   try {
-    const { data } = await supabase.auth.getUser();
-    if (data?.user) {
+    const { data, error } = await db.auth.getUser();
+
+    if (error) {
+      console.error("Erro ao obter usuário:", error.message);
+      return;
+    }
+
+    if (data?.user && typeof userLabel !== "undefined") {
       userLabel.innerText = data.user.email;
     }
   } catch (e) {
     console.error("Erro ao carregar usuário:", e);
   }
 }
+
 
 /* ============================================================
    LOGIN
@@ -1613,7 +1641,7 @@ async function login() {
     return;
   }
 
-  const { data, error } = await supabase.auth.signInWithPassword({
+  const { error } = await db.auth.signInWithPassword({
     email,
     password: senha
   });
@@ -1631,25 +1659,44 @@ async function login() {
   await atualizarTudo();
 }
 
+
 /* ============================================================
    LOGOUT
 ============================================================ */
 async function logout() {
-  await supabase.auth.signOut();
-  userLabel.innerText = "";
+  try {
+    await db.auth.signOut();
+  } catch (e) {
+    console.error("Erro ao sair:", e);
+  }
+
+  if (typeof userLabel !== "undefined") {
+    userLabel.innerText = "";
+  }
+
   loginOverlay.style.display = "flex";
 }
+
 
 /* ============================================================
    RECUPERAR SENHA
 ============================================================ */
 async function enviarRecuperacaoSenha() {
   const email = loginEmail.value.trim();
-  if (!email) return alert("Digite seu email!");
+  if (!email) {
+    alert("Digite seu email!");
+    return;
+  }
 
-  const { error } = await supabase.auth.resetPasswordForEmail(email);
-  alert(error ? error.message : "Email de recuperação enviado!");
+  const { error } = await db.auth.resetPasswordForEmail(email);
+
+  alert(
+    error
+      ? "Erro: " + error.message
+      : "Email de recuperação enviado!"
+  );
 }
+
 
 /* ============================================================
    CADASTRAR NOVO USUÁRIO
@@ -1660,9 +1707,14 @@ async function cadastrarUsuario() {
 
   if (!email || !senha) return;
 
-  const { error } = await supabase.auth.signUp({ email, password: senha });
-  alert(error ? error.message : "Usuário criado!");
+  const { error } = await db.auth.signUp({
+    email,
+    password: senha
+  });
+
+  alert(error ? "Erro: " + error.message : "Usuário criado com sucesso!");
 }
+
 
 /* ============================================================
    ALTERAR SENHA DO USUÁRIO LOGADO
@@ -1671,31 +1723,45 @@ async function alterarSenha() {
   const nova = prompt("Digite a nova senha:");
   if (!nova) return;
 
-  const { error } = await supabase.auth.updateUser({ password: nova });
-  alert(error ? error.message : "Senha alterada!");
+  const { error } = await db.auth.updateUser({
+    password: nova
+  });
+
+  alert(error ? "Erro: " + error.message : "Senha alterada com sucesso!");
 }
+
 
 /* ============================================================
    TEMA (DARK/LIGHT)
 ============================================================ */
 function toggleTheme() {
   document.body.classList.toggle("light");
+
   localStorage.setItem(
     "hxTheme",
     document.body.classList.contains("light") ? "light" : "dark"
   );
 }
 
+
 /* ============================================================
    TROCAR SEÇÃO VISÍVEL NO MENU
 ============================================================ */
 function showSection(id, btn) {
-  document.querySelectorAll("main section").forEach(sec => sec.style.display = "none");
-  document.getElementById(id).style.display = "block";
+  document.querySelectorAll("main section").forEach(sec => {
+    sec.style.display = "none";
+  });
 
-  document.querySelectorAll("#sidebar button").forEach(b => b.classList.remove("menu-active"));
-  btn.classList.add("menu-active");
+  const alvo = document.getElementById(id);
+  if (alvo) alvo.style.display = "block";
+
+  document.querySelectorAll("#sidebar button").forEach(b => {
+    b.classList.remove("menu-active");
+  });
+
+  if (btn) btn.classList.add("menu-active");
 }
+
 
 /* ============================================================
    INICIALIZAÇÃO FINAL DO SISTEMA
@@ -1704,25 +1770,35 @@ document.addEventListener("DOMContentLoaded", async () => {
 
   // 🌙 Carregar tema salvo
   const theme = localStorage.getItem("hxTheme");
-  if (theme === "light") document.body.classList.add("light");
-
-  // 📊 Tela inicial = Dashboard
-  showSection("dashboardSec", document.querySelector("#sidebar button"));
-
-  // Verifica sessão
-  const sessionResp = await supabase.auth.getSession();
-  const session = sessionResp.data.session;
-
-  if (!session) {
-    loginOverlay.style.display = "flex";
-    return;
+  if (theme === "light") {
+    document.body.classList.add("light");
   }
 
-  loginOverlay.style.display = "none";
+  // 📊 Tela inicial
+  const primeiroBotao = document.querySelector("#sidebar button");
+  showSection("dashboardSec", primeiroBotao);
 
-  await carregarUsuario();
-  await atualizarTudo();
+  try {
+    const { data } = await db.auth.getSession();
+    const session = data.session;
+
+    if (!session) {
+      loginOverlay.style.display = "flex";
+      return;
+    }
+
+    loginOverlay.style.display = "none";
+
+    await carregarUsuario();
+    await atualizarTudo();
+
+  } catch (e) {
+    console.error("Erro na inicialização:", e);
+    loginOverlay.style.display = "flex";
+  }
 });
+
 </script>
+
 
 
