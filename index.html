@@ -10,40 +10,39 @@
 
     <style>
         :root {
-            --hx-dark: #0d0d0d; --hx-dark2: #151515; --hx-dark3: #1f1f1f;
-            --hx-accent: #0aff9d; --hx-text: #eaeaea; --hx-card: #181818;
-            --hx-danger: #ff5566; --hx-info: #00cfff;
+            --hx-dark: #0d0d0d; --hx-dark2: #151515; --hx-accent: #0aff9d;
+            --hx-text: #eaeaea; --hx-card: #181818; --hx-danger: #ff5566;
         }
         body { margin: 0; background: var(--hx-dark); color: var(--hx-text); font-family: "Segoe UI", sans-serif; display: flex; min-height: 100vh; }
         
-        /* Sidebar lateral conforme imagem image_ee48a9.png */
-        #sidebar { width: 240px; background: var(--hx-dark2); height: 100vh; position: fixed; border-right: 1px solid var(--hx-dark3); display: flex; flex-direction: column; z-index: 100; }
-        #sidebar .logo { padding: 25px; text-align: center; color: var(--hx-accent); font-weight: bold; font-size: 1.5rem; border-bottom: 1px solid var(--hx-dark3); }
-        #sidebar button { background: none; border: none; color: var(--hx-text); padding: 15px 25px; text-align: left; cursor: pointer; transition: 0.3s; border-left: 3px solid transparent; }
-        #sidebar button:hover, #sidebar button.active { background: var(--hx-dark3); color: var(--hx-accent); border-left-color: var(--hx-accent); }
+        /* Sidebar lateral conforme suas imagens */
+        #sidebar { width: 240px; background: var(--hx-dark2); height: 100vh; position: fixed; border-right: 1px solid #333; display: flex; flex-direction: column; z-index: 100; }
+        #sidebar .logo { padding: 25px; text-align: center; color: var(--hx-accent); font-weight: bold; font-size: 1.5rem; border-bottom: 1px solid #333; }
+        #sidebar button { background: none; border: none; color: var(--hx-text); padding: 15px 25px; text-align: left; cursor: pointer; transition: 0.3s; font-size: 15px; border-left: 3px solid transparent; }
+        #sidebar button:hover, #sidebar button.active { background: #1f1f1f; color: var(--hx-accent); border-left-color: var(--hx-accent); }
         
         main { margin-left: 240px; flex: 1; padding: 30px; box-sizing: border-box; }
         .card { background: var(--hx-card); padding: 20px; border-radius: 12px; margin-bottom: 20px; border: 1px solid #222; }
         
-        /* Dashboard em grid conforme imagem image_eeb9a4.png */
+        /* Grid Dashboard */
         .grid-dash { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-bottom: 20px; }
         .dash-card { padding: 20px; border-radius: 12px; background: var(--hx-dark2); border-left: 4px solid var(--hx-accent); }
 
         input, select, textarea { width: 100%; padding: 12px; margin: 8px 0; background: #222; border: 1px solid #333; color: #fff; border-radius: 6px; box-sizing: border-box; }
         .btn { background: var(--hx-accent); color: #000; border: none; padding: 12px 20px; border-radius: 6px; cursor: pointer; font-weight: bold; margin-top: 15px; }
         
-        .critical { color: var(--hx-danger); font-weight: bold; animation: pulse 1.5s infinite; }
-        @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.5; } 100% { opacity: 1; } }
-
-        /* Overlay de Login conforme imagem image_eeb961.png */
+        /* Overlay de Login */
         #loginOverlay { position: fixed; inset: 0; background: var(--hx-dark); display: flex; align-items: center; justify-content: center; z-index: 2000; }
         .login-card { background: var(--hx-dark2); padding: 30px; border-radius: 12px; border: 1px solid var(--hx-accent); width: 320px; }
+        
+        .critical { color: var(--hx-danger); font-weight: bold; animation: pulse 1.5s infinite; }
+        @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
     </style>
 </head>
 <body>
 
     <nav id="sidebar">
-        <div class="logo">SISTEMA HX</div>
+        <div class="logo">PAINEL HX</div>
         <button onclick="showTab('dashTab', this)" class="active">📊 Dashboard</button>
         <button onclick="showTab('cliTab', this)">👤 Clientes</button>
         <button onclick="showTab('estTab', this)">📦 Estoque</button>
@@ -54,8 +53,8 @@
 
     <div id="loginOverlay">
         <div class="login-card">
-            <h2 style="text-align:center; color: var(--hx-accent)">ACESSO</h2>
-            <input id="lEmail" type="email" placeholder="admin@hx.com" value="admin@hx.com">
+            <h2 style="text-align:center; color: var(--hx-accent)">SISTEMA HX</h2>
+            <input id="lEmail" type="email" placeholder="admin@hx.com">
             <input id="lPass" type="password" placeholder="Senha">
             <button class="btn" style="width:100%" onclick="login()">ENTRAR</button>
             <p id="lErr" style="color:var(--hx-danger); text-align:center; font-size:12px; margin-top:10px;"></p>
@@ -67,49 +66,30 @@
             <h2>📊 Resumo Financeiro</h2>
             <div class="grid-dash">
                 <div class="dash-card">Vendas Hoje <h3 id="vDia" style="color:var(--hx-accent)">R$ 0,00</h3></div>
-                <div class="dash-card">Lucro Hoje <h3 id="lDia" style="color:var(--hx-info)">R$ 0,00</h3></div>
+                <div class="dash-card">Lucro Hoje <h3 id="lDia" style="color:#00cfff">R$ 0,00</h3></div>
                 <div class="dash-card">Vendas Mês <h3 id="vMes">R$ 0,00</h3></div>
                 <div class="dash-card">Estoque Crítico <h3 id="qtdCrit" style="color:var(--hx-danger)">0 Itens</h3></div>
             </div>
             <div class="card"><canvas id="graficoVendas" height="100"></canvas></div>
         </section>
 
-        <section id="venTab" style="display:none;">
-            <h2>💵 Registrar Venda</h2>
-            <div class="card">
-                <select id="vCliSelect"></select>
-                <select id="vProdSelect" onchange="autoPreencherVenda()"></select>
-                <input id="vQtd" type="number" value="1" oninput="autoPreencherVenda()">
-                <input id="vTotalVal" type="number" step="0.01" placeholder="Total R$">
-                <button class="btn" onclick="registrarVenda()">FINALIZAR VENDA</button>
-            </div>
-            <div id="listaVendas"></div>
-        </section>
-
-        <section id="estTab" style="display:none;">
-            <h2>📦 Estoque</h2>
-            <div id="listaProdutos"></div>
-        </section>
-        
-        <section id="osTab" style="display:none;">
-            <h2>🛠 Ordens de Serviço</h2>
-            <div id="listaOS"></div>
-        </section>
+        <section id="cliTab" style="display:none;"><h2>Clientes</h2><div id="listaCli"></div></section>
+        <section id="estTab" style="display:none;"><h2>Estoque</h2><div id="listaEst"></div></section>
+        <section id="venTab" style="display:none;"><h2>Vendas</h2><div id="listaVen"></div></section>
+        <section id="osTab" style="display:none;"><h2>Ordens de Serviço</h2><div id="listaOS"></div></section>
     </main>
 
 <script>
-    /* INICIALIZAÇÃO ÚNICA DO SUPABASE
-       IMPORTANTE: Substitua a chave abaixo pela sua Anon Key real para evitar erro 401
+    /* INICIALIZAÇÃO ÚNICA DO SUPABASE 
+       IMPORTANTE: Substitua 'SUA_ANON_KEY_CORRETA' pela chave encontrada em 
+       Settings > API > anon (public) no seu painel Supabase.
     */
-    const { createClient } = window.supabase;
-    const db = createClient(
-        "https://axfccmezfofnqfsdurqb.supabase.co", 
-        "SUA_ANON_KEY_CORRETA_AQUI" 
-    );
+    const supabaseUrl = "https://axfccmezfofnqfsdurqb.supabase.co";
+    const supabaseKey = "SUA_ANON_KEY_CORRETA"; // <-- COLOQUE A CHAVE AQUI
+    const db = window.supabase.createClient(supabaseUrl, supabaseKey);
 
     let _vendas = [], _produtos = [];
 
-    /* FUNÇÃO LOGIN CORRIGIDA */
     async function login() {
         const email = document.getElementById('lEmail').value;
         const password = document.getElementById('lPass').value;
@@ -119,23 +99,22 @@
             document.getElementById('lErr').innerText = "Erro: " + error.message;
         } else {
             document.getElementById('loginOverlay').style.display = 'none';
-            carregarTudo();
+            carregarDados();
         }
     }
 
-    /* NAVEGAÇÃO DE ABAS */
     function showTab(id, btn) {
         document.querySelectorAll('main section').forEach(s => s.style.display = 'none');
         document.getElementById(id).style.display = 'block';
         document.querySelectorAll('#sidebar button').forEach(b => b.classList.remove('active'));
         btn.classList.add('active');
-        if (id === 'dashTab') renderDashboard();
     }
 
-    /* CARREGAMENTO DE DADOS BASEADO NO SCHEMA */
-    async function carregarTudo() {
+    async function carregarDados() {
+        // Busca baseada no esquema: vendas, produtos e lucros
         const { data: v } = await db.from('vendas').select('*, clientes(nome), produtos(nome)').order('data', {ascending: false});
         const { data: p } = await db.from('produtos').select('*');
+        
         _vendas = v || [];
         _produtos = p || [];
         renderDashboard();
@@ -151,7 +130,7 @@
         document.getElementById('vDia').innerText = `R$ ${totalHoje.toFixed(2)}`;
         document.getElementById('lDia').innerText = `R$ ${lucroHoje.toFixed(2)}`;
         
-        // Alerta de Estoque Crítico baseado na coluna q_id e estoque_minimo
+        // Alerta Crítico (Coluna q_id e estoque_minimo do seu schema)
         const criticos = _produtos.filter(p => (p.q_id || 0) <= (p.estoque_minimo || 0)).length;
         document.getElementById('qtdCrit').innerText = `${criticos} Itens`;
     }
@@ -161,12 +140,11 @@
         location.reload();
     }
 
-    /* Verifica sessão ativa ao carregar a página */
     window.onload = async () => {
         const { data } = await db.auth.getSession();
         if (data.session) {
             document.getElementById('loginOverlay').style.display = 'none';
-            carregarTudo();
+            carregarDados();
         }
     };
 </script>
