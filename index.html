@@ -9,53 +9,66 @@
     <style>
         :root { --hx-dark: #0d0d0d; --hx-dark2: #151515; --hx-accent: #0aff9d; --hx-text: #eaeaea; --hx-danger: #ff5566; }
         body { margin: 0; background: var(--hx-dark); color: var(--hx-text); font-family: 'Segoe UI', sans-serif; display: flex; overflow-x: hidden; }
+        
+        /* Sidebar */
         #sidebar { width: 240px; background: var(--hx-dark2); height: 100vh; position: fixed; border-right: 1px solid #333; display: flex; flex-direction: column; }
         #sidebar button { background: none; border: none; color: #fff; padding: 15px; text-align: left; cursor: pointer; border-left: 3px solid transparent; transition: 0.3s; }
         #sidebar button.active { background: #1f1f1f; color: var(--hx-accent); border-left-color: var(--hx-accent); }
+        
         main { margin-left: 240px; flex: 1; padding: 25px; min-height: 100vh; }
         .card { background: #181818; padding: 20px; border-radius: 8px; margin-bottom: 20px; border: 1px solid #333; }
+        
+        /* Dashboard Cards */
         .grid-dash { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-bottom: 20px; }
+        .dash-card { background: #181818; padding: 20px; border-radius: 8px; border-left: 4px solid var(--hx-accent); }
+
         input, select, textarea { width: 100%; padding: 10px; margin: 8px 0; background: #222; border: 1px solid #444; color: #fff; border-radius: 4px; box-sizing: border-box; }
         .btn { padding: 10px 15px; border-radius: 4px; border: none; cursor: pointer; font-weight: bold; transition: 0.2s; }
         .btn-add { background: var(--hx-accent); color: #000; }
         .btn-del { background: var(--hx-danger); color: #fff; }
-        .btn-edit { background: #3498db; color: #fff; }
-        .critical { background: var(--hx-danger); animation: pulse 1.5s infinite; }
-        @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.5; } 100% { opacity: 1; } }
+        
+        /* Login */
         #loginOverlay { position: fixed; inset: 0; background: #000; z-index: 9999; display: flex; align-items: center; justify-content: center; }
+        .login-card { background: #181818; padding: 30px; border-radius: 12px; border: 1px solid var(--hx-accent); width: 320px; }
+        
+        .critical { color: var(--hx-danger); font-weight: bold; animation: pulse 1.5s infinite; }
+        @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.5; } 100% { opacity: 1; } }
     </style>
 </head>
 <body>
 
 <div id="loginOverlay">
-    <div class="card" style="width: 320px; border: 1px solid var(--hx-accent);">
-        <h2 style="text-align:center; color:var(--hx-accent)">SISTEMA HX</h2>
-        <input id="lEmail" type="email" placeholder="E-mail" value="admin@hx.com">
-        <input id="lPass" type="password" placeholder="Senha">
-        <button class="btn btn-add" style="width:100%" onclick="login()">ENTRAR</button>
+    <div class="login-card">
+        <h2 style="text-align:center; color:var(--hx-accent); margin-bottom: 20px;">SISTEMA HX</h2>
+        <label>E-mail</label>
+        <input id="lEmail" type="email" placeholder="admin@hx.com">
+        <label>Senha</label>
+        <input id="lPass" type="password">
+        <button class="btn btn-add" style="width:100%; margin-top: 10px;" onclick="login()">ENTRAR</button>
         <p id="lErr" style="color:var(--hx-danger); font-size:12px; text-align:center; margin-top:10px;"></p>
     </div>
 </div>
 
 <nav id="sidebar">
-    <div style="padding:20px; font-weight:bold; color:var(--hx-accent); font-size:1.2rem; border-bottom:1px solid #333;">SISTEMA HX</div>
+    <div style="padding:20px; font-weight:bold; color:var(--hx-accent); font-size:1.2rem; border-bottom:1px solid #333;">PAINEL HX</div>
     <button onclick="changeTab('dashTab', this)" class="active">📊 Dashboard</button>
     <button onclick="changeTab('cliTab', this)">👤 Clientes</button>
     <button onclick="changeTab('estTab', this)">📦 Estoque</button>
     <button onclick="changeTab('venTab', this)">💵 Vendas</button>
     <button onclick="changeTab('osTab', this)">🛠 Ordem de Serviço</button>
+    <button onclick="changeTab('orcTab', this)">📝 Orçamentos</button>
 </nav>
 
 <main>
     <section id="dashTab">
         <h2 style="color:var(--hx-accent)">📊 Dashboard Financeiro</h2>
         <div class="grid-dash">
-            <div class="card">Vendas Hoje <h3 id="vDia" style="color:var(--hx-accent)">R$ 0,00</h3></div>
-            <div class="card">Lucro Hoje <h3 id="lDia" style="color:#00cfff">R$ 0,00</h3></div>
-            <div class="card">Faturamento Mês <h3 id="vMes" style="color:#fff">R$ 0,00</h3></div>
-            <div class="card">Estoque Crítico <h3 id="qtdCrit" style="color:var(--hx-danger)">0</h3></div>
+            <div class="dash-card">Vendas Hoje <h3 id="vDia" style="color:var(--hx-accent)">R$ 0,00</h3></div>
+            <div class="dash-card">Lucro Hoje <h3 id="lDia" style="color:#00cfff">R$ 0,00</h3></div>
+            <div class="dash-card">Vendas Mês <h3 id="vMes">R$ 0,00</h3></div>
+            <div class="dash-card">Estoque Crítico <h3 id="qtdCrit" style="color:var(--hx-danger)">0 Itens</h3></div>
         </div>
-        <div class="card"><h4>Vendas Diárias</h4><canvas id="chartDiario" height="100"></canvas></div>
+        <div class="card"><h4>Histórico de Vendas Recentes</h4><canvas id="chartDiario" height="100"></canvas></div>
     </section>
 
     <section id="cliTab" style="display:none">
@@ -63,7 +76,7 @@
         <div class="card">
             <input id="cNome" placeholder="Nome Completo">
             <input id="cTel" placeholder="Telefone">
-            <button class="btn btn-add" onclick="saveCli()">SALVAR CLIENTE</button>
+            <button class="btn btn-add" onclick="saveCli()">CADASTRAR</button>
         </div>
         <div class="card">
             <input id="sCli" placeholder="🔍 Pesquisar cliente..." oninput="renderCli()">
@@ -76,9 +89,9 @@
         <div class="card">
             <input id="pNome" placeholder="Produto">
             <input id="pQtd" type="number" placeholder="Quantidade">
-            <input id="pMin" type="number" placeholder="Mínimo">
-            <input id="pCusto" type="number" placeholder="Custo">
-            <input id="pRev" type="number" placeholder="Revenda">
+            <input id="pMin" type="number" placeholder="Mínimo para Alerta">
+            <input id="pCusto" type="number" placeholder="Preço Custo">
+            <input id="pRev" type="number" placeholder="Preço Venda">
             <button class="btn btn-add" onclick="saveProd()">ADICIONAR</button>
         </div>
         <div class="card">
@@ -87,186 +100,258 @@
     </section>
 
     <section id="venTab" style="display:none">
-        <h2>💵 Vendas</h2>
+        <h2>💵 Registro de Vendas</h2>
         <div class="card">
-            <select id="vCli"></select>
-            <select id="vProd" onchange="updatePrice()"></select>
-            <input id="vQtd" type="number" value="1" oninput="updatePrice()">
-            <p>Total: <span id="vTotal">R$ 0,00</span></p>
-            <button class="btn btn-add" onclick="doVenda()">FINALIZAR</button>
+            <select id="vCliSelect"></select>
+            <select id="vProdSelect" onchange="updateVendaPrice()"></select>
+            <input id="vQtd" type="number" value="1" oninput="updateVendaPrice()">
+            <p>Total Estimado: <strong id="vTotalLabel">R$ 0,00</strong></p>
+            <button class="btn btn-add" onclick="doVenda()">FINALIZAR VENDA</button>
         </div>
         <div class="card">
-            <input id="sVen" placeholder="🔍 Buscar por cliente ou data (AAAA-MM-DD)..." oninput="renderVen()">
+            <div style="display: flex; gap: 10px;">
+                <input id="sVenNome" placeholder="🔍 Por cliente..." oninput="renderVen()">
+                <input id="sVenData" type="date" onchange="renderVen()">
+            </div>
             <div id="listVen"></div>
         </div>
+    </section>
+
+    <section id="osTab" style="display:none">
+        <h2>🛠 Ordens de Serviço</h2>
+        <div class="card">
+            <select id="osCliSelect"></select>
+            <textarea id="osDesc" placeholder="Descrição do problema/serviço..."></textarea>
+            <button class="btn btn-add" onclick="saveOS()">ABRIR O.S.</button>
+        </div>
+        <div id="listOS"></div>
+    </section>
+
+    <section id="orcTab" style="display:none">
+        <h2>📝 Orçamentos</h2>
+        <div class="card">
+            <select id="orcCliSelect"></select>
+            <textarea id="orcDesc" placeholder="Itens e valores do orçamento..."></textarea>
+            <button class="btn btn-add" onclick="saveOrc()">GERAR ORÇAMENTO</button>
+        </div>
+        <div id="listOrc"></div>
     </section>
 </main>
 
 <script>
 // CONFIGURAÇÃO SUPABASE
 const { createClient } = window.supabase;
-const db = createClient("https://axfccmezfofnqfsdurqb.supabase.co", "SUA_ANON_KEY_AQUI");
+const db = createClient("https://axfccmezfofnqfsdurqb.supabase.co", "woGp6hBgiEa41opQxyxqqMULlDKMXm9T83bhJ7UEmb8");
 
-let _clis = [], _prods = [], _vens = [];
+let _clis = [], _prods = [], _vens = [], _oss = [], _orcs = [];
+let chartInstance = null;
 
 async function login() {
-    const { data, error } = await db.auth.signInWithPassword({
-        email: document.getElementById('lEmail').value,
-        password: document.getElementById('lPass').value
-    });
-    if(error) document.getElementById('lErr').innerText = "Erro: " + error.message;
-    else { document.getElementById('loginOverlay').style.display='none'; loadAll(); }
+    const email = document.getElementById('lEmail').value;
+    const password = document.getElementById('lPass').value;
+    const { data, error } = await db.auth.signInWithPassword({ email, password });
+    
+    if(error) {
+        document.getElementById('lErr').innerText = "Erro: " + error.message;
+    } else {
+        document.getElementById('loginOverlay').style.display = 'none';
+        loadAll();
+    }
 }
 
 function changeTab(id, btn) {
-    document.querySelectorAll('main section').forEach(s => s.style.display='none');
-    document.getElementById(id).style.display='block';
+    document.querySelectorAll('main section').forEach(s => s.style.display = 'none');
+    document.getElementById(id).style.display = 'block';
     document.querySelectorAll('#sidebar button').forEach(b => b.classList.remove('active'));
     btn.classList.add('active');
 }
 
 async function loadAll() {
-    const { data: c } = await db.from('clientes').select('*').order('nome');
-    const { data: p } = await db.from('produtos').select('*').order('nome');
-    const { data: v } = await db.from('vendas').select('*, clientes(nome), produtos(nome)').order('data', {ascending:false});
+    const [{data: c}, {data: p}, {data: v}, {data: o}, {data: r}] = await Promise.all([
+        db.from('clientes').select('*').order('nome'),
+        db.from('produtos').select('*').order('nome'),
+        db.from('vendas').select('*, clientes(nome), produtos(nome)').order('data', {ascending: false}),
+        db.from('ordens_servico').select('*, clientes(nome)').order('id', {ascending: false}),
+        db.from('orcamentos').select('*, clientes(nome)').order('id', {ascending: false})
+    ]);
+
+    _clis = c || []; _prods = p || []; _vens = v || []; _oss = o || []; _orcs = r || [];
     
-    _clis = c || []; _prods = p || []; _vens = v || [];
-    renderCli(); renderEst(); renderVen(); updateDash();
-    document.getElementById('vCli').innerHTML = _clis.map(i => `<option value="${i.id}">${i.nome}</option>`).join('');
-    document.getElementById('vProd').innerHTML = _prods.map(i => `<option value="${i.id}">${i.nome} (R$ ${i.preco_revenda})</option>`).join('');
+    refreshSelects();
+    renderCli(); renderEst(); renderVen(); renderOS(); renderOrc(); updateDash();
 }
 
-// DASHBOARD
+function refreshSelects() {
+    const cliOptions = _clis.map(c => `<option value="${c.id}">${c.nome}</option>`).join('');
+    ['vCliSelect', 'osCliSelect', 'orcCliSelect'].forEach(id => document.getElementById(id).innerHTML = cliOptions);
+    document.getElementById('vProdSelect').innerHTML = _prods.map(p => `<option value="${p.id}">${p.nome} (Estoque: ${p.q_id || p.qnt || 0})</option>`).join('');
+}
+
+// DASHBOARD CALCULATIONS
 function updateDash() {
     const hoje = new Date().toISOString().split('T')[0];
+    const mes = hoje.substring(0, 7);
+
     const vHoje = _vens.filter(v => v.data.startsWith(hoje));
-    const totalHoje = vHoje.reduce((a, b) => a + b.valor, 0);
+    const totalHoje = vHoje.reduce((a, b) => a + (b.valor || 0), 0);
     const lucroHoje = vHoje.reduce((a, b) => a + (b.lucro_total || 0), 0);
-    const totalMes = _vens.filter(v => v.data.startsWith(hoje.slice(0, 7))).reduce((a, b) => a + b.valor, 0);
-    const criticos = _prods.filter(p => p.qnt <= p.estoque_minimo).length;
+    const totalMes = _vens.filter(v => v.data.startsWith(mes)).reduce((a, b) => a + (b.valor || 0), 0);
+    const criticos = _prods.filter(p => (p.q_id || p.qnt || 0) <= (p.estoque_minimo || 0)).length;
 
     document.getElementById('vDia').innerText = `R$ ${totalHoje.toFixed(2)}`;
     document.getElementById('lDia').innerText = `R$ ${lucroHoje.toFixed(2)}`;
     document.getElementById('vMes').innerText = `R$ ${totalMes.toFixed(2)}`;
-    document.getElementById('qtdCrit').innerText = criticos;
+    document.getElementById('qtdCrit').innerText = `${criticos} Itens`;
 
-    const dias = [...new Set(_vens.map(v => v.data.split('T')[0]))].sort().slice(-7);
-    new Chart(document.getElementById('chartDiario'), {
-        type: 'bar',
+    renderChart();
+}
+
+function renderChart() {
+    const ctx = document.getElementById('chartDiario').getContext('2d');
+    if(chartInstance) chartInstance.destroy();
+    
+    const ultimasVendas = _vens.slice(0, 7).reverse();
+    chartInstance = new Chart(ctx, {
+        type: 'line',
         data: {
-            labels: dias,
-            datasets: [{ label: 'Vendas Diárias', data: dias.map(d => _vens.filter(v => v.data.startsWith(d)).reduce((a,b)=>a+b.valor,0)), backgroundColor: '#0aff9d' }]
+            labels: ultimasVendas.map(v => v.data.split('T')[0]),
+            datasets: [{ label: 'Vendas Recentes', data: ultimasVendas.map(v => v.valor), borderColor: '#0aff9d', tension: 0.3, fill: true, backgroundColor: 'rgba(10, 255, 157, 0.1)' }]
         }
     });
 }
 
-// CLIENTES: Edição e Exclusão
-function renderCli() {
-    const term = document.getElementById('sCli').value.toLowerCase();
-    document.getElementById('listCli').innerHTML = _clis.filter(x => x.nome.toLowerCase().includes(term)).map(x => `
-        <div style="padding:10px; border-bottom:1px solid #333; display:flex; justify-content:space-between;">
-            <span>${x.nome} - ${x.telefone}</span>
-            <div>
-                <button class="btn btn-edit" onclick="editCli(${x.id})">✏️</button>
-                <button class="btn btn-del" onclick="delItem('clientes', ${x.id})">🗑️</button>
-            </div>
-        </div>
-    `).join('');
-}
-
-async function saveCli() {
-    const nome = document.getElementById('cNome').value;
-    const tel = document.getElementById('cTel').value;
-    if(!nome) return;
-    await db.from('clientes').insert({ nome, telefone: tel });
-    loadAll();
-}
-
-async function editCli(id) {
-    const cli = _clis.find(x => x.id === id);
-    const novoNome = prompt("Novo nome:", cli.nome);
-    if(novoNome) {
-        await db.from('clientes').update({ nome: novoNome }).eq('id', id);
-        loadAll();
-    }
-}
-
-// ESTOQUE: Edição e Alerta Crítico
-function renderEst() {
-    document.getElementById('listEst').innerHTML = _prods.map(x => `
-        <div style="padding:10px; border-bottom:1px solid #333; display:flex; justify-content:space-between; ${x.qnt <= x.estoque_minimo ? 'color:var(--hx-danger)' : ''}">
-            <span>${x.nome} | Qtd: ${x.qnt} ${x.qnt <= x.estoque_minimo ? '<span class="critical">⚠️ CRÍTICO</span>' : ''}</span>
-            <div>
-                <button class="btn btn-edit" onclick="editProd(${x.id})">✏️</button>
-                <button class="btn btn-del" onclick="delItem('produtos', ${x.id})">🗑️</button>
-            </div>
-        </div>
-    `).join('');
-}
-
-async function saveProd() {
-    await db.from('produtos').insert({
-        nome: document.getElementById('pNome').value,
-        qnt: document.getElementById('pQtd').value,
-        estoque_minimo: document.getElementById('pMin').value,
-        preco_custo: document.getElementById('pCusto').value,
-        preco_revenda: document.getElementById('pRev').value
-    });
-    loadAll();
-}
-
-async function editProd(id) {
-    const p = _prods.find(x => x.id === id);
-    const novaQtd = prompt(`Nova quantidade para ${p.nome}:`, p.qnt);
-    if(novaQtd !== null) {
-        await db.from('produtos').update({ qnt: Number(novaQtd) }).eq('id', id);
-        loadAll();
-    }
-}
-
-// VENDAS: Pesquisa e Cálculo
-function updatePrice() {
-    const p = _prods.find(x => x.id == document.getElementById('vProd').value);
+// VENDAS LOGIC
+function updateVendaPrice() {
+    const p = _prods.find(x => x.id == document.getElementById('vProdSelect').value);
     const q = document.getElementById('vQtd').value;
-    if(p) document.getElementById('vTotal').innerText = `R$ ${(p.preco_revenda * q).toFixed(2)}`;
+    if(p) document.getElementById('vTotalLabel').innerText = `R$ ${(p.preco_revenda * q).toFixed(2)}`;
 }
 
 async function doVenda() {
-    const p = _prods.find(x => x.id == document.getElementById('vProd').value);
+    const p = _prods.find(x => x.id == document.getElementById('vProdSelect').value);
     const q = Number(document.getElementById('vQtd').value);
-    if(p.qnt < q) return alert("Estoque insuficiente!");
+    const estoqueAtual = (p.q_id || p.qnt || 0);
+
+    if(estoqueAtual < q) return alert("Estoque insuficiente!");
 
     const valorTotal = p.preco_revenda * q;
     const lucro = valorTotal - (p.preco_custo * q);
 
     await db.from('vendas').insert({
-        cliente_id: document.getElementById('vCli').value,
+        cliente_id: document.getElementById('vCliSelect').value,
         produto_id: p.id,
         quantidade: q,
         valor: valorTotal,
         lucro_total: lucro,
         data: new Date().toISOString()
     });
-    
-    await db.from('produtos').update({ qnt: p.qnt - q }).eq('id', p.id);
+
+    await db.from('produtos').update({ q_id: estoqueAtual - q, qnt: estoqueAtual - q }).eq('id', p.id);
     loadAll();
 }
 
+// GENERAL ACTIONS: RENDER, EDIT, DELETE
+async function delItem(tab, id) {
+    if(confirm("Deseja realmente excluir este registro?")) {
+        await db.from(tab).delete().eq('id', id);
+        loadAll();
+    }
+}
+
 function renderVen() {
-    const s = document.getElementById('sVen').value.toLowerCase();
-    document.getElementById('listVen').innerHTML = _vens.filter(v => v.clientes.nome.toLowerCase().includes(s) || v.data.includes(s)).map(v => `
+    const sNome = document.getElementById('sVenNome').value.toLowerCase();
+    const sData = document.getElementById('sVenData').value;
+    
+    document.getElementById('listVen').innerHTML = _vens.filter(v => 
+        (v.clientes?.nome?.toLowerCase().includes(sNome)) && (sData ? v.data.startsWith(sData) : true)
+    ).map(v => `
         <div style="padding:10px; border-bottom:1px solid #333; display:flex; justify-content:space-between;">
-            <span>${v.data.split('T')[0]} - ${v.clientes.nome}: ${v.produtos.nome} (R$ ${v.valor.toFixed(2)})</span>
+            <span>${v.data.split('T')[0]} - <strong>${v.clientes?.nome}</strong>: ${v.produtos?.nome} (R$ ${v.valor.toFixed(2)})</span>
             <button class="btn btn-del" onclick="delItem('vendas', ${v.id})">🗑️</button>
         </div>
     `).join('');
 }
 
-async function delItem(tab, id) {
-    if(confirm("Deseja realmente excluir?")) {
-        await db.from(tab).delete().eq('id', id);
+// STOQUE RENDER WITH ALERT
+function renderEst() {
+    document.getElementById('listEst').innerHTML = _prods.map(p => {
+        const estoque = (p.q_id || p.qnt || 0);
+        const critico = estoque <= (p.estoque_minimo || 0);
+        return `
+        <div style="padding:10px; border-bottom:1px solid #333; display:flex; justify-content:space-between; ${critico ? 'color:var(--hx-danger)' : ''}">
+            <span>${p.nome} | Estoque: <strong>${estoque}</strong> ${critico ? '<span class="critical">⚠️ BAIXO</span>' : ''}</span>
+            <div>
+                <button class="btn btn-edit" onclick="editProd(${p.id})">✏️</button>
+                <button class="btn btn-del" onclick="delItem('produtos', ${p.id})">🗑️</button>
+            </div>
+        </div>`;
+    }).join('');
+}
+
+async function editProd(id) {
+    const p = _prods.find(x => x.id === id);
+    const novaQtd = prompt(`Nova quantidade para ${p.nome}:`, (p.q_id || p.qnt || 0));
+    if(novaQtd !== null) {
+        await db.from('produtos').update({ q_id: Number(novaQtd), qnt: Number(novaQtd) }).eq('id', id);
         loadAll();
     }
+}
+
+function renderCli() {
+    const s = document.getElementById('sCli').value.toLowerCase();
+    document.getElementById('listCli').innerHTML = _clis.filter(c => c.nome.toLowerCase().includes(s)).map(c => `
+        <div style="padding:10px; border-bottom:1px solid #333; display:flex; justify-content:space-between;">
+            <span>${c.nome} - ${c.telefone || 'Sem fone'}</span>
+            <div>
+                <button class="btn btn-del" onclick="delItem('clientes', ${c.id})">🗑️</button>
+            </div>
+        </div>
+    `).join('');
+}
+
+// OS AND ORC
+async function saveOS() {
+    await db.from('ordens_servico').insert({
+        cliente_id: document.getElementById('osCliSelect').value,
+        descricao: document.getElementById('osDesc').value,
+        status: 'Aberta'
+    });
+    document.getElementById('osDesc').value = "";
+    loadAll();
+}
+
+function renderOS() {
+    document.getElementById('listOS').innerHTML = _oss.map(o => `
+        <div class="card">
+            <div style="display:flex; justify-content:space-between">
+                <strong>OS #${o.id} - ${o.clientes?.nome}</strong>
+                <button class="btn btn-del" onclick="delItem('ordens_servico', ${o.id})">🗑️</button>
+            </div>
+            <p>${o.descricao}</p>
+        </div>
+    `).join('');
+}
+
+// ORCAMENTOS
+async function saveOrc() {
+    await db.from('orcamentos').insert({
+        cliente_id: document.getElementById('orcCliSelect').value,
+        descricao: document.getElementById('orcDesc').value
+    });
+    document.getElementById('orcDesc').value = "";
+    loadAll();
+}
+
+function renderOrc() {
+    document.getElementById('listOrc').innerHTML = _orcs.map(r => `
+        <div class="card">
+            <div style="display:flex; justify-content:space-between">
+                <strong>Orç. #${r.id} - ${r.clientes?.nome}</strong>
+                <button class="btn btn-del" onclick="delItem('orcamentos', ${r.id})">🗑️</button>
+            </div>
+            <p>${r.descricao}</p>
+        </div>
+    `).join('');
 }
 
 window.onload = () => { if(db.auth.getSession()) loadAll(); };
