@@ -26,6 +26,7 @@
         
         label { display: block; margin-top: 15px; font-size: 13px; color: #888; }
         input, select, textarea { width: 100%; padding: 12px; margin-top: 5px; background: #222; border: 1px solid #333; color: #fff; border-radius: 6px; box-sizing: border-box; }
+        
         .btn { background: var(--hx-accent); color: #000; border: none; padding: 10px 20px; border-radius: 6px; cursor: pointer; font-weight: bold; margin-top: 15px; transition: 0.2s; }
         .btn:hover { opacity: 0.8; transform: translateY(-1px); }
         .btn.danger { background: var(--hx-danger); color: white; }
@@ -36,7 +37,6 @@
 
         #loginOverlay { position: fixed; inset: 0; background: var(--hx-dark); display: flex; align-items: center; justify-content: center; z-index: 2000; }
         
-        /* Modal de Edição */
         #modalOverlay { position: fixed; inset: 0; background: rgba(0,0,0,0.8); display: none; align-items: center; justify-content: center; z-index: 3000; }
         .modal-content { background: var(--hx-dark2); padding: 30px; border-radius: 15px; width: 400px; border: 1px solid var(--hx-accent); }
     </style>
@@ -58,8 +58,7 @@
     </nav>
 
     <div id="modalOverlay">
-        <div class="modal-content" id="modalBody">
-            </div>
+        <div class="modal-content" id="modalBody"></div>
     </div>
 
     <div id="loginOverlay">
@@ -76,27 +75,29 @@
         <section id="dashboardSec">
             <h2>Dashboard Financeiro</h2>
             <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap:20px;">
-                <div class="card">
-                    <small>Faturamento Total</small>
-                    <div id="fatTotal" style="font-size:24px; color:var(--hx-accent); font-weight:bold;">R$ 0,00</div>
-                </div>
-                <div class="card">
-                    <small>Lucro Estimado (Mês)</small>
-                    <div id="lucroMes" style="font-size:24px; color:#00cfff; font-weight:bold;">R$ 0,00</div>
-                </div>
+                <div class="card">Faturamento Total <div id="fatTotal" style="font-size:24px; color:var(--hx-accent); font-weight:bold;">R$ 0,00</div></div>
+                <div class="card">Lucro (Mês) <div id="lucroMes" style="font-size:24px; color:#00cfff; font-weight:bold;">R$ 0,00</div></div>
             </div>
-            <div class="card" style="margin-top:20px;">
-                <canvas id="grafVendasDiarias"></canvas>
+            <div class="card" style="margin-top:20px;"><canvas id="grafVendasDiarias"></canvas></div>
+        </section>
+
+        <section id="clientesSec" style="display:none;">
+            <h2>👤 Clientes</h2>
+            <div class="card">
+                <input id="cliNome" placeholder="Nome">
+                <input id="cliTel" placeholder="Telefone">
+                <button class="btn" onclick="salvarCliente()">CADASTRAR CLIENTE</button>
             </div>
+            <div id="listaClientes"></div>
         </section>
 
         <section id="produtosSec" style="display:none;">
-            <h2>📦 Controle de Estoque</h2>
+            <h2>📦 Estoque</h2>
             <div class="card">
                 <div style="display:grid; grid-template-columns: 2fr 1fr 1fr 1fr; gap:10px;">
                     <input id="prodNome" placeholder="Produto">
-                    <input id="prodCusto" type="number" placeholder="Custo R$">
-                    <input id="prodRevenda" type="number" placeholder="Venda R$">
+                    <input id="prodCusto" type="number" placeholder="Custo">
+                    <input id="prodRev" type="number" placeholder="Venda">
                     <input id="prodQtd" type="number" placeholder="Qtd">
                 </div>
                 <button class="btn" onclick="salvarProduto()">ADICIONAR</button>
@@ -105,28 +106,23 @@
         </section>
 
         <section id="vendasSec" style="display:none;">
-            <h2>💵 Registrar Venda</h2>
+            <h2>💵 Vendas</h2>
             <div class="card">
                 <select id="venCliente"></select>
-                <select id="venProduto" onchange="autoPreencherVenda()"></select>
-                <div style="display:grid; grid-template-columns: 1fr 1fr; gap:15px;">
-                    <input id="venQtd" type="number" value="1" oninput="autoPreencherVenda()">
-                    <input id="venValor" type="number" step="0.01" placeholder="Total R$">
-                </div>
-                <select id="venTipo">
-                    <option value="Pix">Pix</option><option value="Dinheiro">Dinheiro</option><option value="Cartão">Cartão</option>
-                </select>
-                <button class="btn" onclick="registrarVenda()">FINALIZAR E IMPRIMIR</button>
+                <select id="venProd" onchange="preencherVenda()"></select>
+                <input id="venQtd" type="number" value="1" oninput="preencherVenda()">
+                <input id="venValor" type="number" step="0.01" placeholder="Total">
+                <button class="btn" onclick="registrarVenda()">VENDER E IMPRIMIR</button>
             </div>
             <div id="listaVendas"></div>
         </section>
 
         <section id="osSec" style="display:none;">
-            <h2>🛠 Ordens de Serviço</h2>
+            <h2>🛠 Ordem de Serviço</h2>
             <div class="card">
                 <select id="osCliente"></select>
-                <textarea id="osDesc" placeholder="Descrição do problema e serviço..."></textarea>
-                <button class="btn" onclick="criarOS()">ABRIR ORDEM</button>
+                <textarea id="osDesc" placeholder="Descrição do serviço..."></textarea>
+                <button class="btn" onclick="criarOS()">ABRIR O.S.</button>
             </div>
             <div id="listaOS"></div>
         </section>
@@ -135,7 +131,7 @@
             <h2>📝 Orçamentos</h2>
             <div class="card">
                 <select id="orcCliente"></select>
-                <textarea id="orcDesc" placeholder="Itens e valores do orçamento..."></textarea>
+                <textarea id="orcDesc" placeholder="Descrição do orçamento..."></textarea>
                 <button class="btn" onclick="criarOrcamento()">GERAR ORÇAMENTO</button>
             </div>
             <div id="listaOrcamentos"></div>
@@ -143,6 +139,7 @@
     </main>
 
     <script>
+        // CLIENTE SUPABASE - DECLARAÇÃO ÚNICA (CORRIGE ERRO 1507)
         const { createClient } = window.supabase;
         const db = createClient(
             "https://axfccmezfofnqfsdurqb.supabase.co", 
@@ -152,8 +149,10 @@
         let chartVendas = null;
 
         function showSection(id, btn) {
+            const sec = document.getElementById(id);
+            if(!sec) return;
             document.querySelectorAll('main section').forEach(s => s.style.display = 'none');
-            document.getElementById(id).style.display = 'block';
+            sec.style.display = 'block';
             document.querySelectorAll('#sidebar button').forEach(b => b.classList.remove('menu-active'));
             if(btn) btn.classList.add('menu-active');
             if(id === 'dashboardSec') carregarDashboard();
@@ -163,241 +162,130 @@
             const email = document.getElementById('loginEmail').value;
             const password = document.getElementById('loginPass').value;
             const { data, error } = await db.auth.signInWithPassword({ email, password });
-            if (error) document.getElementById('loginMsg').innerText = "Erro: " + error.message;
+            if (error) document.getElementById('loginMsg').innerText = error.message;
             else { 
                 document.getElementById('loginOverlay').style.display = 'none';
-                document.getElementById('userLabel').innerText = data.user.email;
                 atualizarTudo();
             }
         }
 
         async function logout() { await db.auth.signOut(); location.reload(); }
 
-        /* --- ESTOQUE: SALVAR, EDITAR, EXCLUIR --- */
+        /* --- CLIENTES --- */
+        async function salvarCliente() {
+            await db.from('clientes').insert({
+                nome: document.getElementById('cliNome').value,
+                telefone: document.getElementById('cliTel').value
+            });
+            atualizarTudo();
+        }
+
+        async function excluirCliente(id) {
+            if(confirm("Excluir cliente?")) {
+                await db.from('clientes').delete().eq('id', id);
+                atualizarTudo();
+            }
+        }
+
+        /* --- ESTOQUE E ALERTA --- */
         async function salvarProduto() {
-            const nome = document.getElementById('prodNome').value;
-            if(!nome) return alert("Preencha o nome do produto!");
             await db.from('produtos').insert({
-                nome: nome,
+                nome: document.getElementById('prodNome').value,
                 preco_custo: document.getElementById('prodCusto').value,
-                preco_revenda: document.getElementById('prodRevenda').value,
+                preco_revenda: document.getElementById('prodRev').value,
                 qtd: document.getElementById('prodQtd').value,
                 estoque_minimo: 2
             });
             atualizarTudo();
         }
 
-        async function excluirProduto(id) {
-            if(!confirm("Tem certeza que deseja excluir este produto?")) return;
-            await db.from('produtos').delete().eq('id', id);
-            atualizarTudo();
-        }
-
-        function abrirEdicaoProduto(p) {
-            const modal = document.getElementById('modalOverlay');
-            const body = document.getElementById('modalBody');
-            body.innerHTML = `
-                <h3>Editar Produto</h3>
-                <label>Nome</label><input id="editNome" value="${p.nome}">
-                <label>Qtd em Estoque</label><input id="editQtd" type="number" value="${p.qtd}">
-                <label>Preço Venda</label><input id="editRevenda" type="number" value="${p.preco_revenda}">
-                <button class="btn" onclick="salvarEdicaoProduto(${p.id})">Salvar Alterações</button>
-                <button class="btn danger" onclick="fecharModal()">Cancelar</button>
-            `;
-            modal.style.display = 'flex';
-        }
-
-        async function salvarEdicaoProduto(id) {
-            await db.from('produtos').update({
-                nome: document.getElementById('editNome').value,
-                qtd: document.getElementById('editQtd').value,
-                preco_revenda: document.getElementById('editRevenda').value
-            }).eq('id', id);
-            fecharModal();
-            atualizarTudo();
-        }
-
         async function carregarProdutos() {
             const { data } = await db.from('produtos').select('*').order('nome');
             window._prodCache = data || [];
-            document.getElementById('listaProdutos').innerHTML = (data || []).map(p => {
-                const isCritical = p.qtd <= (p.estoque_minimo || 1);
-                return `
-                    <div class="card" style="display:flex; justify-content:space-between; align-items:center;">
-                        <div>
-                            <strong>${p.nome}</strong><br>
-                            <small>Estoque: ${p.qtd} ${isCritical ? '<span class="badge-critical">CRÍTICO</span>' : ''}</small>
-                        </div>
-                        <div>
-                            R$ ${Number(p.preco_revenda).toFixed(2)}
-                            <button class="btn edit" onclick='abrirEdicaoProduto(${JSON.stringify(p)})' style="padding:5px 10px; margin-left:10px;">✏️</button>
-                            <button class="btn danger" onclick="excluirProduto(${p.id})" style="padding:5px 10px;">🗑️</button>
-                        </div>
+            document.getElementById('listaProdutos').innerHTML = window._prodCache.map(p => `
+                <div class="card" style="display:flex; justify-content:space-between; align-items:center;">
+                    <div><strong>${p.nome}</strong><br><small>Qtd: ${p.qtd} ${p.qtd <= p.estoque_minimo ? '<span class="badge-critical">ESTOQUE CRÍTICO</span>' : ''}</small></div>
+                    <div>
+                        <button class="btn edit" onclick='abrirEdicaoProd(${JSON.stringify(p)})'>✏️</button>
+                        <button class="btn danger" onclick="excluirProd(${p.id})">🗑️</button>
                     </div>
-                `;
-            }).join('');
-            const select = document.getElementById('venProduto');
-            select.innerHTML = '<option value="">Selecione um produto</option>' + (data || []).map(p => `<option value="${p.id}">${p.nome}</option>`).join('');
+                </div>
+            `).join('');
+            document.getElementById('venProd').innerHTML = '<option value="">Produto</option>' + window._prodCache.map(p => `<option value="${p.id}">${p.nome}</option>`).join('');
         }
 
-        /* --- OS: SALVAR, EDITAR, EXCLUIR --- */
-        async function excluirOS(id) {
-            if(!confirm("Deseja cancelar esta ordem de serviço?")) return;
-            await db.from('ordens_servico').delete().eq('id', id);
-            atualizarTudo();
-        }
-
-        function abrirEdicaoOS(os) {
-            const modal = document.getElementById('modalOverlay');
-            const body = document.getElementById('modalBody');
-            body.innerHTML = `
-                <h3>Atualizar OS #${os.id}</h3>
-                <label>Status</label>
-                <select id="editStatus">
-                    <option value="Aberta" ${os.status === 'Aberta' ? 'selected' : ''}>Aberta</option>
-                    <option value="Em andamento" ${os.status === 'Em andamento' ? 'selected' : ''}>Em andamento</option>
-                    <option value="Concluída" ${os.status === 'Concluída' ? 'selected' : ''}>Concluída</option>
-                </select>
-                <label>Descrição/Observações</label>
-                <textarea id="editDesc">${os.descricao}</textarea>
-                <button class="btn" onclick="salvarEdicaoOS(${os.id})">Atualizar</button>
-                <button class="btn danger" onclick="fecharModal()">Sair</button>
-            `;
-            modal.style.display = 'flex';
-        }
-
-        async function salvarEdicaoOS(id) {
-            await db.from('ordens_servico').update({
-                status: document.getElementById('editStatus').value,
-                descricao: document.getElementById('editDesc').value
-            }).eq('id', id);
-            fecharModal();
-            atualizarTudo();
-        }
-
-        /* --- RESTANTE DAS FUNÇÕES (VENDAS, DASHBOARD, ETC) --- */
-        function autoPreencherVenda() {
-            const prod = window._prodCache.find(p => p.id == document.getElementById('venProduto').value);
-            const qtd = document.getElementById('venQtd').value;
-            if(prod) document.getElementById('venValor').value = (prod.preco_revenda * qtd).toFixed(2);
+        /* --- VENDAS --- */
+        function preencherVenda() {
+            const p = window._prodCache.find(x => x.id == document.getElementById('venProd').value);
+            if(p) document.getElementById('venValor').value = (p.preco_revenda * document.getElementById('venQtd').value).toFixed(2);
         }
 
         async function registrarVenda() {
-            const prod = window._prodCache.find(p => p.id == document.getElementById('venProduto').value);
-            const qtd = Number(document.getElementById('venQtd').value);
-            const valorTotal = Number(document.getElementById('venValor').value);
-            if(!prod) return alert("Selecione um produto!");
-
+            const p = window._prodCache.find(x => x.id == document.getElementById('venProd').value);
+            const valor = Number(document.getElementById('venValor').value);
             const { data: v, error } = await db.from('vendas').insert({
                 cliente_id: document.getElementById('venCliente').value,
-                produto_id: prod.id,
-                quantidade: qtd,
-                valor: valorTotal,
-                lucro_total: (valorTotal - (prod.preco_custo * qtd)),
-                tipo_venda: document.getElementById('venTipo').value,
+                produto_id: p.id,
+                quantidade: Number(document.getElementById('venQtd').value),
+                valor: valor,
+                lucro_total: (valor - (p.preco_custo * Number(document.getElementById('venQtd').value))),
                 data: new Date().toISOString()
             }).select('*, clientes(nome), produtos(nome)').single();
 
             if(!error) {
-                await db.from('produtos').update({ qtd: prod.qtd - qtd }).eq('id', prod.id);
-                alert("Venda registrada!");
-                imprimirCupom(v);
+                await db.from('produtos').update({ qtd: p.qtd - Number(document.getElementById('venQtd').value) }).eq('id', p.id);
+                imprimir(v);
                 atualizarTudo();
             }
         }
 
-        async function carregarVendas() {
-            const { data } = await db.from('vendas').select('*, produtos(nome)').order('data', {ascending: false});
-            window._vendasHistorico = data || [];
-            document.getElementById('listaVendas').innerHTML = window._vendasHistorico.map((v, idx) => `
-                <div class="card" style="font-size:13px; display:flex; justify-content:space-between; align-items:center;">
-                    <div><b>#${v.id} ${v.produtos?.nome}</b><br>R$ ${Number(v.valor).toFixed(2)}</div>
-                    <button class="btn" style="margin:0; padding:5px 10px;" onclick="imprimirCupom(window._vendasHistorico[${idx}])">🖨️</button>
-                </div>
-            `).join('');
+        function imprimir(v) {
+            const w = window.open('', '', 'width=300,height=600');
+            w.document.write(`<pre style="font-family:monospace; font-size:12px;">HX ACESSORIOS\nData: ${new Date(v.data).toLocaleString()}\nItem: ${v.produtos.nome}\nTotal: R$ ${v.valor.toFixed(2)}\nObrigado!</pre>`);
+            w.print(); w.close();
         }
 
-        function imprimirCupom(v) {
-            const win = window.open('', '_blank', 'width=300,height=600');
-            win.document.write(`
-                <div style="font-family:monospace; width:250px; font-size:12px;">
-                    <center><strong>HX ACESSÓRIOS</strong></center><br>
-                    Data: ${new Date(v.data).toLocaleString()}<br>
-                    Cliente: ${v.clientes?.nome || 'Consumidor'}<br>
-                    Item: ${v.produtos?.nome}<br>
-                    Qtd: ${v.quantidade} | Total: R$ ${Number(v.valor).toFixed(2)}<br>
-                    Pagto: ${v.tipo_venda}<br>
-                    <center>Obrigado!</center>
-                </div>
-            `);
-            win.document.close(); win.print(); win.close();
-        }
-
+        /* --- O.S. --- */
         async function criarOS() {
             await db.from('ordens_servico').insert({
                 cliente_id: document.getElementById('osCliente').value,
                 descricao: document.getElementById('osDesc').value,
-                status: 'Aberta', data_abertura: new Date().toISOString()
+                status: 'Aberta'
             });
             atualizarTudo();
         }
 
-        async function carregarOS() {
-            const { data } = await db.from('ordens_servico').select('*, clientes(nome)').order('id', {ascending: false});
-            document.getElementById('listaOS').innerHTML = (data || []).map(os => `
+        /* --- DASHBOARD --- */
+        async function carregarDashboard() {
+            const { data: v } = await db.from('vendas').select('*');
+            if(!v) return;
+            document.getElementById('fatTotal').innerText = `R$ ${v.reduce((a, b) => a + b.valor, 0).toFixed(2)}`;
+            const ctx = document.getElementById('grafVendasDiarias').getContext('2d');
+            if(chartVendas) chartVendas.destroy();
+            chartVendas = new Chart(ctx, { type:'line', data:{ labels: v.slice(-7).map(x => new Date(x.data).toLocaleDateString()), datasets:[{ label:'Vendas', data: v.slice(-7).map(x => x.valor), borderColor:'#0aff9d' }] } });
+        }
+
+        async function atualizarTudo() {
+            await Promise.all([carregarProdutos(), carregarDashboard()]);
+            const { data: clis } = await db.from('clientes').select('*');
+            const selects = ['venCliente', 'osCliente', 'orcCliente'];
+            selects.forEach(s => document.getElementById(s).innerHTML = clis.map(c => `<option value="${c.id}">${c.nome}</option>`).join(''));
+            
+            // Listagem de Clientes
+            document.getElementById('listaClientes').innerHTML = clis.map(c => `
                 <div class="card" style="display:flex; justify-content:space-between; align-items:center;">
-                    <div><b>OS #${os.id} - ${os.clientes?.nome}</b> [${os.status}]<br>${os.descricao}</div>
-                    <div>
-                        <button class="btn edit" onclick='abrirEdicaoOS(${JSON.stringify(os)})' style="padding:5px 10px;">✏️</button>
-                        <button class="btn danger" onclick="excluirOS(${os.id})" style="padding:5px 10px;">🗑️</button>
-                    </div>
+                    <div><strong>${c.nome}</strong></div>
+                    <button class="btn danger" onclick="excluirCliente(${c.id})">🗑️</button>
                 </div>
             `).join('');
         }
 
-        async function criarOrcamento() {
-            await db.from('orcamentos').insert({
-                cliente_id: document.getElementById('orcCliente').value,
-                descricao: document.getElementById('orcDesc').value,
-                data: new Date().toISOString()
-            });
-            atualizarTudo();
-        }
-
-        async function carregarOrcamentos() {
-            const { data } = await db.from('orcamentos').select('*, clientes(nome)').order('id', {ascending: false});
-            document.getElementById('listaOrcamentos').innerHTML = (data || []).map(o => `<div class="card"><b>ORC #${o.id} - ${o.clientes?.nome}</b><br>${o.descricao}</div>`).join('');
-        }
-
-        async function carregarClientes() {
-            const { data } = await db.from('clientes').select('*').order('nome');
-            const selects = ['venCliente', 'osCliente', 'orcCliente'];
-            selects.forEach(s => document.getElementById(s).innerHTML = data.map(c => `<option value="${c.id}">${c.nome}</option>`).join(''));
-        }
-
-        async function carregarDashboard() {
-            const { data: v } = await db.from('vendas').select('*');
-            if(!v || v.length === 0) return;
-            document.getElementById('fatTotal').innerText = `R$ ${v.reduce((acc, x) => acc + Number(x.valor), 0).toFixed(2)}`;
-            const hoje = new Date();
-            const lucroM = v.filter(x => new Date(x.data).getMonth() === hoje.getMonth()).reduce((acc, x) => acc + Number(x.lucro_total || 0), 0);
-            document.getElementById('lucroMes').innerText = `R$ ${lucroM.toFixed(2)}`;
-            const ctx = document.getElementById('grafVendasDiarias').getContext('2d');
-            if(chartVendas) chartVendas.destroy();
-            chartVendas = new Chart(ctx, { type: 'line', data: { labels: v.slice(-7).map(x => new Date(x.data).toLocaleDateString()), datasets: [{ label: 'Vendas R$', data: v.slice(-7).map(x => x.valor), borderColor: '#0aff9d', fill:true, backgroundColor:'rgba(10,255,157,0.1)' }] } });
-        }
-
-        async function atualizarTudo() {
-            await carregarClientes(); await carregarProdutos(); await carregarVendas(); await carregarOS(); await carregarOrcamentos(); await carregarDashboard();
-        }
-
-        function fecharModal() { document.getElementById('modalOverlay').style.display = 'none'; }
+        function fecharModal() { document.getElementById('modalOverlay').style.display='none'; }
 
         window.onload = async () => {
             const { data } = await db.auth.getSession();
             if (data.session) {
                 document.getElementById('loginOverlay').style.display = 'none';
-                document.getElementById('userLabel').innerText = data.session.user.email;
                 atualizarTudo();
             }
         };
