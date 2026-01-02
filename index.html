@@ -3,102 +3,101 @@
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Sistema HX — Gestão Total</title>
+    <title>Sistema HX — Gestão Administrativa</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js/dist/chart.umd.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
     <style>
         :root { --hx-dark: #0d0d0d; --hx-dark2: #151515; --hx-accent: #0aff9d; --hx-text: #eaeaea; --hx-danger: #ff5566; }
-        body { margin: 0; background: var(--hx-dark); color: var(--hx-text); font-family: sans-serif; display: flex; }
-        #sidebar { width: 240px; background: var(--hx-dark2); height: 100vh; position: fixed; border-right: 1px solid #222; display: flex; flex-direction: column; }
-        #sidebar button { background: none; border: none; color: #fff; padding: 15px; text-align: left; cursor: pointer; border-left: 3px solid transparent; }
+        body { margin: 0; background: var(--hx-dark); color: var(--hx-text); font-family: 'Segoe UI', sans-serif; display: flex; overflow-x: hidden; }
+        #sidebar { width: 240px; background: var(--hx-dark2); height: 100vh; position: fixed; border-right: 1px solid #333; display: flex; flex-direction: column; }
+        #sidebar button { background: none; border: none; color: #fff; padding: 15px; text-align: left; cursor: pointer; border-left: 3px solid transparent; transition: 0.3s; }
         #sidebar button.active { background: #1f1f1f; color: var(--hx-accent); border-left-color: var(--hx-accent); }
-        main { margin-left: 240px; flex: 1; padding: 30px; }
+        main { margin-left: 240px; flex: 1; padding: 25px; min-height: 100vh; }
         .card { background: #181818; padding: 20px; border-radius: 8px; margin-bottom: 20px; border: 1px solid #333; }
-        input, select, textarea { width: 100%; padding: 10px; margin: 5px 0; background: #222; border: 1px solid #444; color: #fff; border-radius: 4px; }
-        .btn { padding: 10px 15px; border-radius: 4px; border: none; cursor: pointer; font-weight: bold; }
+        .grid-dash { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-bottom: 20px; }
+        input, select, textarea { width: 100%; padding: 10px; margin: 8px 0; background: #222; border: 1px solid #444; color: #fff; border-radius: 4px; box-sizing: border-box; }
+        .btn { padding: 10px 15px; border-radius: 4px; border: none; cursor: pointer; font-weight: bold; transition: 0.2s; }
         .btn-add { background: var(--hx-accent); color: #000; }
-        .btn-del { background: var(--hx-danger); color: #fff; margin-left: 5px; }
+        .btn-del { background: var(--hx-danger); color: #fff; }
         .btn-edit { background: #3498db; color: #fff; }
-        .badge { padding: 2px 6px; border-radius: 4px; font-size: 11px; font-weight: bold; }
         .critical { background: var(--hx-danger); animation: pulse 1.5s infinite; }
         @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.5; } 100% { opacity: 1; } }
-        #loginOverlay { position: fixed; inset: 0; background: #000; z-index: 1000; display: flex; align-items: center; justify-content: center; }
+        #loginOverlay { position: fixed; inset: 0; background: #000; z-index: 9999; display: flex; align-items: center; justify-content: center; }
     </style>
 </head>
 <body>
 
 <div id="loginOverlay">
-    <div class="card" style="width: 300px;">
+    <div class="card" style="width: 320px; border: 1px solid var(--hx-accent);">
         <h2 style="text-align:center; color:var(--hx-accent)">SISTEMA HX</h2>
         <input id="lEmail" type="email" placeholder="E-mail" value="admin@hx.com">
         <input id="lPass" type="password" placeholder="Senha">
         <button class="btn btn-add" style="width:100%" onclick="login()">ENTRAR</button>
-        <p id="lErr" style="color:var(--hx-danger); font-size:12px; text-align:center"></p>
+        <p id="lErr" style="color:var(--hx-danger); font-size:12px; text-align:center; margin-top:10px;"></p>
     </div>
 </div>
 
 <nav id="sidebar">
-    <div style="padding:20px; font-weight:bold; color:var(--hx-accent)">PAINEL HX</div>
+    <div style="padding:20px; font-weight:bold; color:var(--hx-accent); font-size:1.2rem; border-bottom:1px solid #333;">SISTEMA HX</div>
     <button onclick="changeTab('dashTab', this)" class="active">📊 Dashboard</button>
     <button onclick="changeTab('cliTab', this)">👤 Clientes</button>
     <button onclick="changeTab('estTab', this)">📦 Estoque</button>
     <button onclick="changeTab('venTab', this)">💵 Vendas</button>
+    <button onclick="changeTab('osTab', this)">🛠 Ordem de Serviço</button>
 </nav>
 
 <main>
     <section id="dashTab">
-        <div style="display:grid; grid-template-columns: repeat(3, 1fr); gap:15px;">
-            <div class="card">Vendas Hoje <h2 id="vendaDia" style="color:var(--hx-accent)">R$ 0,00</h2></div>
-            <div class="card">Vendas Mês <h2 id="vendaMes" style="color:#00cfff">R$ 0,00</h2></div>
-            <div class="card">Estoque Crítico <h2 id="qtdCritico" style="color:var(--hx-danger)">0 Itens</h2></div>
+        <h2 style="color:var(--hx-accent)">📊 Dashboard Financeiro</h2>
+        <div class="grid-dash">
+            <div class="card">Vendas Hoje <h3 id="vDia" style="color:var(--hx-accent)">R$ 0,00</h3></div>
+            <div class="card">Lucro Hoje <h3 id="lDia" style="color:#00cfff">R$ 0,00</h3></div>
+            <div class="card">Faturamento Mês <h3 id="vMes" style="color:#fff">R$ 0,00</h3></div>
+            <div class="card">Estoque Crítico <h3 id="qtdCrit" style="color:var(--hx-danger)">0</h3></div>
         </div>
-        <div class="card"><canvas id="chartVendas" height="100"></canvas></div>
+        <div class="card"><h4>Vendas Diárias</h4><canvas id="chartDiario" height="100"></canvas></div>
     </section>
 
     <section id="cliTab" style="display:none">
-        <h2>Cadastro de Clientes</h2>
+        <h2>👤 Gestão de Clientes</h2>
         <div class="card">
             <input id="cNome" placeholder="Nome Completo">
             <input id="cTel" placeholder="Telefone">
             <button class="btn btn-add" onclick="saveCli()">SALVAR CLIENTE</button>
         </div>
         <div class="card">
-            <input id="searchCli" placeholder="🔍 Pesquisar cliente por nome..." oninput="renderCli()">
+            <input id="sCli" placeholder="🔍 Pesquisar cliente..." oninput="renderCli()">
             <div id="listCli" style="margin-top:15px"></div>
         </div>
     </section>
 
     <section id="estTab" style="display:none">
-        <h2>Controle de Estoque</h2>
+        <h2>📦 Controle de Estoque</h2>
         <div class="card">
-            <input id="pNome" placeholder="Nome do Produto">
+            <input id="pNome" placeholder="Produto">
             <input id="pQtd" type="number" placeholder="Quantidade">
-            <input id="pMin" type="number" placeholder="Estoque Mínimo (Alerta)">
-            <input id="pCusto" type="number" placeholder="Preço Custo">
-            <input id="pVenda" type="number" placeholder="Preço Venda">
-            <button class="btn btn-add" onclick="saveProd()">ADICIONAR PRODUTO</button>
+            <input id="pMin" type="number" placeholder="Mínimo">
+            <input id="pCusto" type="number" placeholder="Custo">
+            <input id="pRev" type="number" placeholder="Revenda">
+            <button class="btn btn-add" onclick="saveProd()">ADICIONAR</button>
         </div>
         <div class="card">
-            <button class="btn btn-edit" onclick="filterCritical()">VER APENAS ESTOQUE CRÍTICO</button>
-            <button class="btn" onclick="renderEst()">VER TUDO</button>
-            <div id="listEst" style="margin-top:15px"></div>
+            <div id="listEst"></div>
         </div>
     </section>
 
     <section id="venTab" style="display:none">
-        <h2>Vendas</h2>
+        <h2>💵 Vendas</h2>
         <div class="card">
             <select id="vCli"></select>
-            <select id="vProd"></select>
-            <input id="vQtd" type="number" value="1">
-            <button class="btn btn-add" onclick="doVenda()">FINALIZAR VENDA</button>
+            <select id="vProd" onchange="updatePrice()"></select>
+            <input id="vQtd" type="number" value="1" oninput="updatePrice()">
+            <p>Total: <span id="vTotal">R$ 0,00</span></p>
+            <button class="btn btn-add" onclick="doVenda()">FINALIZAR</button>
         </div>
         <div class="card">
-            <div style="display:flex; gap:10px">
-                <input id="sVenNome" placeholder="🔍 Por cliente..." oninput="renderVen()">
-                <input id="sVenData" type="date" onchange="renderVen()">
-            </div>
-            <div id="listVen" style="margin-top:15px"></div>
+            <input id="sVen" placeholder="🔍 Buscar por cliente ou data (AAAA-MM-DD)..." oninput="renderVen()">
+            <div id="listVen"></div>
         </div>
     </section>
 </main>
@@ -106,16 +105,12 @@
 <script>
 // CONFIGURAÇÃO SUPABASE
 const { createClient } = window.supabase;
-const db = createClient(
-    "https://axfccmezfofnqfsdurqb.supabase.co", 
-    "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImF4ZmNjbWV6Zm9mbnFmc2R1cnFiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjUwNzA1NDMsImV4cCI6MjA4MDY0NjU0M30.woGp6hBgiEa41opQxyxqqMULlDKMXm9T83bhJ7UEmb8"
-);
+const db = createClient("https://axfccmezfofnqfsdurqb.supabase.co", "SUA_ANON_KEY_AQUI");
 
-let _clientes = [], _produtos = [], _vendas = [];
-let chartInstance = null;
+let _clis = [], _prods = [], _vens = [];
 
 async function login() {
-    const { error } = await db.auth.signInWithPassword({
+    const { data, error } = await db.auth.signInWithPassword({
         email: document.getElementById('lEmail').value,
         password: document.getElementById('lPass').value
     });
@@ -135,24 +130,44 @@ async function loadAll() {
     const { data: p } = await db.from('produtos').select('*').order('nome');
     const { data: v } = await db.from('vendas').select('*, clientes(nome), produtos(nome)').order('data', {ascending:false});
     
-    _clientes = c || []; _produtos = p || []; _vendas = v || [];
-    
+    _clis = c || []; _prods = p || []; _vens = v || [];
     renderCli(); renderEst(); renderVen(); updateDash();
-    
-    // Preencher selects
-    document.getElementById('vCli').innerHTML = _clientes.map(i => `<option value="${i.id}">${i.nome}</option>`).join('');
-    document.getElementById('vProd').innerHTML = _produtos.map(i => `<option value="${i.id}">${i.nome} (R$ ${i.preco_revenda})</option>`).join('');
+    document.getElementById('vCli').innerHTML = _clis.map(i => `<option value="${i.id}">${i.nome}</option>`).join('');
+    document.getElementById('vProd').innerHTML = _prods.map(i => `<option value="${i.id}">${i.nome} (R$ ${i.preco_revenda})</option>`).join('');
 }
 
-// CLIENTES: Pesquisar, Editar, Excluir
+// DASHBOARD
+function updateDash() {
+    const hoje = new Date().toISOString().split('T')[0];
+    const vHoje = _vens.filter(v => v.data.startsWith(hoje));
+    const totalHoje = vHoje.reduce((a, b) => a + b.valor, 0);
+    const lucroHoje = vHoje.reduce((a, b) => a + (b.lucro_total || 0), 0);
+    const totalMes = _vens.filter(v => v.data.startsWith(hoje.slice(0, 7))).reduce((a, b) => a + b.valor, 0);
+    const criticos = _prods.filter(p => p.qnt <= p.estoque_minimo).length;
+
+    document.getElementById('vDia').innerText = `R$ ${totalHoje.toFixed(2)}`;
+    document.getElementById('lDia').innerText = `R$ ${lucroHoje.toFixed(2)}`;
+    document.getElementById('vMes').innerText = `R$ ${totalMes.toFixed(2)}`;
+    document.getElementById('qtdCrit').innerText = criticos;
+
+    const dias = [...new Set(_vens.map(v => v.data.split('T')[0]))].sort().slice(-7);
+    new Chart(document.getElementById('chartDiario'), {
+        type: 'bar',
+        data: {
+            labels: dias,
+            datasets: [{ label: 'Vendas Diárias', data: dias.map(d => _vens.filter(v => v.data.startsWith(d)).reduce((a,b)=>a+b.valor,0)), backgroundColor: '#0aff9d' }]
+        }
+    });
+}
+
+// CLIENTES: Edição e Exclusão
 function renderCli() {
-    const term = document.getElementById('searchCli').value.toLowerCase();
-    const filtered = _clientes.filter(x => x.nome.toLowerCase().includes(term));
-    document.getElementById('listCli').innerHTML = filtered.map(x => `
-        <div style="border-bottom:1px solid #333; padding:10px; display:flex; justify-content:space-between">
-            <span><b>${x.nome}</b> - ${x.telefone}</span>
+    const term = document.getElementById('sCli').value.toLowerCase();
+    document.getElementById('listCli').innerHTML = _clis.filter(x => x.nome.toLowerCase().includes(term)).map(x => `
+        <div style="padding:10px; border-bottom:1px solid #333; display:flex; justify-content:space-between;">
+            <span>${x.nome} - ${x.telefone}</span>
             <div>
-                <button class="btn btn-edit" onclick="editCli(${x.id}, '${x.nome}')">✏️</button>
+                <button class="btn btn-edit" onclick="editCli(${x.id})">✏️</button>
                 <button class="btn btn-del" onclick="delItem('clientes', ${x.id})">🗑️</button>
             </div>
         </div>
@@ -160,33 +175,31 @@ function renderCli() {
 }
 
 async function saveCli() {
-    await db.from('clientes').insert({ nome: document.getElementById('cNome').value, telefone: document.getElementById('cTel').value });
+    const nome = document.getElementById('cNome').value;
+    const tel = document.getElementById('cTel').value;
+    if(!nome) return;
+    await db.from('clientes').insert({ nome, telefone: tel });
     loadAll();
 }
 
-// ESTOQUE: Alerta Crítico e Filtro
+async function editCli(id) {
+    const cli = _clis.find(x => x.id === id);
+    const novoNome = prompt("Novo nome:", cli.nome);
+    if(novoNome) {
+        await db.from('clientes').update({ nome: novoNome }).eq('id', id);
+        loadAll();
+    }
+}
+
+// ESTOQUE: Edição e Alerta Crítico
 function renderEst() {
-    document.getElementById('listEst').innerHTML = _produtos.map(x => {
-        const isCrit = x.qnt <= x.estoque_minimo;
-        return `
-        <div style="border-bottom:1px solid #333; padding:10px; display:flex; justify-content:space-between">
-            <span>
-                <b>${x.nome}</b> | Qtd: ${x.qnt} 
-                ${isCrit ? '<span class="badge critical">⚠️ CRÍTICO</span>' : ''}
-            </span>
+    document.getElementById('listEst').innerHTML = _prods.map(x => `
+        <div style="padding:10px; border-bottom:1px solid #333; display:flex; justify-content:space-between; ${x.qnt <= x.estoque_minimo ? 'color:var(--hx-danger)' : ''}">
+            <span>${x.nome} | Qtd: ${x.qnt} ${x.qnt <= x.estoque_minimo ? '<span class="critical">⚠️ CRÍTICO</span>' : ''}</span>
             <div>
                 <button class="btn btn-edit" onclick="editProd(${x.id})">✏️</button>
                 <button class="btn btn-del" onclick="delItem('produtos', ${x.id})">🗑️</button>
             </div>
-        </div>`;
-    }).join('');
-}
-
-function filterCritical() {
-    const criticos = _produtos.filter(p => p.qnt <= p.estoque_minimo);
-    document.getElementById('listEst').innerHTML = criticos.map(x => `
-        <div style="border-bottom:1px solid #333; padding:10px; color:var(--hx-danger)">
-            <b>${x.nome}</b> - Apenas ${x.qnt} unidades restando!
         </div>
     `).join('');
 }
@@ -197,76 +210,63 @@ async function saveProd() {
         qnt: document.getElementById('pQtd').value,
         estoque_minimo: document.getElementById('pMin').value,
         preco_custo: document.getElementById('pCusto').value,
-        preco_revenda: document.getElementById('pVenda').value
+        preco_revenda: document.getElementById('pRev').value
     });
     loadAll();
 }
 
-// VENDAS: Por Data/Nome, Excluir, Dashboard
-function renderVen() {
-    const term = document.getElementById('sVenNome').value.toLowerCase();
-    const date = document.getElementById('sVenData').value;
-    const filtered = _vendas.filter(v => {
-        const matchName = v.clientes?.nome.toLowerCase().includes(term);
-        const matchDate = date ? v.data.startsWith(date) : true;
-        return matchName && matchDate;
+async function editProd(id) {
+    const p = _prods.find(x => x.id === id);
+    const novaQtd = prompt(`Nova quantidade para ${p.nome}:`, p.qnt);
+    if(novaQtd !== null) {
+        await db.from('produtos').update({ qnt: Number(novaQtd) }).eq('id', id);
+        loadAll();
+    }
+}
+
+// VENDAS: Pesquisa e Cálculo
+function updatePrice() {
+    const p = _prods.find(x => x.id == document.getElementById('vProd').value);
+    const q = document.getElementById('vQtd').value;
+    if(p) document.getElementById('vTotal').innerText = `R$ ${(p.preco_revenda * q).toFixed(2)}`;
+}
+
+async function doVenda() {
+    const p = _prods.find(x => x.id == document.getElementById('vProd').value);
+    const q = Number(document.getElementById('vQtd').value);
+    if(p.qnt < q) return alert("Estoque insuficiente!");
+
+    const valorTotal = p.preco_revenda * q;
+    const lucro = valorTotal - (p.preco_custo * q);
+
+    await db.from('vendas').insert({
+        cliente_id: document.getElementById('vCli').value,
+        produto_id: p.id,
+        quantidade: q,
+        valor: valorTotal,
+        lucro_total: lucro,
+        data: new Date().toISOString()
     });
     
-    document.getElementById('listVen').innerHTML = filtered.map(v => `
-        <div style="border-bottom:1px solid #333; padding:10px; display:flex; justify-content:space-between">
-            <span>${new Date(v.data).toLocaleDateString()} - <b>${v.clientes.nome}</b>: ${v.produtos.nome} (R$ ${v.valor})</span>
+    await db.from('produtos').update({ qnt: p.qnt - q }).eq('id', p.id);
+    loadAll();
+}
+
+function renderVen() {
+    const s = document.getElementById('sVen').value.toLowerCase();
+    document.getElementById('listVen').innerHTML = _vens.filter(v => v.clientes.nome.toLowerCase().includes(s) || v.data.includes(s)).map(v => `
+        <div style="padding:10px; border-bottom:1px solid #333; display:flex; justify-content:space-between;">
+            <span>${v.data.split('T')[0]} - ${v.clientes.nome}: ${v.produtos.nome} (R$ ${v.valor.toFixed(2)})</span>
             <button class="btn btn-del" onclick="delItem('vendas', ${v.id})">🗑️</button>
         </div>
     `).join('');
 }
 
-async function doVenda() {
-    const prod = _produtos.find(p => p.id == document.getElementById('vProd').value);
-    const qtd = Number(document.getElementById('vQtd').value);
-    
-    if(prod.qnt < qtd) return alert("Estoque insuficiente!");
-
-    await db.from('vendas').insert({
-        cliente_id: document.getElementById('vCli').value,
-        produto_id: prod.id,
-        quantidade: qtd,
-        valor: prod.preco_revenda * qtd,
-        data: new Date().toISOString()
-    });
-    
-    await db.from('produtos').update({ qnt: prod.qnt - qtd }).eq('id', prod.id);
-    loadAll();
-}
-
-async function delItem(table, id) {
-    if(confirm("Tem certeza que deseja excluir?")) {
-        await db.from(table).delete().eq('id', id);
+async function delItem(tab, id) {
+    if(confirm("Deseja realmente excluir?")) {
+        await db.from(tab).delete().eq('id', id);
         loadAll();
     }
-}
-
-function updateDash() {
-    const hoje = new Date().toISOString().split('T')[0];
-    const mes = hoje.substring(0, 7);
-    
-    const totalHoje = _vendas.filter(v => v.data.startsWith(hoje)).reduce((a, b) => a + b.valor, 0);
-    const totalMes = _vendas.filter(v => v.data.startsWith(mes)).reduce((a, b) => a + b.valor, 0);
-    const criticos = _produtos.filter(p => p.qnt <= p.estoque_minimo).length;
-    
-    document.getElementById('vendaDia').innerText = `R$ ${totalHoje.toFixed(2)}`;
-    document.getElementById('vendaMes').innerText = `R$ ${totalMes.toFixed(2)}`;
-    document.getElementById('qtdCritico').innerText = `${criticos} Itens`;
-
-    const ctx = document.getElementById('chartVendas').getContext('2d');
-    if(chartInstance) chartInstance.destroy();
-    chartInstance = new Chart(ctx, {
-        type: 'line',
-        data: {
-            labels: _vendas.slice(0,7).map(v => new Date(v.data).toLocaleDateString()),
-            datasets: [{ label: 'Vendas Recentes', data: _vendas.slice(0,7).map(v => v.valor), borderColor: '#0aff9d', tension: 0.4 }]
-        },
-        options: { scales: { y: { beginAtZero: true } } }
-    });
 }
 
 window.onload = () => { if(db.auth.getSession()) loadAll(); };
