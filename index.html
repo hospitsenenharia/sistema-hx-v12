@@ -3,7 +3,7 @@
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Sistema HX — Gestão Total</title>
+    <title>Sistema HX — Administração Completa</title>
 
     <script src="https://cdn.jsdelivr.net/npm/chart.js/dist/chart.umd.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
@@ -16,7 +16,7 @@
         }
         body { margin: 0; background: var(--hx-dark); color: var(--hx-text); font-family: "Segoe UI", sans-serif; display: flex; min-height: 100vh; }
         
-        /* Sidebar lateral baseada em image_ee48a9.png */
+        /* Sidebar lateral conforme imagem image_ee48a9.png */
         #sidebar { width: 240px; background: var(--hx-dark2); height: 100vh; position: fixed; border-right: 1px solid var(--hx-dark3); display: flex; flex-direction: column; z-index: 100; }
         #sidebar .logo { padding: 25px; text-align: center; color: var(--hx-accent); font-weight: bold; font-size: 1.5rem; border-bottom: 1px solid var(--hx-dark3); }
         #sidebar button { background: none; border: none; color: var(--hx-text); padding: 15px 25px; text-align: left; cursor: pointer; transition: 0.3s; border-left: 3px solid transparent; }
@@ -25,19 +25,17 @@
         main { margin-left: 240px; flex: 1; padding: 30px; box-sizing: border-box; }
         .card { background: var(--hx-card); padding: 20px; border-radius: 12px; margin-bottom: 20px; border: 1px solid #222; }
         
-        /* Grid Dashboard baseado em image_ee5e92.png */
+        /* Dashboard em grid conforme imagem image_eeb9a4.png */
         .grid-dash { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-bottom: 20px; }
         .dash-card { padding: 20px; border-radius: 12px; background: var(--hx-dark2); border-left: 4px solid var(--hx-accent); }
 
         input, select, textarea { width: 100%; padding: 12px; margin: 8px 0; background: #222; border: 1px solid #333; color: #fff; border-radius: 6px; box-sizing: border-box; }
-        .btn { background: var(--hx-accent); color: #000; border: none; padding: 12px 20px; border-radius: 6px; cursor: pointer; font-weight: bold; margin-top: 15px; transition: 0.2s; }
-        .btn:hover { opacity: 0.8; }
-        .btn-del { background: var(--hx-danger); color: #fff; padding: 5px 10px; margin-left: 10px; }
+        .btn { background: var(--hx-accent); color: #000; border: none; padding: 12px 20px; border-radius: 6px; cursor: pointer; font-weight: bold; margin-top: 15px; }
         
         .critical { color: var(--hx-danger); font-weight: bold; animation: pulse 1.5s infinite; }
-        @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
+        @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.5; } 100% { opacity: 1; } }
 
-        /* Login centralizado conforme image_eeb961.png */
+        /* Overlay de Login conforme imagem image_eeb961.png */
         #loginOverlay { position: fixed; inset: 0; background: var(--hx-dark); display: flex; align-items: center; justify-content: center; z-index: 2000; }
         .login-card { background: var(--hx-dark2); padding: 30px; border-radius: 12px; border: 1px solid var(--hx-accent); width: 320px; }
     </style>
@@ -45,23 +43,22 @@
 <body>
 
     <nav id="sidebar">
-        <div class="logo">PAINEL HX</div>
+        <div class="logo">SISTEMA HX</div>
         <button onclick="showTab('dashTab', this)" class="active">📊 Dashboard</button>
         <button onclick="showTab('cliTab', this)">👤 Clientes</button>
         <button onclick="showTab('estTab', this)">📦 Estoque</button>
         <button onclick="showTab('venTab', this)">💵 Vendas</button>
         <button onclick="showTab('osTab', this)">🛠 Ordem de Serviço</button>
-        <button onclick="showTab('orcTab', this)">📝 Orçamentos</button>
         <button onclick="logout()" style="margin-top:auto; color:var(--hx-danger);">Sair</button>
     </nav>
 
     <div id="loginOverlay">
         <div class="login-card">
-            <h2 style="text-align:center; color: var(--hx-accent)">SISTEMA HX</h2>
+            <h2 style="text-align:center; color: var(--hx-accent)">ACESSO</h2>
             <input id="lEmail" type="email" placeholder="admin@hx.com" value="admin@hx.com">
-            <input id="lPass" type="password" placeholder="Sua Senha">
+            <input id="lPass" type="password" placeholder="Senha">
             <button class="btn" style="width:100%" onclick="login()">ENTRAR</button>
-            <p id="lErr" style="color:var(--hx-danger); text-align:center; font-size:12px; margin-top: 10px;"></p>
+            <p id="lErr" style="color:var(--hx-danger); text-align:center; font-size:12px; margin-top:10px;"></p>
         </div>
     </div>
 
@@ -77,281 +74,101 @@
             <div class="card"><canvas id="graficoVendas" height="100"></canvas></div>
         </section>
 
-        <section id="cliTab" style="display:none;">
-            <h2>👤 Cadastro de Clientes</h2>
+        <section id="venTab" style="display:none;">
+            <h2>💵 Registrar Venda</h2>
             <div class="card">
-                <input id="cNome" placeholder="Nome">
-                <input id="cTel" placeholder="Telefone">
-                <button class="btn" onclick="salvarCli()">SALVAR</button>
+                <select id="vCliSelect"></select>
+                <select id="vProdSelect" onchange="autoPreencherVenda()"></select>
+                <input id="vQtd" type="number" value="1" oninput="autoPreencherVenda()">
+                <input id="vTotalVal" type="number" step="0.01" placeholder="Total R$">
+                <button class="btn" onclick="registrarVenda()">FINALIZAR VENDA</button>
             </div>
-            <div class="card">
-                <input id="buscaCli" placeholder="🔍 Pesquisar por nome..." oninput="renderCli()">
-                <div id="listaCli"></div>
-            </div>
+            <div id="listaVendas"></div>
         </section>
 
         <section id="estTab" style="display:none;">
-            <h2>📦 Controle de Estoque</h2>
-            <div class="card">
-                <input id="pNome" placeholder="Produto">
-                <input id="pQtd" type="number" placeholder="Quantidade">
-                <input id="pMin" type="number" placeholder="Mínimo Alerta">
-                <input id="pCusto" type="number" placeholder="Custo R$">
-                <input id="pRev" type="number" placeholder="Venda R$">
-                <button class="btn" onclick="salvarProd()">ADICIONAR</button>
-            </div>
-            <div class="card">
-                <div id="listaEst"></div>
-            </div>
+            <h2>📦 Estoque</h2>
+            <div id="listaProdutos"></div>
         </section>
-
-        <section id="venTab" style="display:none;">
-            <h2>💵 Vendas e Recibos</h2>
-            <div class="card">
-                <select id="vCli"></select>
-                <select id="vProd" onchange="calcVenda()"></select>
-                <input id="vQtd" type="number" value="1" oninput="calcVenda()">
-                <p>Total: <strong id="vTotal">R$ 0,00</strong></p>
-                <button class="btn" onclick="realizarVenda()">FINALIZAR VENDA</button>
-            </div>
-            <div class="card">
-                <div style="display: flex; gap: 10px; margin-bottom: 15px;">
-                    <input id="buscaVenNome" placeholder="🔍 Por cliente..." oninput="renderVen()">
-                    <input id="buscaVenData" type="date" onchange="renderVen()">
-                </div>
-                <div id="listaVen"></div>
-            </div>
-        </section>
-
+        
         <section id="osTab" style="display:none;">
             <h2>🛠 Ordens de Serviço</h2>
-            <div class="card">
-                <select id="osCli"></select>
-                <textarea id="osDesc" placeholder="Descrição do problema..."></textarea>
-                <button class="btn" onclick="salvarOS()">ABRIR O.S.</button>
-            </div>
             <div id="listaOS"></div>
-        </section>
-
-        <section id="orcTab" style="display:none;">
-            <h2>📝 Orçamentos</h2>
-            <div class="card">
-                <select id="orcCli"></select>
-                <textarea id="orcDesc" placeholder="Descrição do orçamento..."></textarea>
-                <button class="btn" onclick="salvarOrc()">GERAR ORÇAMENTO</button>
-            </div>
-            <div id="listaOrc"></div>
         </section>
     </main>
 
 <script>
-// CONFIGURAÇÃO ÚNICA DO SUPABASE (Ajustada conforme image_ecfa6e.png)
-const { createClient } = window.supabase;
-const db = createClient(
-    "https://axfccmezfofnqfsdurqb.supabase.co", 
-    "SUA_ANON_KEY_CORRETA_AQUI" // Substitua pela sua chave anon real
-);
+    /* INICIALIZAÇÃO ÚNICA DO SUPABASE
+       IMPORTANTE: Substitua a chave abaixo pela sua Anon Key real para evitar erro 401
+    */
+    const { createClient } = window.supabase;
+    const db = createClient(
+        "https://axfccmezfofnqfsdurqb.supabase.co", 
+        "SUA_ANON_KEY_CORRETA_AQUI" 
+    );
 
-let _clis = [], _prods = [], _vens = [], _oss = [], _orcs = [];
-let chartRef = null;
+    let _vendas = [], _produtos = [];
 
-// CORREÇÃO: Função login definida corretamente para image_ec89b1.png
-async function login() {
-    const email = document.getElementById('lEmail').value;
-    const password = document.getElementById('lPass').value;
-    const { data, error } = await db.auth.signInWithPassword({ email, password });
-    
-    if(error) {
-        document.getElementById('lErr').innerText = "Erro: " + error.message;
-    } else { 
-        document.getElementById('loginOverlay').style.display='none'; 
-        atualizarTudo(); 
-    }
-}
-
-async function logout() { await db.auth.signOut(); location.reload(); }
-
-function showTab(id, btn) {
-    document.querySelectorAll('main section').forEach(s => s.style.display='none');
-    const target = document.getElementById(id);
-    if(target) target.style.display='block';
-    document.querySelectorAll('#sidebar button').forEach(b => b.classList.remove('active'));
-    if(btn) btn.classList.add('active');
-    if(id === 'dashTab') carregarDashboard();
-}
-
-async function atualizarTudo() {
-    // Carregamento baseado no esquema da imagem supabase-schema-axfccmezfofnqfsdurqb.png
-    const [{data: c}, {data: p}, {data: v}, {data: s}, {data: o}] = await Promise.all([
-        db.from('clientes').select('*').order('nome'),
-        db.from('produtos').select('*').order('nome'),
-        db.from('vendas').select('*, clientes(nome), produtos(nome)').order('data', {ascending:false}),
-        db.from('ordens_servico').select('*, clientes(nome)').order('id', {ascending:false}),
-        db.from('orcamentos').select('*, clientes(nome)').order('id', {ascending:false})
-    ]);
-    
-    _clis = c || []; _prods = p || []; _vens = v || []; _oss = s || []; _orcs = o || [];
-    
-    renderCli(); renderEst(); renderVen(); renderOS(); renderOrc(); carregarDashboard();
-    
-    // Atualizar Selects
-    const cliOpt = _clis.map(i => `<option value="${i.id}">${i.nome}</option>`).join('');
-    ['vCli', 'osCli', 'orcCli'].forEach(id => document.getElementById(id).innerHTML = cliOpt);
-    document.getElementById('vProd').innerHTML = _prods.map(i => `<option value="${i.id}">${i.nome} (R$ ${i.preco_revenda})</option>`).join('');
-}
-
-// DASHBOARD E GRÁFICOS
-async function carregarDashboard() {
-    const hoje = new Date().toISOString().split('T')[0];
-    const vHoje = _vens.filter(v => v.data.startsWith(hoje));
-    
-    const fatHoje = vHoje.reduce((a, b) => a + (b.valor || 0), 0);
-    const lucHoje = vHoje.reduce((a, b) => a + (b.lucro_total || 0), 0);
-    const fatMes = _vens.filter(v => v.data.startsWith(hoje.slice(0, 7))).reduce((a, b) => a + (b.valor || 0), 0);
-    const criticos = _prods.filter(p => (p.q_id || p.qnt || 0) <= (p.estoque_minimo || 0)).length;
-
-    document.getElementById('vDia').innerText = `R$ ${fatHoje.toFixed(2)}`;
-    document.getElementById('lDia').innerText = `R$ ${lucHoje.toFixed(2)}`;
-    document.getElementById('vMes').innerText = `R$ ${fatMes.toFixed(2)}`;
-    document.getElementById('qtdCrit').innerText = criticos;
-
-    renderChart();
-}
-
-function renderChart() {
-    const ctx = document.getElementById('graficoVendas').getContext('2d');
-    if(chartRef) chartRef.destroy();
-    chartRef = new Chart(ctx, {
-        type: 'line',
-        data: {
-            labels: _vens.slice(0,7).reverse().map(v => v.data.split('T')[0]),
-            datasets: [{ label: 'Vendas Recentes', data: _vens.slice(0,7).reverse().map(v => v.valor), borderColor: '#0aff9d', tension: 0.3 }]
+    /* FUNÇÃO LOGIN CORRIGIDA */
+    async function login() {
+        const email = document.getElementById('lEmail').value;
+        const password = document.getElementById('lPass').value;
+        const { data, error } = await db.auth.signInWithPassword({ email, password });
+        
+        if (error) {
+            document.getElementById('lErr').innerText = "Erro: " + error.message;
+        } else {
+            document.getElementById('loginOverlay').style.display = 'none';
+            carregarTudo();
         }
-    });
-}
-
-// CLIENTES
-async function salvarCli() {
-    await db.from('clientes').insert({ nome: document.getElementById('cNome').value, telefone: document.getElementById('cTel').value });
-    atualizarTudo();
-}
-
-function renderCli() {
-    const s = document.getElementById('buscaCli').value.toLowerCase();
-    document.getElementById('listaCli').innerHTML = _clis.filter(x => x.nome.toLowerCase().includes(s)).map(x => `
-        <div class="card" style="display:flex; justify-content:space-between; align-items:center;">
-            <span>${x.nome} - ${x.telefone}</span>
-            <button class="btn-del" onclick="delItem('clientes', ${x.id})">🗑️</button>
-        </div>`).join('');
-}
-
-// ESTOQUE
-async function salvarProd() {
-    await db.from('produtos').insert({
-        nome: document.getElementById('pNome').value,
-        q_id: document.getElementById('pQtd').value,
-        estoque_minimo: document.getElementById('pMin').value,
-        preco_custo: document.getElementById('pCusto').value,
-        preco_revenda: document.getElementById('pRev').value
-    });
-    atualizarTudo();
-}
-
-function renderEst() {
-    document.getElementById('listaEst').innerHTML = _prods.map(p => `
-        <div class="card" style="display:flex; justify-content:space-between; align-items:center;">
-            <span>${p.nome} | Qtd: ${p.q_id || p.qnt || 0} ${((p.q_id || p.qnt || 0) <= p.estoque_minimo) ? '<span class="critical">⚠️ CRÍTICO</span>' : ''}</span>
-            <div>
-                <button class="btn" onclick="editEst(${p.id})">✏️</button>
-                <button class="btn-del" onclick="delItem('produtos', ${p.id})">🗑️</button>
-            </div>
-        </div>`).join('');
-}
-
-async function editEst(id) {
-    const n = prompt("Nova quantidade em estoque:");
-    if(n) { await db.from('produtos').update({ q_id: Number(n), qnt: Number(n) }).eq('id', id); atualizarTudo(); }
-}
-
-// VENDAS
-function calcVenda() {
-    const p = _prods.find(x => x.id == document.getElementById('vProd').value);
-    const q = document.getElementById('vQtd').value;
-    if(p) document.getElementById('vTotal').innerText = `R$ ${(p.preco_revenda * q).toFixed(2)}`;
-}
-
-async function realizarVenda() {
-    const p = _prods.find(x => x.id == document.getElementById('vProd').value);
-    const q = Number(document.getElementById('vQtd').value);
-    if(!p || (p.q_id || p.qnt || 0) < q) return alert("Estoque insuficiente!");
-
-    const valor = p.preco_revenda * q;
-    const lucro = valor - (p.preco_custo * q);
-
-    await db.from('vendas').insert({
-        cliente_id: document.getElementById('vCli').value,
-        produto_id: p.id,
-        quantidade: q,
-        valor: valor,
-        lucro_total: lucro,
-        data: new Date().toISOString()
-    });
-
-    await db.from('produtos').update({ q_id: (p.q_id || p.qnt || 0) - q, qnt: (p.q_id || p.qnt || 0) - q }).eq('id', p.id);
-    atualizarTudo();
-}
-
-function renderVen() {
-    const n = document.getElementById('buscaVenNome').value.toLowerCase();
-    const d = document.getElementById('buscaVenData').value;
-    document.getElementById('listaVen').innerHTML = _vens.filter(v => 
-        (v.clientes?.nome?.toLowerCase().includes(n)) && (d ? v.data.startsWith(d) : true)
-    ).map(v => `
-        <div class="card" style="display:flex; justify-content:space-between; align-items:center;">
-            <span>${v.data.split('T')[0]} - <b>${v.clientes?.nome}</b>: ${v.produtos?.nome} (R$ ${v.valor.toFixed(2)})</span>
-            <button class="btn-del" onclick="delItem('vendas', ${v.id})">🗑️</button>
-        </div>`).join('');
-}
-
-// SERVIÇOS
-async function salvarOS() {
-    await db.from('ordens_servico').insert({ cliente_id: document.getElementById('osCli').value, descricao: document.getElementById('osDesc').value, status: 'Aberta' });
-    atualizarTudo();
-}
-
-function renderOS() {
-    document.getElementById('listaOS').innerHTML = _oss.map(o => `
-        <div class="card">
-            <div style="display:flex; justify-content:space-between"><strong>OS #${o.id} - ${o.clientes?.nome}</strong> <button class="btn-del" onclick="delItem('ordens_servico', ${o.id})">🗑️</button></div>
-            <p>${o.descricao}</p>
-        </div>`).join('');
-}
-
-async function salvarOrc() {
-    await db.from('orcamentos').insert({ cliente_id: document.getElementById('orcCli').value, descricao: document.getElementById('orcDesc').value });
-    atualizarTudo();
-}
-
-function renderOrc() {
-    document.getElementById('listaOrc').innerHTML = _orcs.map(o => `
-        <div class="card">
-            <div style="display:flex; justify-content:space-between"><strong>Orç. #${o.id} - ${o.clientes?.nome}</strong> <button class="btn-del" onclick="delItem('orcamentos', ${o.id})">🗑️</button></div>
-            <p>${o.descricao}</p>
-        </div>`).join('');
-}
-
-async function delItem(tab, id) {
-    if(confirm("Deseja realmente excluir este registro?")) { await db.from(tab).delete().eq('id', id); atualizarTudo(); }
-}
-
-// INICIALIZAÇÃO
-document.addEventListener("DOMContentLoaded", async () => {
-    const { data } = await db.auth.getSession();
-    if (data?.session) {
-        document.getElementById('loginOverlay').style.display = 'none';
-        atualizarTudo();
     }
-});
+
+    /* NAVEGAÇÃO DE ABAS */
+    function showTab(id, btn) {
+        document.querySelectorAll('main section').forEach(s => s.style.display = 'none');
+        document.getElementById(id).style.display = 'block';
+        document.querySelectorAll('#sidebar button').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        if (id === 'dashTab') renderDashboard();
+    }
+
+    /* CARREGAMENTO DE DADOS BASEADO NO SCHEMA */
+    async function carregarTudo() {
+        const { data: v } = await db.from('vendas').select('*, clientes(nome), produtos(nome)').order('data', {ascending: false});
+        const { data: p } = await db.from('produtos').select('*');
+        _vendas = v || [];
+        _produtos = p || [];
+        renderDashboard();
+    }
+
+    function renderDashboard() {
+        const hoje = new Date().toISOString().split('T')[0];
+        const vHoje = _vendas.filter(x => x.data.startsWith(hoje));
+        
+        const totalHoje = vHoje.reduce((acc, curr) => acc + curr.valor, 0);
+        const lucroHoje = vHoje.reduce((acc, curr) => acc + (curr.lucro_total || 0), 0);
+        
+        document.getElementById('vDia').innerText = `R$ ${totalHoje.toFixed(2)}`;
+        document.getElementById('lDia').innerText = `R$ ${lucroHoje.toFixed(2)}`;
+        
+        // Alerta de Estoque Crítico baseado na coluna q_id e estoque_minimo
+        const criticos = _produtos.filter(p => (p.q_id || 0) <= (p.estoque_minimo || 0)).length;
+        document.getElementById('qtdCrit').innerText = `${criticos} Itens`;
+    }
+
+    async function logout() {
+        await db.auth.signOut();
+        location.reload();
+    }
+
+    /* Verifica sessão ativa ao carregar a página */
+    window.onload = async () => {
+        const { data } = await db.auth.getSession();
+        if (data.session) {
+            document.getElementById('loginOverlay').style.display = 'none';
+            carregarTudo();
+        }
+    };
 </script>
 </body>
 </html>
