@@ -3,7 +3,7 @@
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Sistema HX — Gestão Integrada</title>
+    <title>Sistema HX — Administração</title>
 
     <script src="https://cdn.jsdelivr.net/npm/chart.js/dist/chart.umd.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
@@ -12,11 +12,8 @@
         :root {
             --hx-dark: #0d0d0d;
             --hx-dark2: #151515;
-            --hx-dark3: #1f1f1f;
             --hx-accent: #0aff9d;
             --hx-text: #eaeaea;
-            --hx-card: #181818;
-            --hx-danger: #ff5566;
         }
 
         body {
@@ -25,297 +22,183 @@
             color: var(--hx-text);
             font-family: "Segoe UI", sans-serif;
             display: flex;
-            min-height: 100vh;
         }
 
-        /* Sidebar */
         #sidebar {
             width: 240px;
             background: var(--hx-dark2);
             height: 100vh;
             position: fixed;
-            border-right: 1px solid var(--hx-dark3);
+            border-right: 1px solid #333;
             display: flex;
             flex-direction: column;
-            z-index: 100;
         }
 
+        #sidebar h2 { padding: 20px; color: var(--hx-accent); font-size: 1.2rem; margin: 0; }
         #sidebar button {
-            background: none;
-            border: none;
-            color: var(--hx-text);
-            padding: 15px 25px;
-            text-align: left;
-            cursor: pointer;
-            transition: 0.3s;
-            font-size: 15px;
+            background: none; border: none; color: var(--hx-text);
+            padding: 15px 20px; text-align: left; cursor: pointer; width: 100%;
+            transition: 0.3s; font-size: 16px; border-left: 3px solid transparent;
         }
+        #sidebar button:hover, .menu-active { background: #1f1f1f; color: var(--hx-accent) !important; border-left-color: var(--hx-accent); }
 
-        #sidebar button:hover, #sidebar button.menu-active {
-            background: var(--hx-dark3);
-            color: var(--hx-accent);
-        }
+        main { margin-left: 240px; width: 100%; padding: 25px; box-sizing: border-box; }
 
-        main {
-            margin-left: 240px;
-            flex: 1;
-            padding: 30px;
-            box-sizing: border-box;
-        }
-
-        .card {
-            background: var(--hx-card);
-            padding: 20px;
-            border-radius: 12px;
-            margin-bottom: 20px;
-            border: 1px solid #222;
-        }
-
+        .card { background: #181818; padding: 20px; border-radius: 8px; margin-bottom: 20px; border: 1px solid #222; }
+        
         input, select, textarea {
-            width: 100%;
-            padding: 12px;
-            margin-top: 5px;
-            background: #222;
-            border: 1px solid #333;
-            color: #fff;
-            border-radius: 6px;
-            box-sizing: border-box;
+            width: 100%; padding: 12px; margin: 8px 0; background: #222; 
+            border: 1px solid #333; color: #fff; border-radius: 6px; box-sizing: border-box;
         }
 
         .btn {
-            background: var(--hx-accent);
-            color: #000;
-            border: none;
-            padding: 12px 20px;
-            border-radius: 6px;
-            cursor: pointer;
-            font-weight: bold;
-            margin-top: 15px;
+            background: var(--hx-accent); color: #000; border: none; padding: 12px 20px;
+            border-radius: 6px; cursor: pointer; font-weight: bold; transition: 0.2s;
         }
+        .btn:hover { opacity: 0.8; }
 
-        /* Login */
         #loginOverlay {
-            position: fixed; inset: 0; background: var(--hx-dark);
-            display: flex; align-items: center; justify-content: center; z-index: 1000;
+            position: fixed; inset: 0; background: var(--hx-dark); 
+            display: flex; align-items: center; justify-content: center; z-index: 10000;
         }
-
-        /* Modal */
-        #modalOverlay {
-            position: fixed; inset: 0; background: rgba(0,0,0,0.85);
-            display: none; align-items: center; justify-content: center; z-index: 2000;
+        .login-card { 
+            background: var(--hx-dark2); padding: 35px; border-radius: 12px; 
+            width: 100%; max-width: 350px; border: 1px solid var(--hx-accent);
+            box-shadow: 0 0 20px rgba(10, 255, 157, 0.2);
         }
     </style>
 </head>
 <body>
 
     <nav id="sidebar">
-        <div style="padding: 30px 20px; color: var(--hx-accent); font-weight: bold; font-size: 1.5rem;">HX</div>
+        <h2>SISTEMA HX</h2>
         <button onclick="showSection('dashboardSec', this)" class="menu-active">📊 Dashboard</button>
         <button onclick="showSection('clientesSec', this)">👤 Clientes</button>
         <button onclick="showSection('produtosSec', this)">📦 Estoque</button>
         <button onclick="showSection('vendasSec', this)">💵 Vendas</button>
-        <div style="margin-top: auto; padding: 20px;">
-            <small id="userLabel" style="display:block; margin-bottom:10px;"></small>
-            <button onclick="logout()" style="color: var(--hx-danger);">Sair</button>
+        <div style="margin-top: auto; padding: 20px; border-top: 1px solid #222;">
+            <span id="userLabel" style="font-size: 12px; display: block; margin-bottom: 10px; color: var(--hx-accent);"></span>
+            <button onclick="logout()" style="color: #ff5566; padding: 0;">Sair</button>
         </div>
     </nav>
 
     <div id="loginOverlay">
-        <div style="background: var(--hx-dark2); padding: 40px; border-radius: 15px; width: 300px; border: 1px solid var(--hx-accent);">
-            <h2 style="text-align:center; color: var(--hx-accent)">SISTEMA HX</h2>
-            <input id="loginEmail" type="email" placeholder="E-mail">
-            <input id="loginPass" type="password" placeholder="Senha">
-            <button class="btn" style="width:100%" onclick="login()">ACESSAR</button>
-            <div id="loginMsg" style="color:var(--hx-danger); text-align:center; margin-top:15px;"></div>
-        </div>
-    </div>
-
-    <div id="modalOverlay">
-        <div style="background: var(--hx-dark2); padding: 25px; border-radius: 12px; width: 400px; border: 1px solid var(--hx-accent);">
-            <h3 id="modalTitle"></h3>
-            <div id="modalContent"></div>
-            <button class="btn" id="modalSaveBtn">SALVAR</button>
-            <button class="btn" onclick="fecharModal()" style="background:#333; color:#fff;">FECHAR</button>
+        <div class="login-card">
+            <h2 style="color:var(--hx-accent); text-align:center; margin-top: 0;">ACESSO</h2>
+            <label>E-mail</label>
+            <input id="loginEmail" type="email" placeholder="admin@hx.com">
+            <label>Senha</label>
+            <input id="loginPass" type="password" placeholder="******">
+            <button class="btn" style="width:100%; margin-top: 15px;" onclick="login()">ENTRAR</button>
+            <div id="loginMsg" style="text-align:center; margin-top:15px; font-size:13px; color: #ff5566;"></div>
         </div>
     </div>
 
     <main>
         <section id="dashboardSec">
             <h2>Dashboard</h2>
-            <div style="display:flex; gap:20px;">
-                <div class="card" style="flex:1;">Faturamento: <b id="fatTotal">R$ 0,00</b></div>
-                <div class="card" style="flex:1;">Lucro (Mês): <b id="lucroMes">R$ 0,00</b></div>
+            <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap:20px;">
+                <div class="card">
+                    <small>Faturamento Total</small>
+                    <div id="fatTotal" style="font-size:24px; color:var(--hx-accent); font-weight: bold;">R$ 0,00</div>
+                </div>
+                <div class="card">
+                    <small>Vendas Registradas</small>
+                    <div id="numVendas" style="font-size:24px; font-weight: bold;">0</div>
+                </div>
             </div>
-            <div class="card"><canvas id="grafVendasDiarias"></canvas></div>
+            <div class="card" style="margin-top: 20px;">
+                <canvas id="grafVendasDiarias"></canvas>
+            </div>
         </section>
 
         <section id="clientesSec" style="display:none;">
-            <h2>Clientes</h2>
+            <h2>👤 Clientes</h2>
             <div class="card">
-                <input id="cliNome" placeholder="Nome">
-                <button class="btn" onclick="salvarCliente()">Cadastrar Cliente</button>
+                <input id="cliNome" placeholder="Nome do Cliente">
+                <button class="btn" onclick="salvarCliente()">Cadastrar</button>
             </div>
             <div id="listaClientes"></div>
         </section>
-
-        <section id="produtosSec" style="display:none;">
-            <h2>Estoque</h2>
-            <div class="card">
-                <input id="prodNome" placeholder="Produto">
-                <input id="prodCusto" type="number" placeholder="Custo R$">
-                <input id="prodRevenda" type="number" placeholder="Venda R$">
-                <input id="prodQtd" type="number" placeholder="Qtd">
-                <button class="btn" onclick="salvarProduto()">Adicionar</button>
-            </div>
-            <div id="listaProdutos"></div>
-        </section>
-
-        <section id="vendasSec" style="display:none;">
-            <h2>Registrar Venda</h2>
-            <div class="card">
-                <select id="venCliente"></select>
-                <select id="venProduto"></select>
-                <input id="venQtd" type="number" value="1" placeholder="Quantidade">
-                <input id="venValor" type="number" placeholder="Valor Total">
-                <button class="btn" onclick="registrarVenda()">Finalizar e Imprimir</button>
-            </div>
-            <div id="listaVendas"></div>
-        </section>
-    </main>
+        
+        </main>
 
     <script>
-        // CONFIGURAÇÃO ÚNICA SUPABASE
+        // CONFIGURAÇÃO SUPABASE (ÚNICA DECLARAÇÃO)
         const { createClient } = window.supabase;
         const db = createClient(
             "https://axfccmezfofnqfsdurqb.supabase.co",
-            "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImF4ZmNjbWV6Zm9mbnFmc2R1cnFiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjUwNzA1NDMsImV4cCI6MjA4MDY0NjU0M30.woGp6hBgiEa41opQxyxqqMULlDKMXm9T83bhJ7UEmb8" 
+            "SUA_ANON_KEY_AQUI" // COLOQUE SUA CHAVE AQUI
         );
-
-        let chartVendas = null;
 
         /* --- NAVEGAÇÃO --- */
         function showSection(id, btn) {
             document.querySelectorAll('main section').forEach(s => s.style.display = 'none');
-            document.getElementById(id).style.display = 'block';
+            const target = document.getElementById(id);
+            if(target) target.style.display = 'block';
+            
             document.querySelectorAll('#sidebar button').forEach(b => b.classList.remove('menu-active'));
             if(btn) btn.classList.add('menu-active');
-            if(id === 'dashboardSec') carregarDashboard();
         }
 
-        /* --- AUTH --- */
+        /* --- AUTENTICAÇÃO --- */
         async function login() {
             const email = document.getElementById('loginEmail').value;
             const password = document.getElementById('loginPass').value;
-            const { data, error } = await db.auth.signInWithPassword({ email, password });
-            if (error) {
-                document.getElementById('loginMsg').innerText = error.message;
-            } else {
-                document.getElementById('loginOverlay').style.display = 'none';
-                atualizarTudo();
+            const msg = document.getElementById('loginMsg');
+
+            if(!email || !password) {
+                msg.innerText = "Preencha todos os campos!";
+                return;
+            }
+
+            try {
+                const { data, error } = await db.auth.signInWithPassword({ email, password });
+                if (error) {
+                    msg.innerText = "Erro: " + error.message;
+                } else {
+                    document.getElementById('loginOverlay').style.display = 'none';
+                    document.getElementById('userLabel').innerText = data.user.email;
+                    atualizarTudo();
+                }
+            } catch (e) {
+                msg.innerText = "Erro ao conectar.";
+                console.error(e);
             }
         }
 
-        async function logout() { await db.auth.signOut(); location.reload(); }
+        async function logout() {
+            await db.auth.signOut();
+            location.reload();
+        }
 
-        /* --- CLIENTES --- */
+        /* --- DADOS --- */
         async function salvarCliente() {
             const nome = document.getElementById('cliNome').value;
-            await db.from('clientes').insert({ nome: nome });
-            document.getElementById('cliNome').value = "";
-            carregarClientes();
+            if(!nome) return alert("Digite o nome!");
+
+            const { error } = await db.from('clientes').insert({ nome });
+            if(error) alert("Erro: " + error.message);
+            else {
+                document.getElementById('cliNome').value = "";
+                carregarClientes();
+            }
         }
 
         async function carregarClientes() {
             const { data } = await db.from('clientes').select('*').order('nome');
             const lista = document.getElementById('listaClientes');
-            lista.innerHTML = (data || []).map(c => `<div class="card">${c.nome}</div>`).join('');
-            
-            // Popula selects
-            const selects = ['venCliente'];
-            selects.forEach(s => {
-                const el = document.getElementById(s);
-                if(el) el.innerHTML = (data || []).map(c => `<option value="${c.id}">${c.nome}</option>`).join('');
-            });
-        }
-
-        /* --- PRODUTOS --- */
-        async function salvarProduto() {
-            await db.from('produtos').insert({
-                nome: document.getElementById('prodNome').value,
-                preco_custo: document.getElementById('prodCusto').value,
-                preco_revenda: document.getElementById('prodRevenda').value,
-                qtd: document.getElementById('prodQtd').value
-            });
-            carregarProdutos();
-        }
-
-        async function carregarProdutos() {
-            const { data } = await db.from('produtos').select('*');
-            window._prodCache = data || [];
-            document.getElementById('listaProdutos').innerHTML = (data || []).map(p => `<div class="card">${p.nome} - Qtd: ${p.qtd}</div>`).join('');
-            document.getElementById('venProduto').innerHTML = (data || []).map(p => `<option value="${p.id}">${p.nome}</option>`).join('');
-        }
-
-        /* --- VENDAS --- */
-        async function registrarVenda() {
-            const prodId = document.getElementById('venProduto').value;
-            const prod = window._prodCache.find(x => x.id == prodId);
-            const qtd = Number(document.getElementById('venQtd').value);
-            const valor = Number(document.getElementById('venValor').value);
-
-            const { data: venda, error } = await db.from('vendas').insert({
-                cliente_id: document.getElementById('venCliente').value,
-                produto_id: prodId,
-                quantidade: qtd,
-                valor: valor,
-                lucro_total: (valor - (prod.preco_custo * qtd)),
-                data: new Date().toISOString()
-            }).select('*, produtos(nome)').single();
-
-            if(!error) {
-                await db.from('produtos').update({ qtd: prod.qtd - qtd }).eq('id', prodId);
-                imprimirVenda(venda);
-                atualizarTudo();
+            if(data) {
+                lista.innerHTML = data.map(c => `<div class="card" style="margin-bottom:10px;">${c.nome}</div>`).join('');
             }
         }
 
-        function imprimirVenda(v) {
-            const win = window.open("", "_blank");
-            win.document.write(`<html><body><pre>HX ACESSORIOS\nData: ${new Date(v.data).toLocaleString()}\nItem: ${v.produtos.nome}\nValor: R$ ${v.valor.toFixed(2)}</pre></body></html>`);
-            win.document.close();
-            win.print();
-        }
-
-        /* --- DASHBOARD --- */
-        async function carregarDashboard() {
-            const { data: vendas } = await db.from('vendas').select('*');
-            if(!vendas) return;
-            const total = vendas.reduce((acc, v) => acc + v.valor, 0);
-            document.getElementById('fatTotal').innerText = `R$ ${total.toFixed(2)}`;
-            renderGrafico(vendas);
-        }
-
-        function renderGrafico(vendas) {
-            const ctx = document.getElementById('grafVendasDiarias').getContext('2d');
-            if(chartVendas) chartVendas.destroy();
-            chartVendas = new Chart(ctx, {
-                type: 'bar',
-                data: {
-                    labels: vendas.slice(-7).map(v => new Date(v.data).toLocaleDateString()),
-                    datasets: [{ label: 'Vendas R$', data: vendas.slice(-7).map(v => v.valor), backgroundColor: '#0aff9d' }]
-                }
-            });
+        async function atualizarTudo() {
+            await carregarClientes();
+            // Adicione aqui outras funções de carga (produtos, vendas, etc.)
         }
 
         /* --- INICIALIZAÇÃO --- */
-        async function atualizarTudo() {
-            await carregarClientes();
-            await carregarProdutos();
-            await carregarDashboard();
-        }
-
-        function fecharModal() { document.getElementById('modalOverlay').style.display = 'none'; }
-
         window.onload = async () => {
             const { data } = await db.auth.getSession();
             if (data.session) {
