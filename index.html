@@ -15,32 +15,18 @@
             --hx-danger: #ff5566; --hx-warning: #ffaa00;
         }
         body { margin: 0; background: var(--hx-dark); color: var(--hx-text); font-family: "Segoe UI", sans-serif; display: flex; min-height: 100vh; }
-        
-        /* Sidebar */
         #sidebar { width: 240px; background: var(--hx-dark2); height: 100vh; position: fixed; border-right: 1px solid var(--hx-dark3); display: flex; flex-direction: column; z-index: 100; }
         #sidebar .logo { padding: 25px; text-align: center; color: var(--hx-accent); font-weight: bold; font-size: 1.5rem; border-bottom: 1px solid var(--hx-dark3); }
         #sidebar button { background: none; border: none; color: var(--hx-text); padding: 15px 25px; text-align: left; cursor: pointer; transition: 0.3s; font-size: 15px; border-left: 3px solid transparent; }
         #sidebar button:hover, #sidebar button.menu-active { background: var(--hx-dark3); color: var(--hx-accent); border-left: 3px solid var(--hx-accent); }
-        
-        /* Layout */
         main { margin-left: 240px; flex: 1; padding: 30px; box-sizing: border-box; }
         .card { background: var(--hx-card); padding: 20px; border-radius: 12px; margin-bottom: 20px; border: 1px solid #222; box-shadow: 0 4px 15px rgba(0,0,0,0.3); }
-        
-        /* Inputs */
         label { display: block; margin-top: 15px; font-size: 13px; color: #888; }
         input, select, textarea { width: 100%; padding: 12px; margin-top: 5px; background: #222; border: 1px solid #333; color: #fff; border-radius: 6px; box-sizing: border-box; }
         .btn { background: var(--hx-accent); color: #000; border: none; padding: 12px 20px; border-radius: 6px; cursor: pointer; font-weight: bold; margin-top: 15px; transition: 0.2s; }
         .btn:hover { opacity: 0.8; transform: translateY(-1px); }
-        .btn.secondary { background: #333; color: #fff; }
-        
-        /* Badges */
         .badge-critical { background: var(--hx-danger); color: white; padding: 2px 8px; border-radius: 4px; font-size: 11px; font-weight: bold; }
-
-        /* Login */
         #loginOverlay { position: fixed; inset: 0; background: var(--hx-dark); display: flex; align-items: center; justify-content: center; z-index: 2000; }
-        
-        /* Modais */
-        #modalOverlay { position: fixed; inset: 0; background: rgba(0,0,0,0.85); display: none; align-items: center; justify-content: center; z-index: 1000; backdrop-filter: blur(5px); }
     </style>
 </head>
 <body>
@@ -55,7 +41,7 @@
         <button onclick="showSection('orcamentoSec', this)">📝 Orçamentos</button>
         <div style="margin-top: auto; padding: 20px; border-top: 1px solid var(--hx-dark3);">
             <small id="userLabel" style="display:block; margin-bottom:10px; color:var(--hx-accent)"></small>
-            <button onclick="logout()" style="color: var(--hx-danger); padding: 0;">Sair</button>
+            <button onclick="logout()" style="color: var(--hx-danger); padding: 0; background:none; border:none; cursor:pointer;">Sair</button>
         </div>
     </nav>
 
@@ -146,7 +132,6 @@
 
         let chartVendas = null;
 
-        /* --- NAVEGAÇÃO --- */
         function showSection(id, btn) {
             document.querySelectorAll('main section').forEach(s => s.style.display = 'none');
             document.getElementById(id).style.display = 'block';
@@ -155,13 +140,13 @@
             if(id === 'dashboardSec') carregarDashboard();
         }
 
-        /* --- AUTH --- */
         async function login() {
             const email = document.getElementById('loginEmail').value;
             const password = document.getElementById('loginPass').value;
             const { data, error } = await db.auth.signInWithPassword({ email, password });
-            if (error) document.getElementById('loginMsg').innerText = error.message;
-            else { 
+            if (error) {
+                document.getElementById('loginMsg').innerText = error.message;
+            } else {
                 document.getElementById('loginOverlay').style.display = 'none';
                 document.getElementById('userLabel').innerText = data.user.email;
                 atualizarTudo();
@@ -170,14 +155,15 @@
 
         async function logout() { await db.auth.signOut(); location.reload(); }
 
-        /* --- PRODUTOS & ESTOQUE CRÍTICO --- */
         async function salvarProduto() {
+            const nome = document.getElementById('prodNome').value;
+            if(!nome) return alert("Informe o nome do produto");
             await db.from('produtos').insert({
-                nome: document.getElementById('prodNome').value,
+                nome: nome,
                 preco_custo: document.getElementById('prodCusto').value,
                 preco_revenda: document.getElementById('prodRevenda').value,
                 qtd: document.getElementById('prodQtd').value,
-                estoque_minimo: 2 // Valor padrão para alerta
+                estoque_minimo: 2
             });
             atualizarTudo();
         }
@@ -186,7 +172,7 @@
             const { data } = await db.from('produtos').select('*').order('nome');
             window._prodCache = data || [];
             
-            document.getElementById('listaProdutos').innerHTML = data.map(p => {
+            document.getElementById('listaProdutos').innerHTML = (data || []).map(p => {
                 const isCritical = p.qtd <= (p.estoque_minimo || 1);
                 return `
                     <div class="card" style="display:flex; justify-content:space-between; align-items:center;">
@@ -200,20 +186,23 @@
             }).join('');
 
             const select = document.getElementById('venProduto');
-            select.innerHTML = data.map(p => `<option value="${p.id}">${p.nome}</option>`).join('');
+            select.innerHTML = '<option value="">Selecione um produto</option>' + (data || []).map(p => `<option value="${p.id}">${p.nome}</option>`).join('');
         }
 
-        /* --- VENDAS & IMPRESSÃO --- */
         function autoPreencherVenda() {
-            const prod = window._prodCache.find(p => p.id == document.getElementById('venProduto').value);
+            const prodId = document.getElementById('venProduto').value;
+            const prod = window._prodCache.find(p => p.id == prodId);
             const qtd = document.getElementById('venQtd').value;
             if(prod) document.getElementById('venValor').value = (prod.preco_revenda * qtd).toFixed(2);
         }
 
         async function registrarVenda() {
-            const prod = window._prodCache.find(p => p.id == document.getElementById('venProduto').value);
+            const prodId = document.getElementById('venProduto').value;
+            const prod = window._prodCache.find(p => p.id == prodId);
             const qtd = Number(document.getElementById('venQtd').value);
             const valor = Number(document.getElementById('venValor').value);
+
+            if(!prod) return alert("Selecione um produto");
 
             const { data: v, error } = await db.from('vendas').insert({
                 cliente_id: document.getElementById('venCliente').value,
@@ -230,17 +219,24 @@
                 alert("Venda registrada!");
                 imprimirCupom(v);
                 atualizarTudo();
+            } else {
+                alert("Erro ao vender: " + error.message);
             }
         }
 
         async function carregarVendas() {
             const { data } = await db.from('vendas').select('*, produtos(nome)').order('data', {ascending: false});
-            document.getElementById('listaVendas').innerHTML = (data || []).map(v => `
+            window._vendasHistorico = data || [];
+            document.getElementById('listaVendas').innerHTML = window._vendasHistorico.map((v, index) => `
                 <div class="card" style="font-size:13px; display:flex; justify-content:space-between;">
-                    <div><b>#${v.id} ${v.produtos?.nome}</b><br>Total: R$ ${v.valor.toFixed(2)}</div>
-                    <button class="btn" style="margin:0; padding:5px 10px;" onclick='imprimirCupom(${JSON.stringify(v)})'>🖨️</button>
+                    <div><b>#${v.id} ${v.produtos?.nome}</b><br>Total: R$ ${Number(v.valor).toFixed(2)}</div>
+                    <button class="btn" style="margin:0; padding:5px 10px;" onclick="reimprimirVenda(${index})">🖨️</button>
                 </div>
             `).join('');
+        }
+
+        function reimprimirVenda(index) {
+            imprimirCupom(window._vendasHistorico[index]);
         }
 
         function imprimirCupom(v) {
@@ -253,22 +249,24 @@
                     --------------------------------<br>
                     Item: ${v.produtos?.nome}<br>
                     Qtd: ${v.quantidade} x R$ ${(v.valor/v.quantidade).toFixed(2)}<br>
-                    <strong>TOTAL: R$ ${v.valor.toFixed(2)}</strong><br>
+                    <strong>TOTAL: R$ ${Number(v.valor).toFixed(2)}</strong><br>
                     Pagto: ${v.tipo_venda}<br>
                     --------------------------------<br>
                     <center>Obrigado pela preferência!</center>
                 </div>
             `);
-            win.document.close(); win.print(); win.close();
+            win.document.close();
+            win.print();
+            win.close();
         }
 
-        /* --- OS & ORÇAMENTOS --- */
         async function criarOS() {
             await db.from('ordens_servico').insert({
                 cliente_id: document.getElementById('osCliente').value,
                 descricao: document.getElementById('osDesc').value,
                 status: 'Aberta', data_abertura: new Date().toISOString()
             });
+            document.getElementById('osDesc').value = "";
             atualizarTudo();
         }
 
@@ -285,6 +283,7 @@
                 descricao: document.getElementById('orcDesc').value,
                 data: new Date().toISOString()
             });
+            document.getElementById('orcDesc').value = "";
             atualizarTudo();
         }
 
@@ -295,29 +294,45 @@
             `).join('');
         }
 
-        /* --- CLIENTES & DASHBOARD --- */
         async function carregarClientes() {
             const { data } = await db.from('clientes').select('*').order('nome');
             const selects = ['venCliente', 'osCliente', 'orcCliente'];
-            selects.forEach(s => document.getElementById(s).innerHTML = data.map(c => `<option value="${c.id}">${c.nome}</option>`).join(''));
+            selects.forEach(s => {
+                const el = document.getElementById(s);
+                if(el) el.innerHTML = (data || []).map(c => `<option value="${c.id}">${c.nome}</option>`).join('');
+            });
         }
 
         async function carregarDashboard() {
             const { data: v } = await db.from('vendas').select('*');
-            if(!v) return;
-            const fat = v.reduce((acc, x) => acc + x.valor, 0);
+            if(!v || v.length === 0) return;
+            
+            const fat = v.reduce((acc, x) => acc + Number(x.valor), 0);
             document.getElementById('fatTotal').innerText = `R$ ${fat.toFixed(2)}`;
+            
+            const hoje = new Date();
+            const lucroM = v.filter(x => new Date(x.data).getMonth() === hoje.getMonth())
+                           .reduce((acc, x) => acc + Number(x.lucro_total || 0), 0);
+            document.getElementById('lucroMes').innerText = `R$ ${lucroM.toFixed(2)}`;
             
             const ctx = document.getElementById('grafVendasDiarias').getContext('2d');
             if(chartVendas) chartVendas.destroy();
             chartVendas = new Chart(ctx, {
                 type: 'line',
-                data: { labels: v.slice(-7).map(x => new Date(x.data).toLocaleDateString()), datasets: [{ label: 'Vendas R$', data: v.slice(-7).map(x => x.valor), borderColor: '#0aff9d', fill:true, backgroundColor:'rgba(10,255,157,0.1)' }] }
+                data: { 
+                    labels: v.slice(-7).map(x => new Date(x.data).toLocaleDateString()), 
+                    datasets: [{ label: 'Vendas R$', data: v.slice(-7).map(x => x.valor), borderColor: '#0aff9d', fill:true, backgroundColor:'rgba(10,255,157,0.1)' }] 
+                }
             });
         }
 
         async function atualizarTudo() {
-            await Promise.all([carregarClientes(), carregarProdutos(), carregarVendas(), carregarOS(), carregarOrcamentos(), carregarDashboard()]);
+            await carregarClientes();
+            await carregarProdutos();
+            await carregarVendas();
+            await carregarOS();
+            await carregarOrcamentos();
+            await carregarDashboard();
         }
 
         window.onload = async () => {
