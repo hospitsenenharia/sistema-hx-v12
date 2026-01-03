@@ -130,7 +130,8 @@
 <script>
 // INICIALIZAÇÃO ÚNICA DO SUPABASE - Use a sua Anon Key correta aqui
 const { createClient } = window.supabase;
-const db = createClient("https://axfccmezfofnqfsdurqb.supabase.co", "woGp6hBgiEa41opQxyxqqMULlDKMXm9T83bhJ7UEmb8");
+const db = createClient("https://axfccmezfofnqfsdurqb.supabase.co","eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImF4ZmNjbWV6Zm9mbnFmc2R1cnFiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjUwNzA1NDMsImV4cCI6MjA4MDY0NjU0M30.woGp6hBgiEa41opQxyxqqMULlDKMXm9T83bhJ7UEmb8"
+);
 
 let _clis = [], _prods = [], _vens = [];
 let chartInstance = null;
@@ -251,3 +252,4 @@ window.onload = async () => {
 </script>
 </body>
 </html>
+
