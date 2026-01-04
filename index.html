@@ -199,17 +199,30 @@
         </div>
         <div id="listOS"></div>
     </section>
+<nav id="sidebar">
+    <div style="padding:20px; font-weight:bold; color:var(--hx-accent); font-size:1.2rem;">
+        PAINEL HX
+    </div>
 
-    <section id="orcTab" style="display:none">
-        <h2>📝 Orçamentos</h2>
-        <div class="card">
-            <select id="orcCliSelect"></select>
-            <textarea id="orcDesc" placeholder="Itens e valores do orçamento..."></textarea>
-            <button class="btn btn-add" onclick="saveOrc()">GERAR ORÇAMENTO</button>
-        </div>
-        <div id="listOrc"></div>
-    </section>
-</main>
+    <button onclick="changeTab('dashTab', this)" class="active">📊 Dashboard</button>
+    <button onclick="changeTab('cliTab', this)">👤 Clientes</button>
+    <button onclick="changeTab('estTab', this)">📦 Estoque</button>
+    <button onclick="changeTab('venTab', this)">💵 Vendas</button>
+    <button onclick="changeTab('osTab', this)">🛠 Ordem de Serviço</button>
+    <button onclick="changeTab('orcTab', this)">📝 Orçamentos</button>
+
+    <!-- 🔻 BOTÃO SAIR (SEMPRE O ÚLTIMO DA SIDEBAR) -->
+    <button 
+        onclick="logout()"
+        style="
+            margin-top:auto;
+            color: var(--hx-danger);
+            border-top:1px solid #333;
+        ">
+        🚪 Sair
+    </button>
+</nav>
+
 
     
 
@@ -617,6 +630,7 @@ window.onload = async () => {
 </script>
 </body>
 </html>
+
 
 
 
