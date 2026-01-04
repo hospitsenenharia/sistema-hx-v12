@@ -16,11 +16,9 @@
         .card { background: #181818; padding: 20px; border-radius: 8px; margin-bottom: 20px; border: 1px solid #333; }
         .grid-dash { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-bottom: 20px; }
         input, select, textarea { width: 100%; padding: 10px; margin: 8px 0; background: #222; border: 1px solid #444; color: #fff; border-radius: 4px; box-sizing: border-box; }
-        .btn { padding: 10px 15px; border-radius: 4px; border: none; cursor: pointer; font-weight: bold; transition: 0.2s; }
+        .btn { padding: 10px 15px; border-radius: 4px; border: none; cursor: pointer; font-weight: bold; }
         .btn-add { background: var(--hx-accent); color: #000; }
         #loginOverlay { position: fixed; inset: 0; background: #000; z-index: 9999; display: flex; align-items: center; justify-content: center; }
-        .critical { color: var(--hx-danger); font-weight: bold; animation: pulse 1.5s infinite; }
-        @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.5; } 100% { opacity: 1; } }
     </style>
 </head>
 <body>
@@ -31,16 +29,17 @@
         <input id="lEmail" type="email" placeholder="admin@hx.com">
         <input id="lPass" type="password" placeholder="Senha">
         <button class="btn btn-add" style="width:100%" onclick="login()">ENTRAR</button>
-        <p id="lErr" style="color:var(--hx-danger); font-size:12px; text-align:center; margin-top:10px;"></p>
+        <p id="lErr" style="color:var(--hx-danger); text-align:center; margin-top:10px;"></p>
     </div>
 </div>
 
 <nav id="sidebar">
-    <div style="padding:20px; font-weight:bold; color:var(--hx-accent); font-size:1.2rem; border-bottom:1px solid #333;">PAINEL HX</div>
+    <div style="padding:20px; font-weight:bold; color:var(--hx-accent); font-size:1.2rem;">PAINEL HX</div>
     <button onclick="changeTab('dashTab', this)" class="active">📊 Dashboard</button>
-    <button onclick="changeTab('cliTab', this)">👤 Clientes</button>
     <button onclick="changeTab('estTab', this)">📦 Estoque</button>
-    <button onclick="changeTab('venTab', this)">💵 Vendas (PDV)</button>
+    <button onclick="changeTab('venTab', this)">💵 Vendas</button>
+    <button onclick="changeTab('osTab', this)">🛠 Ordem de Serviço</button>
+    <button onclick="changeTab('orcTab', this)">📝 Orçamentos</button>
     <button onclick="logout()" style="margin-top: auto; color: var(--hx-danger);">🚪 Sair</button>
 </nav>
 
@@ -49,130 +48,130 @@
         <div class="grid-dash">
             <div class="card">Vendas Hoje <h3 id="vDia" style="color:var(--hx-accent)">R$ 0,00</h3></div>
             <div class="card">Lucro Hoje <h3 id="lDia" style="color:#00cfff">R$ 0,00</h3></div>
+            <div class="card">Vendas Mês <h3 id="vMes">R$ 0,00</h3></div>
             <div class="card">Estoque Crítico <h3 id="qtdCrit" style="color:var(--hx-danger)">0 Itens</h3></div>
         </div>
-        <div class="card"><h4>Histórico de Vendas</h4><canvas id="chartDiario" height="100"></canvas></div>
+        <div class="card"><h4>Faturamento Mensal</h4><canvas id="chartDiario" height="100"></canvas></div>
     </section>
 
-    <section id="estTab" style="display:none">
-        <h2>📦 Estoque</h2>
-        <div class="card" id="listEst"></div>
-    </section>
-
-    <section id="venTab" style="display:none">
-        <h2>💵 PDV</h2>
+    <section id="osTab" style="display:none">
+        <h2>🛠 Ordens de Serviço</h2>
         <div class="card">
-            <select id="vCliSelect"></select>
-            <select id="vProdSelect" onchange="calcVenda()"></select>
-            <input id="vQtd" type="number" value="1" oninput="calcVenda()">
-            <button class="btn btn-add" onclick="doVenda()">FINALIZAR VENDA</button>
+            <select id="osCliente"></select>
+            <textarea id="osDesc" placeholder="Descrição do serviço"></textarea>
+            <button class="btn btn-add" onclick="criarOS()">ABRIR OS</button>
         </div>
-        <div id="listVen"></div>
+        <div id="listOS"></div>
     </section>
 
-    <section id="cliTab" style="display:none"><h2>👤 Clientes</h2><div id="listCli"></div></section>
+    <section id="orcTab" style="display:none">
+        <h2>📝 Orçamentos</h2>
+        <div class="card">
+            <select id="orcCliente"></select>
+            <textarea id="orcDesc" placeholder="Descrição do orçamento"></textarea>
+            <input id="orcValor" type="number" placeholder="Valor Estimado">
+            <button class="btn btn-add" onclick="criarOrc()">SALVAR ORÇAMENTO</button>
+        </div>
+        <div id="listOrc"></div>
+    </section>
+    
+    <section id="estTab" style="display:none"><h2>📦 Estoque</h2><div id="listEst"></div></section>
+    <section id="venTab" style="display:none"><h2>💵 Vendas</h2><div id="listVen"></div></section>
 </main>
 
 <script>
-// 1. INICIALIZAÇÃO ÚNICA
 const { createClient } = window.supabase;
 const db = createClient("https://axfccmezfofnqfsdurqb.supabase.co","eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImF4ZmNjbWV6Zm9mbnFmc2R1cnFiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjUwNzA1NDMsImV4cCI6MjA4MDY0NjU0M30.woGp6hBgiEa41opQxyxqqMULlDKMXm9T83bhJ7UEmb8");
 
-let _clis = [], _prods = [], _vens = [];
+let _clis = [], _prods = [], _vens = [], _oss = [], _orcs = [];
 let chartInstance = null;
 
-// 2. FUNÇÃO calcVenda CORRIGIDA
-function calcVenda() {
-    const prodId = document.getElementById('vProdSelect').value;
-    const qtd = Number(document.getElementById('vQtd').value);
-    const p = _prods.find(x => x.id == prodId);
-    if (!p) return;
-
-    if ((p.quantidade || 0) < qtd) {
-        alert("⚠️ Quantidade maior que o estoque!");
-        document.getElementById('vQtd').value = p.quantidade || 1;
-    }
-}
-
-async function login() {
-    const { error } = await db.auth.signInWithPassword({
-        email: document.getElementById('lEmail').value,
-        password: document.getElementById('lPass').value
-    });
-    if(error) document.getElementById('lErr').innerText = "Erro: Login inválido!";
-    else { document.getElementById('loginOverlay').style.display = 'none'; loadAll(); }
-}
-
-async function loadAll() {
-    try {
-        const [{data: c}, {data: p}, {data: v}] = await Promise.all([
-            db.from('clientes').select('*'),
-            db.from('produtos').select('*'),
-            db.from('vendas').select('*, clientes(nome), produtos(nome)')
-        ]);
-        _clis = c || []; _prods = p || []; _vens = v || [];
-        updateDashboard(); refreshSelects(); renderEst();
-    } catch(e) { console.error("Erro Supabase:", e); }
-}
-
+// 1️⃣ DASHBOARD E GRÁFICO (SOLUÇÃO COMPLETA)
 function updateDashboard() {
     const hoje = new Date().toISOString().split('T')[0];
-    const vHoje = _vens.filter(v => v.data && v.data.startsWith(hoje)); // Filtro de data seguro
-    
-    document.getElementById('vDia').innerText = "R$ " + vHoje.reduce((a, b) => a + (b.valor || 0), 0).toFixed(2);
-    document.getElementById('lDia').innerText = "R$ " + vHoje.reduce((a, b) => a + (b.lucro_total || 0), 0).toFixed(2);
-    // Padronização para 'quantidade'
-    document.getElementById('qtdCrit').innerText = _prods.filter(p => (p.quantidade || 0) <= (p.estoque_minimo || 2)).length;
+    const mesAtual = hoje.slice(0, 7);
+    const vHoje = _vens.filter(v => v.data?.startsWith(hoje));
+    const vMes = _vens.filter(v => v.data?.startsWith(mesAtual));
 
-    renderChart(); // Chamada do gráfico
+    document.getElementById('vDia').innerText = "R$ " + vHoje.reduce((t, v) => t + Number(v.valor || 0), 0).toFixed(2);
+    document.getElementById('lDia').innerText = "R$ " + vHoje.reduce((t, v) => t + Number(v.lucro_total || 0), 0).toFixed(2);
+    document.getElementById('vMes').innerText = "R$ " + vMes.reduce((t, v) => t + Number(v.valor || 0), 0).toFixed(2);
+    document.getElementById('qtdCrit').innerText = _prods.filter(p => (p.quantidade || 0) <= (p.estoque_minimo || 2)).length + " Itens";
+
+    renderChart(vMes); // Ativa o gráfico com os dados do mês
 }
 
-// 3. FUNÇÃO DO GRÁFICO (ESSENCIAL)
-function renderChart() {
-    const ultimos = _vens.slice(-7);
-    const labels = ultimos.map(v => new Date(v.data).toLocaleDateString());
-    const valores = ultimos.map(v => v.valor || 0);
+function renderChart(vendas) {
+    const porDia = {};
+    vendas.forEach(v => { const d = v.data.slice(0, 10); porDia[d] = (porDia[d] || 0) + Number(v.valor || 0); });
+    const labels = Object.keys(porDia);
+    const valores = Object.values(porDia);
 
     if (chartInstance) chartInstance.destroy();
     chartInstance = new Chart(document.getElementById('chartDiario'), {
-        type: 'line',
-        data: {
-            labels,
-            datasets: [{ label: 'Vendas (R$)', data: valores, borderColor: '#0aff9d', tension: 0.3, fill: true }]
-        },
-        options: { responsive: true }
+        type: 'bar',
+        data: { labels, datasets: [{ label: 'Vendas (R$)', data: valores, backgroundColor: '#0aff9d' }] },
+        options: { plugins: { legend: { labels: { color: '#fff' } } }, scales: { x: { ticks: { color: '#aaa' } }, y: { ticks: { color: '#aaa' } } } }
     });
 }
 
-async function doVenda() {
-    const p = _prods.find(x => x.id == document.getElementById('vProdSelect').value);
-    const q = Number(document.getElementById('vQtd').value);
-    if((p.quantidade || 0) < q) return alert("Estoque insuficiente!");
-
-    await db.from('vendas').insert({
-        cliente_id: document.getElementById('vCliSelect').value,
-        produto_id: p.id,
-        quantidade: q,
-        valor: p.preco_revenda * q,
-        lucro_total: (p.preco_revenda - p.preco_custo) * q,
+// 2️⃣ ORÇAMENTOS (CRIAR + IMPRIMIR)
+async function criarOrc() {
+    await db.from('orcamentos').insert({
+        cliente_id: document.getElementById('orcCliente').value,
+        descricao: document.getElementById('orcDesc').value,
+        valor: document.getElementById('orcValor').value,
         data: new Date().toISOString()
     });
-
-    // Update padronizado para 'quantidade'
-    await db.from('produtos').update({ quantidade: (p.quantidade || 0) - q }).eq('id', p.id);
     loadAll();
 }
 
-function refreshSelects() {
-    document.getElementById('vCliSelect').innerHTML = _clis.map(c => `<option value="${c.id}">${c.nome}</option>`).join('');
-    document.getElementById('vProdSelect').innerHTML = _prods.map(p => `<option value="${p.id}">${p.nome} (Estoque: ${p.quantidade || 0})</option>`).join('');
+function printOrc(id) {
+    const o = _orcs.find(x => x.id === id);
+    const w = window.open('');
+    w.document.write(`<h2>ORÇAMENTO #${o.id}</h2><p>Cliente: ${o.clientes?.nome}</p><p>${o.descricao}</p><h3>Valor: R$ ${o.valor}</h3>`);
+    w.print(); w.close();
 }
 
-function renderEst() {
-    document.getElementById('listEst').innerHTML = _prods.map(p => `
-        <div class="card" style="display:flex; justify-content:space-between">
-            <span><b>${p.nome}</b> - Qtd: ${p.quantidade || 0}</span>
-        </div>`).join('');
+// 3️⃣ OS (CRIAR + IMPRIMIR)
+async function criarOS() {
+    await db.from('ordens_servico').insert({
+        cliente_id: document.getElementById('osCliente').value,
+        descricao: document.getElementById('osDesc').value,
+        status: 'Aberta', data: new Date().toISOString()
+    });
+    loadAll();
+}
+
+function printOS(id) {
+    const o = _oss.find(x => x.id === id);
+    const w = window.open('');
+    w.document.write(`<h2>OS #${o.id}</h2><p>Cliente: ${o.clientes?.nome}</p><p>Status: ${o.status}</p><p>${o.descricao}</p>`);
+    w.print(); w.close();
+}
+
+// FUNÇÕES DE CARREGAMENTO
+async function loadAll() {
+    const [{data:c}, {data:p}, {data:v}, {data:o}, {data:r}] = await Promise.all([
+        db.from('clientes').select('*'), db.from('produtos').select('*'),
+        db.from('vendas').select('*'), db.from('ordens_servico').select('*, clientes(nome)'),
+        db.from('orcamentos').select('*, clientes(nome)')
+    ]);
+    _clis = c || []; _prods = p || []; _vens = v || []; _oss = o || []; _orcs = r || [];
+    
+    // Atualizar Selects e Listas
+    const cliOpt = _clis.map(c => `<option value="${c.id}">${c.nome}</option>`).join('');
+    ['osCliente', 'orcCliente'].forEach(id => document.getElementById(id).innerHTML = cliOpt);
+    
+    document.getElementById('listOS').innerHTML = _oss.map(o => `<div class="card">OS #${o.id} - ${o.clientes?.nome} <button onclick="printOS(${o.id})">🖨️</button></div>`).join('');
+    document.getElementById('listOrc').innerHTML = _orcs.map(o => `<div class="card">ORC #${o.id} - ${o.clientes?.nome} <button onclick="printOrc(${o.id})">🖨️</button></div>`).join('');
+    
+    updateDashboard();
+}
+
+async function login() {
+    const { error } = await db.auth.signInWithPassword({ email: document.getElementById('lEmail').value, password: document.getElementById('lPass').value });
+    if(!error) { document.getElementById('loginOverlay').style.display = 'none'; loadAll(); }
 }
 
 function changeTab(id, btn) {
@@ -183,11 +182,6 @@ function changeTab(id, btn) {
 }
 
 async function logout() { await db.auth.signOut(); location.reload(); }
-
-window.onload = async () => {
-    const { data } = await db.auth.getSession();
-    if(data.session) { document.getElementById('loginOverlay').style.display = 'none'; loadAll(); }
-};
 </script>
 </body>
 </html>
