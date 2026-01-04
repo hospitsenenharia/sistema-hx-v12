@@ -452,15 +452,13 @@ async function login() {
     if (typeof loadAll === "function") loadAll();
 }
 
-</script>
-
- <script>
+<script>
 /* ================= SUPABASE ================= */
 const { createClient } = window.supabase;
 
 const db = createClient(
   "https://axfccmezfofnqfsdurqb.supabase.co",
-  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImF4ZmNjbWV6Zm9mbnFmc2R1cnFiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjUwNzA1NDMsImV4cCI6MjA4MDY0NjU0M30.woGp6hBgiEa41opQxyxqqMULlDKMXm9T83bhJ7UEmb8"
+"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImF4ZmNjbWV6Zm9mbnFmc2R1cnFiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjUwNzA1NDMsImV4cCI6MjA4MDY0NjU0M30.woGp6hBgiEa41opQxyxqqMULlDKMXm9T83bhJ7UEmb8"
 );
 
 let _clis = [], _prods = [], _vens = [], _oss = [], _orcs = [];
@@ -492,15 +490,20 @@ async function login() {
   loadAll();
 }
 
-/* ======= TODO O RESTO DO SEU JS ======= */
-/* updateDash, renderChart, loadAll, etc */
-/* COLE TODO O JS QUE VOCÊ JÁ TEM AQUI DENTRO */
-
+/* ================= LOAD ================= */
+window.onload = async () => {
+  const { data } = await db.auth.getSession();
+  if (data.session) {
+    document.getElementById('loginOverlay').style.display = "none";
+    loadAll();
+  }
+};
 </script>
-  
+
             
 </body>
 </html>
+
 
 
 
