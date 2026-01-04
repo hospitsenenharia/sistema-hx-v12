@@ -223,7 +223,10 @@ let chartInstance = null;
 
 function imprimirVenda(id) {
     const v = _vens.find(x => x.id === id);
-    if (!v) return alert("Venda não encontrada");
+    if (!v) {
+        alert("Venda não encontrada");
+        return;
+    }
 
     const w = window.open("", "_blank", "width=300,height=600");
 
@@ -233,6 +236,7 @@ function imprimirVenda(id) {
 <head>
 <meta charset="utf-8">
 <title>Cupom Não Fiscal</title>
+
 <style>
 body {
   width: 80mm;
@@ -241,10 +245,17 @@ body {
   font-family: monospace;
   font-size: 12px;
 }
-.center { text-align: center; }
-hr { border: none; border-top: 1px dashed #000; margin: 6px 0; }
+.center {
+  text-align: center;
+}
+hr {
+  border: none;
+  border-top: 1px dashed #000;
+  margin: 6px 0;
+}
 </style>
 </head>
+
 <body onload="window.print(); window.close();">
 
 <div class="center">
@@ -263,11 +274,13 @@ Data: ${new Date(v.data).toLocaleString("pt-BR")}
 
 <hr>
 
-<div class="center">Obrigado pela preferência!</div>
+<div class="center">
+  Obrigado pela preferência!
+</div>
 
 </body>
 </html>
-`);
+    `);
 
     w.document.close();
 }
@@ -604,6 +617,7 @@ window.onload = async () => {
 </script>
 </body>
 </html>
+
 
 
 
