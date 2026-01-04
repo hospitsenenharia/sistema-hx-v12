@@ -60,16 +60,71 @@
 </nav>
 
 <main>
-    <section id="dashTab">
-        <h2 style="color:var(--hx-accent)">📊 Dashboard Financeiro</h2>
-        <div class="grid-dash">
-            <div class="dash-card">Vendas Hoje <h3 id="vDia" style="color:var(--hx-accent)">R$ 0,00</h3></div>
-            <div class="dash-card">Lucro Hoje <h3 id="lDia" style="color:#00cfff">R$ 0,00</h3></div>
-            <div class="dash-card">Vendas Mês <h3 id="vMes">R$ 0,00</h3></div>
-            <div class="dash-card">Estoque Crítico <h3 id="qtdCrit" style="color:var(--hx-danger)">0 Itens</h3></div>
-        </div>
-        <div class="card"><h4>Histórico de Vendas Recentes</h4><canvas id="chartDiario" height="100"></canvas></div>
-    </section>
+<section id="dashTab">
+  <h2 style="color:var(--hx-accent)">📊 Dashboard Financeiro</h2>
+
+  <!-- FILTRO DE PERÍODO (AQUI É O LUGAR CERTO) -->
+  <div style="display:flex; gap:10px; margin-bottom:15px;">
+    <select id="filtroMes" onchange="updateDash()">
+      <option value="">Mês</option>
+      <option value="01">Janeiro</option>
+      <option value="02">Fevereiro</option>
+      <option value="03">Março</option>
+      <option value="04">Abril</option>
+      <option value="05">Maio</option>
+      <option value="06">Junho</option>
+      <option value="07">Julho</option>
+      <option value="08">Agosto</option>
+      <option value="09">Setembro</option>
+      <option value="10">Outubro</option>
+      <option value="11">Novembro</option>
+      <option value="12">Dezembro</option>
+    </select>
+
+    <select id="filtroAno" onchange="updateDash()">
+      <option value="">Ano</option>
+      <option>2024</option>
+      <option>2025</option>
+      <option>2026</option>
+    </select>
+  </div>
+
+  <!-- CARDS -->
+  <div class="grid-dash">
+    <div class="dash-card">
+    Último Dia com Vendas
+    <h3 id="vDia" style="color:var(--hx-accent)">R$ 0,00</h3>
+    </div>
+
+    <div class="dash-card">
+      Lucro Hoje
+      <h3 id="lDia" style="color:#00cfff">R$ 0,00</h3>
+    </div>
+
+    <div class="dash-card">
+      Vendas Mês
+      <h3 id="vMes">R$ 0,00</h3>
+    </div>
+
+      <div class="dash-card">
+  Lucro do Mês
+  <h3 id="lMes" style="color:#00cfff">R$ 0,00</h3>
+</div>
+
+
+    <div class="dash-card">
+      Estoque Crítico
+      <h3 id="qtdCrit" style="color:var(--hx-danger)">0 Itens</h3>
+    </div>
+  </div>
+
+  <!-- GRÁFICO -->
+  <div class="card">
+    <h4>Histórico de Vendas Recentes</h4>
+    <canvas id="chartDiario" height="100"></canvas>
+  </div>
+</section>
+
 
     <section id="cliTab" style="display:none">
         <h2>👤 Gestão de Clientes</h2>
@@ -188,57 +243,129 @@ function refreshSelects() {
 }
 
 // DASHBOARD CALCULATIONS
+function getUltimoDiaComVenda() {
+    return _vens
+        .filter(v => v.data)
+        .map(v => new Date(v.data))
+        .sort((a, b) => b - a)[0] || null;
+}
+
 function updateDash() {
-    const agora = new Date();
-    const hojeLocal = agora.toLocaleDateString("pt-BR");
-    const mesAnoAtual = `${agora.getFullYear()}-${String(agora.getMonth() + 1).padStart(2, "0")}`;
+    const mesFiltro = document.getElementById("filtroMes")?.value;
+    const anoFiltro = document.getElementById("filtroAno")?.value;
+
+    const ultimoDia = getUltimoDiaComVenda();
+    const refDia = ultimoDia
+        ? ultimoDia.toLocaleDateString("pt-BR")
+        : new Date().toLocaleDateString("pt-BR");
 
     let totalHoje = 0;
     let lucroHoje = 0;
     let totalMes = 0;
+    let lucroMes = 0;
 
+    // 🛑 PRIMEIRO: se não há vendas
+    if (!_vens.length) {
+        document.getElementById("vDia").innerText = "R$ 0,00";
+        document.getElementById("lDia").innerText = "R$ 0,00";
+        document.getElementById("vMes").innerText = "R$ 0,00";
+        document.getElementById("qtdCrit").innerText = "0 Itens";
+
+        renderChart();
+        return;
+    }
+
+    // 🔁 AGORA sim percorre as vendas
     _vens.forEach(v => {
         if (!v.data) return;
 
-        const dataVenda = new Date(v.data);
-        const diaVenda = dataVenda.toLocaleDateString("pt-BR");
-        const mesAnoVenda = `${dataVenda.getFullYear()}-${String(dataVenda.getMonth() + 1).padStart(2, "0")}`;
+        const d = new Date(v.data);
+        const dia = d.toLocaleDateString("pt-BR");
+        const mes = String(d.getMonth() + 1).padStart(2, "0");
+        const ano = String(d.getFullYear());
 
-        if (diaVenda === hojeLocal) {
+        // 🔹 último dia com venda
+        if (dia === refDia) {
             totalHoje += Number(v.valor || 0);
             lucroHoje += Number(v.lucro_total || 0);
         }
 
-        if (mesAnoVenda === mesAnoAtual) {
+        // 🔹 mês / ano filtrado
+        const passaMes = !mesFiltro || mes === mesFiltro;
+        const passaAno = !anoFiltro || ano === anoFiltro;
+
+        if (passaMes && passaAno) {
             totalMes += Number(v.valor || 0);
+            lucroMes += Number(v.lucro_total || 0);
         }
     });
 
-    const criticos = _prods.filter(
-        p => (p.q_id || p.qnt || 0) <= (p.estoque_minimo || 0)
-    ).length;
-
-    document.getElementById('vDia').innerText = `R$ ${totalHoje.toFixed(2)}`;
-    document.getElementById('lDia').innerText = `R$ ${lucroHoje.toFixed(2)}`;
-    document.getElementById('vMes').innerText = `R$ ${totalMes.toFixed(2)}`;
-    document.getElementById('qtdCrit').innerText = `${criticos} Itens`;
+    // ✅ ATUALIZA OS CARDS
+    document.getElementById("vDia").innerText = `R$ ${totalHoje.toFixed(2)}`;
+    document.getElementById("lDia").innerText = `R$ ${lucroHoje.toFixed(2)}`;
+    document.getElementById("vMes").innerText = `R$ ${totalMes.toFixed(2)}`;
+    document.getElementById("lMes").innerText = `R$ ${lucroMes.toFixed(2)}`;
 
     renderChart();
 }
+
 
 function renderChart() {
     const ctx = document.getElementById('chartDiario').getContext('2d');
     if(chartInstance) chartInstance.destroy();
     
-    const ultimasVendas = _vens.slice(0, 7).reverse();
+    function renderChart() {
+    const ctx = document.getElementById('chartDiario').getContext('2d');
+    if (chartInstance) chartInstance.destroy();
+
+    const mesFiltro = document.getElementById("filtroMes")?.value;
+    const anoFiltro = document.getElementById("filtroAno")?.value;
+
+    const vendasFiltradas = _vens.filter(v => {
+        if (!v.data) return false;
+
+        const d = new Date(v.data);
+        const mes = String(d.getMonth() + 1).padStart(2, "0");
+        const ano = String(d.getFullYear());
+
+        return (!mesFiltro || mes === mesFiltro) &&
+               (!anoFiltro || ano === anoFiltro);
+    }).slice(0, 7).reverse();
+
+    // 🛑 se não houver dados para o gráfico
+    if (!vendasFiltradas.length) return;
+
     chartInstance = new Chart(ctx, {
         type: 'line',
         data: {
-            labels: ultimasVendas.map(v => v.data.split('T')[0]),
-            datasets: [{ label: 'Vendas Recentes', data: ultimasVendas.map(v => v.valor), borderColor: '#0aff9d', tension: 0.3, fill: true, backgroundColor: 'rgba(10, 255, 157, 0.1)' }]
+            labels: vendasFiltradas.map(v => v.data.split('T')[0]),
+            datasets: [{
+                label: 'Vendas Recentes',
+                data: vendasFiltradas.map(v => Number(v.valor || 0)),
+                borderColor: '#0aff9d',
+                backgroundColor: 'rgba(10, 255, 157, 0.1)',
+                tension: 0.3,
+                fill: true
+            }]
+        },
+        options: {
+            plugins: {
+                legend: {
+                    labels: { color: "#eaeaea" }
+                }
+            },
+            scales: {
+                x: {
+                    ticks: { color: "#aaa" }
+                },
+                y: {
+                    ticks: { color: "#aaa" }
+                }
+            }
         }
     });
 }
+
 
 // VENDAS LOGIC
 function updateVendaPrice() {
@@ -385,3 +512,4 @@ window.onload = async () => {
 </script>
 </body>
 </html>
+
