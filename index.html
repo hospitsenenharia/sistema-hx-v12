@@ -18,7 +18,7 @@
         .btn { padding: 10px; border: none; border-radius: 4px; font-weight: bold; cursor: pointer; }
         .btn-add { background: var(--hx-accent); color: #000; }
         .btn-del { background: var(--hx-danger); color: #fff; }
-        .badge-critico { background: var(--hx-danger); color: white; padding: 2px 8px; border-radius: 4px; font-size: 11px; }
+        .badge-critico { background: var(--hx-danger); color: white; padding: 2px 8px; border-radius: 4px; font-size: 11px; font-weight: bold; }
     </style>
 </head>
 <body>
@@ -49,10 +49,10 @@
         <h2>📦 Gestão de Estoque</h2>
         <div class="card">
             <input id="pNome" placeholder="Nome do Produto">
-            <input id="pQtd" type="number" placeholder="Quantidade Atual">
+            <input id="pQtd" type="number" placeholder="Quantidade">
             <input id="pMin" type="number" placeholder="Mínimo Alerta">
-            <input id="pCusto" type="number" placeholder="Preço Custo">
-            <input id="pRev" type="number" placeholder="Preço Venda">
+            <input id="pCusto" type="number" step="0.01" placeholder="Preço Custo">
+            <input id="pRev" type="number" step="0.01" placeholder="Preço Venda">
             <button class="btn btn-add" onclick="addProduto()">ADICIONAR PRODUTO</button>
         </div>
         <div class="card">
@@ -76,7 +76,7 @@
         </div>
         <div class="card">
             <div style="display:flex; gap:10px;">
-                <input id="fNome" placeholder="🔍 Por Cliente" oninput="renderVendas()">
+                <input id="fNome" placeholder="🔍 Filtrar por Cliente" oninput="renderVendas()">
                 <input id="fData" type="date" onchange="renderVendas()">
             </div>
             <div id="listVen" style="margin-top:15px"></div>
@@ -113,10 +113,14 @@ function renderAll() {
 
 function updateDashboard() {
     const hoje = new Date().toLocaleDateString('pt-BR');
+    const mesAtual = new Date().toISOString().slice(0, 7);
+    
     const vHoje = _vens.filter(v => new Date(v.data).toLocaleDateString('pt-BR') === hoje);
+    const vMes = _vens.filter(v => v.data && v.data.startsWith(mesAtual));
     
     document.getElementById('vDia').innerText = "R$ " + vHoje.reduce((t,v) => t + Number(v.valor||0), 0).toFixed(2);
     document.getElementById('lDia').innerText = "R$ " + vHoje.reduce((t,v) => t + Number(v.lucro_total||0), 0).toFixed(2);
+    document.getElementById('vMes').innerText = "R$ " + vMes.reduce((t,v) => t + Number(v.valor||0), 0).toFixed(2);
     document.getElementById('qtdCrit').innerText = _prods.filter(p => (p.quantidade||0) <= (p.estoque_minimo||2)).length + " Itens";
 }
 
@@ -124,9 +128,9 @@ function renderEst() {
     const busca = document.getElementById('buscaEst').value.toLowerCase();
     document.getElementById('listEst').innerHTML = _prods.filter(p => p.nome.toLowerCase().includes(busca)).map(p => `
         <div class="card" style="display:flex; justify-content:space-between; align-items:center;">
-            <span><b>${p.nome}</b> — Estoque: ${p.quantidade || 0} ${ (p.quantidade || 0) <= (p.estoque_minimo || 2) ? '<span class="badge-critico">BAIXO</span>' : ''}</span>
+            <span><b>${p.nome}</b> — Est: ${p.quantidade || 0} ${ (p.quantidade || 0) <= (p.estoque_minimo || 2) ? '<span class="badge-critico">BAIXO</span>' : ''}</span>
             <div>
-                <button class="btn" onclick="editarEstoque(${p.id})">✏️</button>
+                <button class="btn" onclick="editarItem('produtos', ${p.id})">✏️</button>
                 <button class="btn btn-del" onclick="deletarItem('produtos', ${p.id})">🗑️</button>
             </div>
         </div>`).join('');
@@ -151,10 +155,10 @@ function renderVendas() {
 async function addProduto() {
     await db.from('produtos').insert({ 
         nome: pNome.value, 
-        quantidade: pQtd.value, 
-        estoque_minimo: pMin.value, 
-        preco_custo: pCusto.value, 
-        preco_revenda: pRev.value 
+        quantidade: Number(pQtd.value), 
+        estoque_minimo: Number(pMin.value), 
+        preco_custo: Number(pCusto.value), 
+        preco_revenda: Number(pRev.value) 
     });
     load();
 }
@@ -180,13 +184,13 @@ async function vender() {
 function imprimirRecibo(id) {
     const v = _vens.find(x => x.id == id);
     const w = window.open('','','width=300');
-    w.document.write(`<body style="font-family:monospace;width:80mm">
+    w.document.write(`<body style="font-family:monospace;width:80mm;padding:10px">
         <h3>HX ACESSÓRIOS</h3>
         <p>Data: ${new Date(v.data).toLocaleString()}</p>
         <p>Cliente: ${v.clientes.nome}</p>
         <hr>
         <p>${v.produtos.nome} x${v.quantidade}</p>
-        <p>PAGAMENTO: ${v.tipo_venda || 'Não informado'}</p>
+        <p>PAGAMENTO: ${v.tipo_venda || 'N/A'}</p>
         <h3>TOTAL: R$ ${v.valor.toFixed(2)}</h3>
         <script>window.print();<\/script>
     </body>`);
@@ -200,8 +204,10 @@ async function deletarItem(tabela, id) {
 }
 
 function refreshSelects() {
-    vCliSelect.innerHTML = _clis.map(c => `<option value="${c.id}">${c.nome}</option>`).join('');
-    vProdSelect.innerHTML = _prods.map(p => `<option value="${p.id}">${p.nome} (Est: ${p.quantidade || 0})</option>`).join('');
+    const cliOpt = _clis.map(c => `<option value="${c.id}">${c.nome}</option>`).join('');
+    vCliSelect.innerHTML = cliOpt;
+    const prodOpt = _prods.map(p => `<option value="${p.id}">${p.nome} (Est: ${p.quantidade || 0})</option>`).join('');
+    vProdSelect.innerHTML = prodOpt;
 }
 
 function tab(id,b){
