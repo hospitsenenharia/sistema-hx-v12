@@ -3,7 +3,7 @@
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Sistema HX — Gestão Administrativa</title>
+    <title>Sistema HX — Gestão Total</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js/dist/chart.umd.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
     <style>
@@ -36,6 +36,7 @@
 <nav id="sidebar">
     <div style="padding:20px; font-weight:bold; color:var(--hx-accent); font-size:1.2rem;">PAINEL HX</div>
     <button onclick="changeTab('dashTab', this)" class="active">📊 Dashboard</button>
+    <button onclick="changeTab('cliTab', this)">👤 Clientes</button>
     <button onclick="changeTab('estTab', this)">📦 Estoque</button>
     <button onclick="changeTab('venTab', this)">💵 Vendas</button>
     <button onclick="changeTab('osTab', this)">🛠 Ordem de Serviço</button>
@@ -51,15 +52,25 @@
             <div class="card">Vendas Mês <h3 id="vMes">R$ 0,00</h3></div>
             <div class="card">Estoque Crítico <h3 id="qtdCrit" style="color:var(--hx-danger)">0 Itens</h3></div>
         </div>
-        <div class="card"><h4>Faturamento Mensal</h4><canvas id="chartDiario" height="100"></canvas></div>
+        <div class="card"><h4>Faturamento Mensal (R$)</h4><canvas id="chartDiario" height="100"></canvas></div>
+    </section>
+
+    <section id="cliTab" style="display:none">
+        <h2>👤 Gestão de Clientes</h2>
+        <div class="card">
+            <input id="cliNome" placeholder="Nome Completo">
+            <input id="cliTel" placeholder="Telefone">
+            <button class="btn btn-add" onclick="addCliente()">CADASTRAR</button>
+        </div>
+        <div id="listCli"></div>
     </section>
 
     <section id="osTab" style="display:none">
-        <h2>🛠 Ordens de Serviço</h2>
+        <h2>🛠 Ordem de Serviço</h2>
         <div class="card">
             <select id="osCliente"></select>
-            <textarea id="osDesc" placeholder="Descrição do serviço"></textarea>
-            <button class="btn btn-add" onclick="criarOS()">ABRIR OS</button>
+            <textarea id="osDesc" placeholder="Descrição técnica do serviço"></textarea>
+            <button class="btn btn-add" onclick="criarOS()">ABRIR ORDEM</button>
         </div>
         <div id="listOS"></div>
     </section>
@@ -68,54 +79,66 @@
         <h2>📝 Orçamentos</h2>
         <div class="card">
             <select id="orcCliente"></select>
-            <textarea id="orcDesc" placeholder="Descrição do orçamento"></textarea>
-            <input id="orcValor" type="number" placeholder="Valor Estimado">
-            <button class="btn btn-add" onclick="criarOrc()">SALVAR ORÇAMENTO</button>
+            <textarea id="orcDesc" placeholder="Detalhes do orçamento"></textarea>
+            <input id="orcValor" type="number" placeholder="Valor Estimado (R$)">
+            <button class="btn btn-add" onclick="criarOrc()">GERAR ORÇAMENTO</button>
         </div>
         <div id="listOrc"></div>
     </section>
-    
+
     <section id="estTab" style="display:none"><h2>📦 Estoque</h2><div id="listEst"></div></section>
-    <section id="venTab" style="display:none"><h2>💵 Vendas</h2><div id="listVen"></div></section>
+    <section id="venTab" style="display:none"><h2>💵 PDV</h2><div id="listVen"></div></section>
 </main>
 
 <script>
+// INICIALIZAÇÃO ÚNICA E SEGURA
 const { createClient } = window.supabase;
 const db = createClient("https://axfccmezfofnqfsdurqb.supabase.co","eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImF4ZmNjbWV6Zm9mbnFmc2R1cnFiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjUwNzA1NDMsImV4cCI6MjA4MDY0NjU0M30.woGp6hBgiEa41opQxyxqqMULlDKMXm9T83bhJ7UEmb8");
 
 let _clis = [], _prods = [], _vens = [], _oss = [], _orcs = [];
 let chartInstance = null;
 
-// 1️⃣ DASHBOARD E GRÁFICO (SOLUÇÃO COMPLETA)
+// 1. DASHBOARD COM FILTRO DE FUSO HORÁRIO BRASIL
 function updateDashboard() {
-    const hoje = new Date().toISOString().split('T')[0];
-    const mesAtual = hoje.slice(0, 7);
-    const vHoje = _vens.filter(v => v.data?.startsWith(hoje));
-    const vMes = _vens.filter(v => v.data?.startsWith(mesAtual));
+    const hojePTBR = new Date().toLocaleDateString('pt-BR');
+    const mesReferencia = new Date().toISOString().slice(0, 7);
+
+    const vHoje = _vens.filter(v => new Date(v.data).toLocaleDateString('pt-BR') === hojePTBR);
+    const vMes = _vens.filter(v => v.data?.startsWith(mesReferencia));
 
     document.getElementById('vDia').innerText = "R$ " + vHoje.reduce((t, v) => t + Number(v.valor || 0), 0).toFixed(2);
     document.getElementById('lDia').innerText = "R$ " + vHoje.reduce((t, v) => t + Number(v.lucro_total || 0), 0).toFixed(2);
     document.getElementById('vMes').innerText = "R$ " + vMes.reduce((t, v) => t + Number(v.valor || 0), 0).toFixed(2);
     document.getElementById('qtdCrit').innerText = _prods.filter(p => (p.quantidade || 0) <= (p.estoque_minimo || 2)).length + " Itens";
 
-    renderChart(vMes); // Ativa o gráfico com os dados do mês
+    renderChart(vMes);
 }
 
+// 2. GRÁFICO FUNCIONANDO (BARRA POR DIA)
 function renderChart(vendas) {
-    const porDia = {};
-    vendas.forEach(v => { const d = v.data.slice(0, 10); porDia[d] = (porDia[d] || 0) + Number(v.valor || 0); });
-    const labels = Object.keys(porDia);
-    const valores = Object.values(porDia);
+    const agrupado = {};
+    vendas.forEach(v => { const d = v.data.slice(0, 10); agrupado[d] = (agrupado[d] || 0) + Number(v.valor || 0); });
+    
+    const labels = Object.keys(agrupado);
+    const valores = Object.values(agrupado);
 
     if (chartInstance) chartInstance.destroy();
     chartInstance = new Chart(document.getElementById('chartDiario'), {
         type: 'bar',
-        data: { labels, datasets: [{ label: 'Vendas (R$)', data: valores, backgroundColor: '#0aff9d' }] },
+        data: { labels, datasets: [{ label: 'Vendas Diárias (R$)', data: valores, backgroundColor: '#0aff9d' }] },
         options: { plugins: { legend: { labels: { color: '#fff' } } }, scales: { x: { ticks: { color: '#aaa' } }, y: { ticks: { color: '#aaa' } } } }
     });
 }
 
-// 2️⃣ ORÇAMENTOS (CRIAR + IMPRIMIR)
+// 3. FUNÇÕES DE CRIAÇÃO (CLIENTE, ORC, OS)
+async function addCliente() {
+    const nome = document.getElementById('cliNome').value;
+    const telefone = document.getElementById('cliTel').value;
+    if (!nome) return alert("Nome é obrigatório!");
+    await db.from('clientes').insert({ nome, telefone });
+    loadAll();
+}
+
 async function criarOrc() {
     await db.from('orcamentos').insert({
         cliente_id: document.getElementById('orcCliente').value,
@@ -126,14 +149,6 @@ async function criarOrc() {
     loadAll();
 }
 
-function printOrc(id) {
-    const o = _orcs.find(x => x.id === id);
-    const w = window.open('');
-    w.document.write(`<h2>ORÇAMENTO #${o.id}</h2><p>Cliente: ${o.clientes?.nome}</p><p>${o.descricao}</p><h3>Valor: R$ ${o.valor}</h3>`);
-    w.print(); w.close();
-}
-
-// 3️⃣ OS (CRIAR + IMPRIMIR)
 async function criarOS() {
     await db.from('ordens_servico').insert({
         cliente_id: document.getElementById('osCliente').value,
@@ -143,28 +158,31 @@ async function criarOS() {
     loadAll();
 }
 
-function printOS(id) {
-    const o = _oss.find(x => x.id === id);
-    const w = window.open('');
-    w.document.write(`<h2>OS #${o.id}</h2><p>Cliente: ${o.clientes?.nome}</p><p>Status: ${o.status}</p><p>${o.descricao}</p>`);
-    w.print(); w.close();
+// 4. IMPRESSÃO
+function printDoc(tipo, id) {
+    const item = tipo === 'OS' ? _oss.find(x => x.id === id) : _orcs.find(x => x.id === id);
+    const win = window.open('', '_blank');
+    win.document.write(`<html><body><h2>${tipo} #${item.id}</h2><p><b>Cliente:</b> ${item.clientes?.nome}</p><p><b>Detalhes:</b> ${item.descricao}</p><h3>TOTAL: R$ ${item.valor || '---'}</h3><script>window.print();<\/script></body></html>`);
 }
 
-// FUNÇÕES DE CARREGAMENTO
+// 5. CARREGAMENTO GERAL (CORRIGIDO)
 async function loadAll() {
     const [{data:c}, {data:p}, {data:v}, {data:o}, {data:r}] = await Promise.all([
-        db.from('clientes').select('*'), db.from('produtos').select('*'),
-        db.from('vendas').select('*'), db.from('ordens_servico').select('*, clientes(nome)'),
-        db.from('orcamentos').select('*, clientes(nome)')
+        db.from('clientes').select('*').order('nome'),
+        db.from('produtos').select('*'),
+        db.from('vendas').select('*'),
+        db.from('ordens_servico').select('*, clientes(nome)').order('id', {ascending: false}),
+        db.from('orcamentos').select('*, clientes(nome)').order('id', {ascending: false})
     ]);
     _clis = c || []; _prods = p || []; _vens = v || []; _oss = o || []; _orcs = r || [];
     
-    // Atualizar Selects e Listas
+    // Atualizar Selects
     const cliOpt = _clis.map(c => `<option value="${c.id}">${c.nome}</option>`).join('');
     ['osCliente', 'orcCliente'].forEach(id => document.getElementById(id).innerHTML = cliOpt);
     
-    document.getElementById('listOS').innerHTML = _oss.map(o => `<div class="card">OS #${o.id} - ${o.clientes?.nome} <button onclick="printOS(${o.id})">🖨️</button></div>`).join('');
-    document.getElementById('listOrc').innerHTML = _orcs.map(o => `<div class="card">ORC #${o.id} - ${o.clientes?.nome} <button onclick="printOrc(${o.id})">🖨️</button></div>`).join('');
+    // Listagem com Botão de Impressão
+    document.getElementById('listOS').innerHTML = _oss.map(o => `<div class="card">OS #${o.id} - ${o.clientes?.nome} <button onclick="printDoc('OS', ${o.id})">🖨️ Imprimir</button></div>`).join('');
+    document.getElementById('listOrc').innerHTML = _orcs.map(o => `<div class="card">ORC #${o.id} - ${o.clientes?.nome} <button onclick="printDoc('ORC', ${o.id})">🖨️ Imprimir</button></div>`).join('');
     
     updateDashboard();
 }
