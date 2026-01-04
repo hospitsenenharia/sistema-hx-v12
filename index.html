@@ -140,7 +140,27 @@
   <section id="dashTab"></section>
   <section id="cliTab" style="display:none"></section>
   <section id="estTab" style="display:none"></section>
-  <section id="venTab" style="display:none"></section>
+<section id="venTab" style="display:none">
+  <h2>💵 Registro de Vendas</h2>
+
+  <div class="card">
+    <label>Cliente</label>
+    <select id="vCliSelect"></select>
+
+    <label>Produto</label>
+    <select id="vProdSelect"></select>
+
+    <label>Quantidade</label>
+    <input id="vQtd" type="number" value="1">
+
+    <button class="btn btn-add" onclick="doVenda()">FINALIZAR VENDA</button>
+  </div>
+
+  <div class="card">
+    <h3>Vendas Registradas</h3>
+    <div id="listVen"></div>
+  </div>
+</section>
   <section id="osTab" style="display:none"></section>
   <section id="orcTab" style="display:none"></section>
 
@@ -259,15 +279,52 @@ async function loadAll() {
 
     _clis = c || []; _prods = p || []; _vens = v || []; _oss = o || []; _orcs = r || [];
     
-    refreshSelects();
-    renderCli(); renderEst(); renderVen(); renderOS(); renderOrc(); updateDash();
+<script>
+function refreshSelects() {
+  const cliOptions = _clis.map(c =>
+    `<option value="${c.id}">${c.nome}</option>`
+  ).join('');
+
+  ['vCliSelect', 'osCliSelect', 'orcCliSelect'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.innerHTML = cliOptions;
+  });
+
+  const prodSelect = document.getElementById('vProdSelect');
+  if (prodSelect) {
+    prodSelect.innerHTML = _prods.map(p =>
+      `<option value="${p.id}">${p.nome}</option>`
+    ).join('');
+  }
 }
 
-function refreshSelects() {
-    const cliOptions = _clis.map(c => `<option value="${c.id}">${c.nome}</option>`).join('');
-    ['vCliSelect', 'osCliSelect', 'orcCliSelect'].forEach(id => document.getElementById(id).innerHTML = cliOptions);
-    document.getElementById('vProdSelect').innerHTML = _prods.map(p => `<option value="${p.id}">${p.nome} (Estoque: ${p.q_id || p.qnt || 0})</option>`).join('');
+async function loadAll() {
+  const [{ data: c }, { data: p }, { data: v }, { data: o }, { data: r }] =
+    await Promise.all([
+      db.from('clientes').select('*').order('nome'),
+      db.from('produtos').select('*').order('nome'),
+      db.from('vendas').select('*, clientes(nome), produtos(nome)').order('data', { ascending: false }),
+      db.from('ordens_servico').select('*, clientes(nome)').order('id', { ascending: false }),
+      db.from('orcamentos').select('*, clientes(nome)').order('id', { ascending: false })
+    ]);
+
+  // 👉 dados globais
+  _clis = c || [];
+  _prods = p || [];
+  _vens = v || [];
+  _oss = o || [];
+  _orcs = r || [];
+
+  // ✅ chamadas corretas
+  refreshSelects();
+  renderCli();
+  renderEst();
+  renderVen();
+  renderOS();
+  renderOrc();
+  updateDash();
 }
+</script>
 
 // DASHBOARD CALCULATIONS
 function getUltimoDiaComVenda() {
@@ -563,6 +620,7 @@ async function logout() {
 </script>
 </body>
 </html>
+
 
 
 
