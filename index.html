@@ -33,33 +33,114 @@
         
         .critical { color: var(--hx-danger); font-weight: bold; animation: pulse 1.5s infinite; }
         @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.5; } 100% { opacity: 1; } }
+
+       /* 📱 MOBILE */
+@media (max-width: 768px) {
+
+  /* esconde o botão sair no menu horizontal */
+  #sidebar button[onclick="logout()"] {
+    display: none;
+  }
+
+  body {
+    flex-direction: column;
+  }
+
+  #sidebar {
+    position: relative;
+    width: 100%;
+    height: auto;
+    flex-direction: row;
+    overflow-x: auto;
+    border-right: none;
+    border-bottom: 1px solid #333;
+  }
+
+  #sidebar button {
+    flex: 1;
+    white-space: nowrap;
+    text-align: center;
+    border-left: none;
+    border-bottom: 3px solid transparent;
+  }
+
+  #sidebar button.active {
+    border-bottom-color: var(--hx-accent);
+    background: none;
+  }
+
+  main {
+    margin-left: 0;
+    padding: 15px;
+  }
+
+  .grid-dash {
+    grid-template-columns: 1fr;
+  }
+
+  input, select, textarea {
+    font-size: 16px;
+  }
+}
+
+
+        /* Feedback visual ao toque/clique */
+#sidebar button:active {
+  background: #1f1f1f;
+}
+
     </style>
 </head>
 <body>
 
+<!-- ================= LOGIN ================= -->
 <div id="loginOverlay">
   <div class="login-card">
     <h2>SISTEMA HX</h2>
 
-    <input id="lEmail">
-    <input id="lPass" type="password">
+    <input id="lEmail" placeholder="E-mail">
+    <input id="lPass" type="password" placeholder="Senha">
 
     <button class="btn btn-add" onclick="login()">ENTRAR</button>
   </div>
 </div>
 
-
+<!-- ================= SIDEBAR ================= -->
 <nav id="sidebar">
-    <div style="padding:20px; font-weight:bold; color:var(--hx-accent); font-size:1.2rem; border-bottom:1px solid #333;">PAINEL HX</div>
+    <div style="
+        padding:20px;
+        font-weight:bold;
+        color:var(--hx-accent);
+        font-size:1.2rem;
+        border-bottom:1px solid #333;
+    ">
+        PAINEL HX
+    </div>
+
     <button onclick="changeTab('dashTab', this)" class="active">📊 Dashboard</button>
     <button onclick="changeTab('cliTab', this)">👤 Clientes</button>
     <button onclick="changeTab('estTab', this)">📦 Estoque</button>
     <button onclick="changeTab('venTab', this)">💵 Vendas</button>
     <button onclick="changeTab('osTab', this)">🛠 Ordem de Serviço</button>
     <button onclick="changeTab('orcTab', this)">📝 Orçamentos</button>
+
+    <!-- 🔻 BOTÃO SAIR (RODAPÉ DA SIDEBAR) -->
+    <button
+        onclick="logout()"
+        style="
+            margin-top:auto;
+            color: var(--hx-danger);
+            border-top:1px solid #333;
+        ">
+        🚪 Sair
+    </button>
 </nav>
 
+<!-- ================= CONTEÚDO ================= -->
+
+
 <main>
+    </body>
 <section id="dashTab">
   <h2 style="color:var(--hx-accent)">📊 Dashboard Financeiro</h2>
 
@@ -621,15 +702,25 @@ function renderOrc() {
 
 window.onload = async () => {
   const { data } = await db.auth.getSession();
+
   if (data.session) {
     document.getElementById('loginOverlay').style.display = "none";
     loadAll();
+  } else {
+    document.getElementById('loginOverlay').style.display = "flex";
   }
 };
+// 🔻 LOGOUT (SAIR DO SISTEMA)
+async function logout() {
+    if (!confirm("Deseja realmente sair do sistema?")) return;
+    await db.auth.signOut();
+    location.reload();
+}
 
 </script>
 </body>
 </html>
+
 
 
 
