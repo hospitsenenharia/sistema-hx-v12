@@ -243,6 +243,70 @@ async function login() {
     resetarInatividade(); // inicia o timer
   }
 }
+// 🖨️ IMPRIMIR CUPOM NÃO FISCAL
+function imprimirVenda(id) {
+  const v = _vens.find(x => x.id === id);
+  if (!v) return alert("Venda não encontrada");
+
+  const w = window.open("", "_blank", "width=300,height=600");
+
+  w.document.write(`
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+<meta charset="UTF-8">
+<title>Cupom Não Fiscal</title>
+<style>
+  @page { size: 80mm auto; margin: 0; }
+  body {
+    width: 80mm;
+    margin: 0;
+    padding: 6px;
+    font-family: monospace;
+    font-size: 12px;
+  }
+  .center { text-align: center; }
+  hr {
+    border: none;
+    border-top: 1px dashed #000;
+    margin: 6px 0;
+  }
+</style>
+</head>
+
+<body onload="window.print(); window.close();">
+
+<div class="center">
+  <strong>SISTEMA HX</strong><br>
+  CUPOM NÃO FISCAL
+</div>
+
+<hr>
+
+Cliente: ${v.clientes?.nome || "Não informado"}<br>
+Produto: ${v.produtos?.nome || "-"}<br>
+Qtd: ${v.quantidade}<br>
+Pagamento: ${v.tipo_pagamento || "N/I"}<br>
+
+<hr>
+
+<strong>TOTAL: R$ ${Number(v.valor).toFixed(2)}</strong><br>
+Data: ${new Date(v.data).toLocaleString("pt-BR")}
+
+<hr>
+
+<div class="center">
+  Obrigado pela preferência!
+</div>
+
+</body>
+</html>
+  `);
+
+  w.document.close();
+}
+
+    
 </script>
 
 
@@ -480,32 +544,29 @@ async function delItem(tab, id) {
 }
 
 function renderVen() {
-  const sNome = document.getElementById('sVenNome').value.toLowerCase();
-  const sData = document.getElementById('sVenData').value;
+  document.getElementById('listVen').innerHTML = _vens.map(v => `
+    <div style="padding:10px; border-bottom:1px solid #333; display:flex; justify-content:space-between; align-items:center;">
+      <span>
+        ${v.data.split('T')[0]} -
+        <strong>${v.clientes?.nome}</strong>
+        (${v.tipo_pagamento || "N/I"})
+        R$ ${Number(v.valor).toFixed(2)}
+      </span>
 
-  document.getElementById('listVen').innerHTML = _vens
-    .filter(v =>
-      (v.clientes?.nome?.toLowerCase().includes(sNome)) &&
-      (sData ? v.data.startsWith(sData) : true)
-    )
-    .map(v => `
-      <div style="padding:10px; border-bottom:1px solid #333; display:flex; justify-content:space-between; align-items:center;">
-        <span>
-          ${v.data.split('T')[0]} -
-          <strong>${v.clientes?.nome}</strong> |
-          ${v.produtos?.nome} |
-          R$ ${Number(v.valor).toFixed(2)} |
-          ${v.tipo_pagamento || "N/I"}
-        </span>
+      <div style="display:flex; gap:6px;">
+        <!-- 🖨️ IMPRIMIR -->
+        <button class="btn btn-add" onclick="imprimirVenda(${v.id})">🖨️</button>
 
-        <div style="display:flex; gap:5px;">
-          <button class="btn btn-add" onclick="imprimirVenda(${v.id})">🖨️</button>
-          <button class="btn btn-edit" onclick="editarVenda(${v.id})">✏️</button>
-          <button class="btn btn-del" onclick="delItem('vendas', ${v.id})">🗑️</button>
-        </div>
+        <!-- ✏️ EDITAR -->
+        <button class="btn btn-edit" onclick="editarVenda(${v.id})">✏️</button>
+
+        <!-- 🗑️ EXCLUIR -->
+        <button class="btn btn-del" onclick="delItem('vendas', ${v.id})">🗑️</button>
       </div>
-    `).join('');
+    </div>
+  `).join('');
 }
+
 
 
 // STOQUE RENDER WITH ALERT
@@ -637,6 +698,7 @@ window.onload = async () => {
 </script>
 </body>
 </html>
+
 
 
 
