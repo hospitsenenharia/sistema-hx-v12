@@ -220,14 +220,8 @@ const db = createClient("https://axfccmezfofnqfsdurqb.supabase.co", "eyJhbGciOiJ
 );
 let _clis = [], _prods = [], _vens = [], _oss = [], _orcs = [];
 let chartInstance = null;
-function imprimirVenda(id) {
-    const v = _vens.find(x => x.id === id);
-    if (!v) return;
 
-    const w = window.open("", "_blank", "width=300,height=600");
-
-    w.document.write(`
-   function imprimirVenda(id) {
+    function imprimirVenda(id) {
     const v = _vens.find(x => x.id === id);
     if (!v) {
         alert("Venda não encontrada");
@@ -250,9 +244,7 @@ function imprimirVenda(id) {
             font-family: monospace;
             font-size: 12px;
         }
-        .center {
-            text-align: center;
-        }
+        .center { text-align: center; }
         hr {
             border: none;
             border-top: 1px dashed #000;
@@ -288,6 +280,7 @@ function imprimirVenda(id) {
 
     w.document.close();
 }
+
 
 
 
@@ -700,6 +693,7 @@ window.onload = async () => {
 </script>
 </body>
 </html>
+
 
 
 
