@@ -166,20 +166,6 @@
     </section>
 </main>
 
-<script>
-    // CONFIGURAÇÃO SUPABASE
-    const { createClient } = window.supabase;
-
-    const db = createClient(
-        "https://axfccmezfofnqfsdurqb.supabase.co",
-        "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImF4ZmNjbWV6Zm9mbnFmc2R1cnFiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjUwNzA1NDMsImV4cCI6MjA4MDY0NjU0M30.woGp6hBgiEa41opQxyxqqMULlDKMXm9T83bhJ7UEmb8"
-    );
-
-    let _clis = [], _prods = [], _vens = [], _oss = [], _orcs = [];
-    let chartInstance = null;
-</script>
-
-
 async function login() {
     const email = document.getElementById('lEmail').value;
     const password = document.getElementById('lPass').value;
@@ -467,8 +453,55 @@ async function login() {
 }
 
 </script>
+
+ <script>
+/* ================= SUPABASE ================= */
+const { createClient } = window.supabase;
+
+const db = createClient(
+  "https://axfccmezfofnqfsdurqb.supabase.co",
+  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImF4ZmNjbWV6Zm9mbnFmc2R1cnFiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjUwNzA1NDMsImV4cCI6MjA4MDY0NjU0M30.woGp6hBgiEa41opQxyxqqMULlDKMXm9T83bhJ7UEmb8"
+);
+
+let _clis = [], _prods = [], _vens = [], _oss = [], _orcs = [];
+let chartInstance = null;
+
+/* ================= LOGIN ================= */
+async function login() {
+  const email = document.getElementById('lEmail').value;
+  const senha = document.getElementById('lPass').value;
+  const msg = document.getElementById('lErr');
+
+  if (!email || !senha) {
+    msg.innerText = "Preencha email e senha!";
+    return;
+  }
+
+  const { error } = await db.auth.signInWithPassword({
+    email,
+    password: senha
+  });
+
+  if (error) {
+    msg.innerText = error.message;
+    return;
+  }
+
+  msg.innerText = "";
+  document.getElementById('loginOverlay').style.display = "none";
+  loadAll();
+}
+
+/* ======= TODO O RESTO DO SEU JS ======= */
+/* updateDash, renderChart, loadAll, etc */
+/* COLE TODO O JS QUE VOCÊ JÁ TEM AQUI DENTRO */
+
+</script>
+  
+            
 </body>
 </html>
+
 
 
 
