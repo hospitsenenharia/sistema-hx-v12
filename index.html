@@ -410,6 +410,43 @@ function renderOrc() {
 }
 
 window.onload = () => { if(db.auth.getSession()) loadAll(); };
+
+    // ===================== LOGIN =====================
+async function login() {
+    const email =
+        document.getElementById('loginEmail')?.value ||
+        document.getElementById('lEmail')?.value;
+
+    const senha =
+        document.getElementById('loginPass')?.value ||
+        document.getElementById('lPass')?.value;
+
+    const msg =
+        document.getElementById('loginMsg') ||
+        document.getElementById('lErr');
+
+    if (!email || !senha) {
+        if (msg) msg.innerText = "Preencha email e senha!";
+        return;
+    }
+
+    const { error } = await supabase.auth.signInWithPassword({
+        email,
+        password: senha
+    });
+
+    if (error) {
+        if (msg) msg.innerText = error.message;
+        return;
+    }
+
+    if (msg) msg.innerText = "";
+    document.getElementById('loginOverlay').style.display = "none";
+
+    if (typeof loadAll === "function") loadAll();
+}
+
 </script>
 </body>
 </html>
+
