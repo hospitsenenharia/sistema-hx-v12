@@ -25,7 +25,7 @@ main{margin-left:240px;flex:1;padding:25px}
 .card{background:#181818;padding:20px;border-radius:8px;
 margin-bottom:20px;border:1px solid #333}
 .grid-dash{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:15px}
-input,select{width:100%;padding:10px;margin:8px 0;
+input,select,textarea{width:100%;padding:10px;margin:8px 0;
 background:#222;border:1px solid #444;color:#fff;border-radius:4px}
 .btn{padding:10px;border:none;border-radius:4px;font-weight:bold;cursor:pointer}
 .btn-add{background:var(--hx-accent);color:#000}
@@ -41,10 +41,13 @@ background:#222;border:1px solid #444;color:#fff;border-radius:4px}
  <button onclick="tab('cliTab',this)">👤 Clientes</button>
  <button onclick="tab('estTab',this)">📦 Estoque</button>
  <button onclick="tab('venTab',this)">💵 Vendas</button>
+ <button onclick="tab('orcTab',this)">📝 Orçamentos</button>
+ <button onclick="tab('osTab',this)">🛠 Ordem de Serviço</button>
 </nav>
 
 <main>
 
+<!-- DASHBOARD -->
 <section id="dashTab">
  <div class="grid-dash">
   <div class="card">Vendas Hoje<h3 id="vDia">R$ 0,00</h3></div>
@@ -60,6 +63,7 @@ background:#222;border:1px solid #444;color:#fff;border-radius:4px}
  <button class="btn btn-add" onclick="gerarPDF()">📄 Relatório Mensal (PDF)</button>
 </section>
 
+<!-- CLIENTES -->
 <section id="cliTab" style="display:none">
  <h2>Clientes</h2>
  <div class="card">
@@ -70,11 +74,13 @@ background:#222;border:1px solid #444;color:#fff;border-radius:4px}
  <div id="listCli"></div>
 </section>
 
+<!-- ESTOQUE -->
 <section id="estTab" style="display:none">
  <h2>Estoque</h2>
  <div id="listEst"></div>
 </section>
 
+<!-- PDV -->
 <section id="venTab" style="display:none">
  <h2>PDV</h2>
 
@@ -94,65 +100,84 @@ background:#222;border:1px solid #444;color:#fff;border-radius:4px}
  <div id="listVen"></div>
 </section>
 
+<!-- ORÇAMENTOS -->
+<section id="orcTab" style="display:none">
+ <h2>Orçamentos</h2>
+ <div id="listOrc"></div>
+</section>
+
+<!-- ORDEM DE SERVIÇO -->
+<section id="osTab" style="display:none">
+ <h2>Ordens de Serviço</h2>
+ <div id="listOS"></div>
+</section>
+
 </main>
 
 <script>
 const { createClient } = supabase;
 const db = createClient("SUA_URL_SUPABASE","SUA_CHAVE_PUBLICA");
 
-let cl=[], pr=[], ve=[], chartMes;
-let userRole = 'caixa';
+let cl=[], pr=[], ve=[], orc=[], os=[], chartMes;
+let userRole='caixa';
 
-/* ================= PERFIL ================= */
+/* PERFIL */
 async function carregarPerfil(){
  const { data:{user} } = await db.auth.getUser();
  if(!user) return;
-
- const { data } = await db.from('perfis')
-  .select('role').eq('id',user.id).single();
-
- userRole = data?.role || 'caixa';
+ const { data } = await db.from('profiles').select('role').eq('id',user.id).single();
+ userRole=data?.role||'caixa';
 }
 
-/* ================= LOAD ================= */
+/* LOAD */
 async function load(){
  await carregarPerfil();
 
- const [{data:c},{data:p},{data:v}] = await Promise.all([
+ const [
+  {data:c},{data:p},{data:v},{data:o},{data:s}
+ ] = await Promise.all([
   db.from('clientes').select('*'),
   db.from('produtos').select('*'),
-  db.from('vendas').select(`*, clientes(nome), produtos(nome, preco_custo, preco_revenda, quantidade)`)
+  db.from('vendas').select(`*, clientes(nome), produtos(nome,preco_custo,preco_revenda,qtd)`),
+  db.from('orcamentos').select(`*, clientes(nome)`),
+  db.from('ordens_servico').select(`*, clientes(nome)`)
  ]);
 
- cl=c||[]; pr=p||[]; ve=v||[];
+ cl=c||[]; pr=p||[]; ve=v||[]; orc=o||[]; os=s||[];
  renderAll();
 }
 
-/* ================= RENDER ================= */
+/* RENDER */
 function renderAll(){
  vCli.innerHTML=cl.map(c=>`<option value="${c.id}">${c.nome}</option>`).join('');
  vProd.innerHTML=pr.map(p=>`<option value="${p.id}">${p.nome}</option>`).join('');
-
  listCli.innerHTML=cl.map(c=>`<div class="card">${c.nome}</div>`).join('');
- listEst.innerHTML=pr.map(p=>`<div class="card">${p.nome} — Estoque: ${p.quantidade||0}</div>`).join('');
+ listEst.innerHTML=pr.map(p=>`<div class="card">${p.nome} — Estoque: ${p.qtd}</div>`).join('');
+ listOrc.innerHTML=orc.map(o=>`<div class="card">ORÇ #${o.id} — ${o.clientes.nome}</div>`).join('');
+ listOS.innerHTML=os.map(o=>`<div class="card">OS #${o.id} — ${o.clientes.nome}</div>`).join('');
 
  dashboard();
  renderVendas();
 }
 
-/* ================= DASHBOARD ================= */
+/* DASHBOARD */
 function dashboard(){
- const hojeBR=new Date().toLocaleDateString('pt-BR');
- const mesISO=new Date().toISOString().slice(0,7);
- const ano=new Date().getFullYear();
-
+ const hoje=new Date();
  let vd=0,ld=0,vm=0,va=0,grp={};
 
  ve.forEach(v=>{
   const d=new Date(v.data);
-  if(d.toLocaleDateString('pt-BR')===hojeBR){vd+=v.valor;ld+=v.lucro_total}
-  if(v.data.startsWith(mesISO)){vm+=v.valor;grp[d.getDate()]=(grp[d.getDate()]||0)+v.valor}
-  if(d.getFullYear()===ano){va+=v.valor}
+
+  if(d.toDateString()===hoje.toDateString()){
+   vd+=v.valor; ld+=v.lucro_total;
+  }
+  if(d.getMonth()===hoje.getMonth() && d.getFullYear()===hoje.getFullYear()){
+   vm+=v.valor;
+   grp[d.getDate()]=(grp[d.getDate()]||0)+v.valor;
+  }
+  if(d.getFullYear()===hoje.getFullYear()){
+   va+=v.valor;
+  }
  });
 
  vDia.innerText=`R$ ${vd.toFixed(2)}`;
@@ -160,15 +185,21 @@ function dashboard(){
  vMes.innerText=`R$ ${vm.toFixed(2)}`;
  vAno.innerText=`R$ ${va.toFixed(2)}`;
 
+ renderGrafico(grp);
+}
+
+/* GRAFICO */
+function renderGrafico(grp){
+ const ctx=document.getElementById('chartMes');
  if(chartMes) chartMes.destroy();
- chartMes=new Chart(chartMes,{
+ chartMes=new Chart(ctx,{
   type:'bar',
   data:{labels:Object.keys(grp),
-  datasets:[{label:'Faturamento Mensal',data:Object.values(grp),backgroundColor:'#0aff9d'}]}
+   datasets:[{label:'Faturamento Diário',data:Object.values(grp),backgroundColor:'#0aff9d'}]}
  });
 }
 
-/* ================= PDF ================= */
+/* PDF */
 function gerarPDF(){
  const { jsPDF } = window.jspdf;
  const pdf=new jsPDF();
@@ -176,30 +207,30 @@ function gerarPDF(){
  const mes=new Date().toISOString().slice(0,7);
 
  pdf.text(`RELATÓRIO ${mes}`,10,10);
-
  ve.filter(v=>v.data.startsWith(mes)).forEach(v=>{
-  pdf.text(`${new Date(v.data).toLocaleDateString()} - ${v.clientes.nome} - R$ ${v.valor}`,10,y);
+  pdf.text(`${v.clientes.nome} - R$ ${v.valor}`,10,y);
   y+=8; total+=v.valor;
  });
-
  pdf.text(`TOTAL: R$ ${total.toFixed(2)}`,10,y+10);
  pdf.save(`relatorio_${mes}.pdf`);
 }
 
-/* ================= CRUD ================= */
+/* CRUD */
 async function addCliente(){
  await db.from('clientes').insert({nome:cliNome.value,telefone:cliTel.value});
- cliNome.value='';cliTel.value='';
+ cliNome.value=''; cliTel.value='';
  load();
 }
 
 async function vender(){
  const prod=pr.find(p=>p.id==vProd.value);
  const qtd=Number(vQtd.value);
- if(qtd>prod.quantidade) return alert('Estoque insuficiente');
+ if(qtd>prod.qtd) return alert('Estoque insuficiente');
 
  await db.from('vendas').insert({
-  cliente_id:vCli.value, produto_id:prod.id, quantidade:qtd,
+  cliente_id:vCli.value,
+  produto_id:prod.id,
+  quantidade:qtd,
   valor:prod.preco_revenda*qtd,
   lucro_total:(prod.preco_revenda-prod.preco_custo)*qtd,
   data:new Date().toISOString()
@@ -207,17 +238,39 @@ async function vender(){
  load();
 }
 
+/* VENDAS */
 function renderVendas(){
- listVen.innerHTML=ve.map(v=>`
+ const n=fNome.value.toLowerCase();
+ const d=fData.value;
+ listVen.innerHTML=ve.filter(v=>{
+  return (!n||v.clientes.nome.toLowerCase().includes(n)) &&
+         (!d||v.data.slice(0,10)===d);
+ }).map(v=>`
  <div class="card">
   ${v.clientes.nome} — ${v.produtos.nome} — R$ ${v.valor}
+  <button onclick="recibo(${v.id})">🖨️</button>
   ${userRole==='admin'?`<button class="btn-del" onclick="del(${v.id})">🗑️</button>`:''}
  </div>`).join('');
 }
 
+function recibo(id){
+ const v=ve.find(x=>x.id==id);
+ const w=window.open('','','width=300');
+ w.document.write(`<body style="font-family:monospace;width:80mm">
+ <h3>RECIBO</h3>
+ Cliente:${v.clientes.nome}<br>
+ Produto:${v.produtos.nome}<br>
+ Valor:R$ ${v.valor}<br>
+ ${new Date(v.data).toLocaleString()}
+ <script>window.print()</script>
+ </body>`);
+}
+
 async function del(id){
- await db.from('vendas').delete().eq('id',id);
- load();
+ if(confirm('Excluir?')){
+  await db.from('vendas').delete().eq('id',id);
+  load();
+ }
 }
 
 function tab(id,b){
