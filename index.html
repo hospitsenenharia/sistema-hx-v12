@@ -210,37 +210,30 @@ function refreshSelects() {
 
 // DASHBOARD CALCULATIONS
 function updateDash() {
-    if (!_vens.length) {
-        document.getElementById('vDia').innerText = "R$ 0,00";
-        document.getElementById('lDia').innerText = "R$ 0,00";
-        document.getElementById('vMes').innerText = "R$ 0,00";
-        document.getElementById('lMes').innerText = "R$ 0,00";
-        document.getElementById('qtdCrit').innerText = "0 Itens";
-        renderChart();
-        return;
-    }
-
-    const hoje = new Date();
-    const diaHoje = hoje.toISOString().slice(0, 10);
-    const mesAtual = hoje.toISOString().slice(0, 7);
-
     let totalHoje = 0;
     let lucroHoje = 0;
     let totalMes = 0;
     let lucroMes = 0;
 
+    const hoje = new Date();
+    const diaHoje = hoje.toLocaleDateString("pt-BR");
+    const mesAtual = hoje.getMonth();
+    const anoAtual = hoje.getFullYear();
+
     _vens.forEach(v => {
         if (!v.data) return;
 
-        const dataVenda = v.data.slice(0, 10);
-        const mesVenda = v.data.slice(0, 7);
+        const d = new Date(v.data);
+        const diaVenda = d.toLocaleDateString("pt-BR");
 
-        if (dataVenda === diaHoje) {
+        // 📌 HOJE
+        if (diaVenda === diaHoje) {
             totalHoje += Number(v.valor || 0);
             lucroHoje += Number(v.lucro_total || 0);
         }
 
-        if (mesVenda === mesAtual) {
+        // 📌 MÊS ATUAL
+        if (d.getMonth() === mesAtual && d.getFullYear() === anoAtual) {
             totalMes += Number(v.valor || 0);
             lucroMes += Number(v.lucro_total || 0);
         }
@@ -250,14 +243,15 @@ function updateDash() {
         (p.q_id || p.qnt || 0) <= (p.estoque_minimo || 0)
     ).length;
 
-    document.getElementById('vDia').innerText = `R$ ${totalHoje.toFixed(2)}`;
-    document.getElementById('lDia').innerText = `R$ ${lucroHoje.toFixed(2)}`;
-    document.getElementById('vMes').innerText = `R$ ${totalMes.toFixed(2)}`;
-    document.getElementById('lMes').innerText = `R$ ${lucroMes.toFixed(2)}`;
-    document.getElementById('qtdCrit').innerText = `${criticos} Itens`;
+    document.getElementById("vDia").innerText = `R$ ${totalHoje.toFixed(2)}`;
+    document.getElementById("lDia").innerText = `R$ ${lucroHoje.toFixed(2)}`;
+    document.getElementById("vMes").innerText = `R$ ${totalMes.toFixed(2)}`;
+    document.getElementById("lMes").innerText = `R$ ${lucroMes.toFixed(2)}`;
+    document.getElementById("qtdCrit").innerText = `${criticos} Itens`;
 
     renderChart();
 }
+
 
 
 function renderChart() {
@@ -438,4 +432,5 @@ window.onload = async () => {
 </script>
 </body>
 </html>
+
 
