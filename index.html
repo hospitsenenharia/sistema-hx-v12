@@ -63,11 +63,32 @@
     <section id="dashTab">
         <h2 style="color:var(--hx-accent)">📊 Dashboard Financeiro</h2>
         <div class="grid-dash">
-            <div class="dash-card">Vendas Hoje <h3 id="vDia" style="color:var(--hx-accent)">R$ 0,00</h3></div>
-            <div class="dash-card">Lucro Hoje <h3 id="lDia" style="color:#00cfff">R$ 0,00</h3></div>
-            <div class="dash-card">Vendas Mês <h3 id="vMes">R$ 0,00</h3></div>
-            <div class="dash-card">Estoque Crítico <h3 id="qtdCrit" style="color:var(--hx-danger)">0 Itens</h3></div>
-        </div>
+    <div class="dash-card">
+        Vendas Hoje
+        <h3 id="vDia" style="color:var(--hx-accent)">R$ 0,00</h3>
+    </div>
+
+    <div class="dash-card">
+        Lucro Hoje
+        <h3 id="lDia" style="color:#00cfff">R$ 0,00</h3>
+    </div>
+
+    <div class="dash-card">
+        Vendas Mês
+        <h3 id="vMes">R$ 0,00</h3>
+    </div>
+
+    <div class="dash-card">
+        Lucro do Mês
+        <h3 id="lMes" style="color:#00cfff">R$ 0,00</h3>
+    </div>
+
+    <div class="dash-card">
+        Estoque Crítico
+        <h3 id="qtdCrit" style="color:var(--hx-danger)">0 Itens</h3>
+    </div>
+</div>
+
         <div class="card"><h4>Histórico de Vendas Recentes</h4><canvas id="chartDiario" height="100"></canvas></div>
     </section>
 
@@ -189,36 +210,89 @@ function refreshSelects() {
 
 // DASHBOARD CALCULATIONS
 function updateDash() {
-    const hoje = new Date().toISOString().split('T')[0];
-    const mes = hoje.substring(0, 7);
+    if (!_vens.length) {
+        document.getElementById('vDia').innerText = "R$ 0,00";
+        document.getElementById('lDia').innerText = "R$ 0,00";
+        document.getElementById('vMes').innerText = "R$ 0,00";
+        document.getElementById('lMes').innerText = "R$ 0,00";
+        document.getElementById('qtdCrit').innerText = "0 Itens";
+        renderChart();
+        return;
+    }
 
-    const vHoje = _vens.filter(v => v.data.startsWith(hoje));
-    const totalHoje = vHoje.reduce((a, b) => a + (b.valor || 0), 0);
-    const lucroHoje = vHoje.reduce((a, b) => a + (b.lucro_total || 0), 0);
-    const totalMes = _vens.filter(v => v.data.startsWith(mes)).reduce((a, b) => a + (b.valor || 0), 0);
-    const criticos = _prods.filter(p => (p.q_id || p.qnt || 0) <= (p.estoque_minimo || 0)).length;
+    const hoje = new Date();
+    const diaHoje = hoje.toISOString().slice(0, 10);
+    const mesAtual = hoje.toISOString().slice(0, 7);
+
+    let totalHoje = 0;
+    let lucroHoje = 0;
+    let totalMes = 0;
+    let lucroMes = 0;
+
+    _vens.forEach(v => {
+        if (!v.data) return;
+
+        const dataVenda = v.data.slice(0, 10);
+        const mesVenda = v.data.slice(0, 7);
+
+        if (dataVenda === diaHoje) {
+            totalHoje += Number(v.valor || 0);
+            lucroHoje += Number(v.lucro_total || 0);
+        }
+
+        if (mesVenda === mesAtual) {
+            totalMes += Number(v.valor || 0);
+            lucroMes += Number(v.lucro_total || 0);
+        }
+    });
+
+    const criticos = _prods.filter(p =>
+        (p.q_id || p.qnt || 0) <= (p.estoque_minimo || 0)
+    ).length;
 
     document.getElementById('vDia').innerText = `R$ ${totalHoje.toFixed(2)}`;
     document.getElementById('lDia').innerText = `R$ ${lucroHoje.toFixed(2)}`;
     document.getElementById('vMes').innerText = `R$ ${totalMes.toFixed(2)}`;
+    document.getElementById('lMes').innerText = `R$ ${lucroMes.toFixed(2)}`;
     document.getElementById('qtdCrit').innerText = `${criticos} Itens`;
 
     renderChart();
 }
 
+
 function renderChart() {
+    if (!_vens.length) return;
+
     const ctx = document.getElementById('chartDiario').getContext('2d');
-    if(chartInstance) chartInstance.destroy();
-    
+    if (chartInstance) chartInstance.destroy();
+
     const ultimasVendas = _vens.slice(0, 7).reverse();
+
     chartInstance = new Chart(ctx, {
         type: 'line',
         data: {
             labels: ultimasVendas.map(v => v.data.split('T')[0]),
-            datasets: [{ label: 'Vendas Recentes', data: ultimasVendas.map(v => v.valor), borderColor: '#0aff9d', tension: 0.3, fill: true, backgroundColor: 'rgba(10, 255, 157, 0.1)' }]
+            datasets: [{
+                label: 'Vendas Recentes',
+                data: ultimasVendas.map(v => Number(v.valor || 0)),
+                borderColor: '#0aff9d',
+                backgroundColor: 'rgba(10, 255, 157, 0.1)',
+                tension: 0.3,
+                fill: true
+            }]
+        },
+        options: {
+            plugins: {
+                legend: { labels: { color: "#eaeaea" } }
+            },
+            scales: {
+                x: { ticks: { color: "#aaa" } },
+                y: { ticks: { color: "#aaa" } }
+            }
         }
     });
 }
+
 
 // VENDAS LOGIC
 function updateVendaPrice() {
@@ -354,7 +428,14 @@ function renderOrc() {
     `).join('');
 }
 
-window.onload = () => { if(db.auth.getSession()) loadAll(); };
+window.onload = async () => {
+  const { data } = await db.auth.getSession();
+  if (data.session) {
+    document.getElementById('loginOverlay').style.display = 'none';
+    loadAll();
+  }
+};
 </script>
 </body>
 </html>
+
