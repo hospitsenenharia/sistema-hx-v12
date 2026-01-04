@@ -273,15 +273,20 @@ let chartInstance = null;
 async function login() {
     const email = document.getElementById('lEmail').value;
     const password = document.getElementById('lPass').value;
-    const { data, error } = await db.auth.signInWithPassword({ email, password });
+
+    const { data, error } = await db.auth.signInWithPassword({
+        email,
+        password
+    });
     
-    if(error) {
+    if (error) {
         document.getElementById('lErr').innerText = "Erro: " + error.message;
     } else {
         document.getElementById('loginOverlay').style.display = 'none';
         loadAll();
     }
 }
+
 
 function changeTab(id, btn) {
     document.querySelectorAll('main section').forEach(s => s.style.display = 'none');
@@ -377,13 +382,7 @@ function updateDash() {
 
     renderChart();
 }
-
-
 function renderChart() {
-    const ctx = document.getElementById('chartDiario').getContext('2d');
-    if(chartInstance) chartInstance.destroy();
-    
-    function renderChart() {
     const ctx = document.getElementById('chartDiario').getContext('2d');
     if (chartInstance) chartInstance.destroy();
 
@@ -401,7 +400,6 @@ function renderChart() {
                (!anoFiltro || ano === anoFiltro);
     }).slice(0, 7).reverse();
 
-    // 🛑 se não houver dados para o gráfico
     if (!vendasFiltradas.length) return;
 
     chartInstance = new Chart(ctx, {
@@ -419,17 +417,11 @@ function renderChart() {
         },
         options: {
             plugins: {
-                legend: {
-                    labels: { color: "#eaeaea" }
-                }
+                legend: { labels: { color: "#eaeaea" } }
             },
             scales: {
-                x: {
-                    ticks: { color: "#aaa" }
-                },
-                y: {
-                    ticks: { color: "#aaa" }
-                }
+                x: { ticks: { color: "#aaa" } },
+                y: { ticks: { color: "#aaa" } }
             }
         }
     });
@@ -609,5 +601,6 @@ window.onload = async () => {
 </script>
 </body>
 </html>
+
 
 
