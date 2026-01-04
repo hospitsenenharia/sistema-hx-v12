@@ -216,6 +216,7 @@ function refreshSelects() {
 }
 
 // DASHBOARD CALCULATIONS
+// ================= DASHBOARD =================
 function updateDash() {
 
     const agora = new Date();
@@ -234,25 +235,25 @@ function updateDash() {
         const diaVenda = dataVenda.toLocaleDateString('pt-BR');
         const mesAnoVenda = `${dataVenda.getFullYear()}-${String(dataVenda.getMonth() + 1).padStart(2, "0")}`;
 
-        // 📅 VENDAS DE HOJE
+        // 📅 HOJE
         if (diaVenda === hojeLocal) {
             totalHoje += Number(v.valor || 0);
             lucroHoje += Number(v.lucro_total || 0);
         }
 
-        // 📆 VENDAS DO MÊS
+        // 📆 MÊS
         if (mesAnoVenda === mesAnoAtual) {
             totalMes += Number(v.valor || 0);
             lucroMes += Number(v.lucro_total || 0);
         }
     });
 
-    // 🚨 ESTOQUE CRÍTICO
+    // 🚨 Estoque crítico
     const criticos = _prods.filter(
         p => (p.q_id || p.qnt || 0) <= (p.estoque_minimo || 0)
     ).length;
 
-    // 🧾 ATUALIZAR DASHBOARD
+    // 🧾 Atualizar dashboard
     document.getElementById('vDia').innerText = `R$ ${totalHoje.toFixed(2)}`;
     document.getElementById('lDia').innerText = `R$ ${lucroHoje.toFixed(2)}`;
     document.getElementById('vMes').innerText = `R$ ${totalMes.toFixed(2)}`;
@@ -262,18 +263,29 @@ function updateDash() {
     renderChart();
 }
 
+// ================= GRÁFICO =================
+function renderChart() {
     const ctx = document.getElementById('chartDiario').getContext('2d');
-    if(chartInstance) chartInstance.destroy();
-    
+    if (chartInstance) chartInstance.destroy();
+
     const ultimasVendas = _vens.slice(0, 7).reverse();
+
     chartInstance = new Chart(ctx, {
         type: 'line',
         data: {
             labels: ultimasVendas.map(v => v.data.split('T')[0]),
-            datasets: [{ label: 'Vendas Recentes', data: ultimasVendas.map(v => v.valor), borderColor: '#0aff9d', tension: 0.3, fill: true, backgroundColor: 'rgba(10, 255, 157, 0.1)' }]
+            datasets: [{
+                label: 'Vendas Recentes',
+                data: ultimasVendas.map(v => v.valor),
+                borderColor: '#0aff9d',
+                backgroundColor: 'rgba(10, 255, 157, 0.1)',
+                tension: 0.3,
+                fill: true
+            }]
         }
     });
 }
+
 
 // VENDAS LOGIC
 function updateVendaPrice() {
@@ -449,4 +461,5 @@ async function login() {
 </script>
 </body>
 </html>
+
 
