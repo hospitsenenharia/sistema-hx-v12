@@ -89,221 +89,64 @@
   background: #1f1f1f;
 }
 
-    </style>
+  </style>
 </head>
+
 <body>
 
-<!-- ================= LOGIN ================= -->
+<!-- 🔐 LOGIN -->
 <div id="loginOverlay">
   <div class="login-card">
     <h2>SISTEMA HX</h2>
-
-    <input id="lEmail" placeholder="E-mail">
+    <input id="lEmail" placeholder="Email">
     <input id="lPass" type="password" placeholder="Senha">
-
     <button class="btn btn-add" onclick="login()">ENTRAR</button>
   </div>
 </div>
 
-<!-- ================= SIDEBAR ================= -->
+<!-- 📌 SIDEBAR (UMA ÚNICA VEZ) -->
 <nav id="sidebar">
-    <div style="
-        padding:20px;
-        font-weight:bold;
-        color:var(--hx-accent);
-        font-size:1.2rem;
-        border-bottom:1px solid #333;
+  <div style="
+    padding:20px;
+    font-weight:bold;
+    color:var(--hx-accent);
+    font-size:1.2rem;
+    border-bottom:1px solid #333;
+  ">
+    PAINEL HX
+  </div>
+
+  <button onclick="changeTab('dashTab', this)" class="active">📊 Dashboard</button>
+  <button onclick="changeTab('cliTab', this)">👤 Clientes</button>
+  <button onclick="changeTab('estTab', this)">📦 Estoque</button>
+  <button onclick="changeTab('venTab', this)">💵 Vendas</button>
+  <button onclick="changeTab('osTab', this)">🛠 Ordem de Serviço</button>
+  <button onclick="changeTab('orcTab', this)">📝 Orçamentos</button>
+
+  <button
+    onclick="logout()"
+    style="
+      margin-top:auto;
+      color: var(--hx-danger);
+      border-top:1px solid #333;
     ">
-        PAINEL HX
-    </div>
-
-    <button onclick="changeTab('dashTab', this)" class="active">📊 Dashboard</button>
-    <button onclick="changeTab('cliTab', this)">👤 Clientes</button>
-    <button onclick="changeTab('estTab', this)">📦 Estoque</button>
-    <button onclick="changeTab('venTab', this)">💵 Vendas</button>
-    <button onclick="changeTab('osTab', this)">🛠 Ordem de Serviço</button>
-    <button onclick="changeTab('orcTab', this)">📝 Orçamentos</button>
-
-    <!-- 🔻 BOTÃO SAIR (RODAPÉ DA SIDEBAR) -->
-    <button
-        onclick="logout()"
-        style="
-            margin-top:auto;
-            color: var(--hx-danger);
-            border-top:1px solid #333;
-        ">
-        🚪 Sair
-    </button>
+    🚪 Sair
+  </button>
 </nav>
 
-<!-- ================= CONTEÚDO ================= -->
-
-
+<!-- 📄 CONTEÚDO -->
 <main>
-    </body>
-<section id="dashTab">
-  <h2 style="color:var(--hx-accent)">📊 Dashboard Financeiro</h2>
 
-  <!-- FILTRO DE PERÍODO (AQUI É O LUGAR CERTO) -->
-  <div style="display:flex; gap:10px; margin-bottom:15px;">
-    <select id="filtroMes" onchange="updateDash()">
-      <option value="">Mês</option>
-      <option value="01">Janeiro</option>
-      <option value="02">Fevereiro</option>
-      <option value="03">Março</option>
-      <option value="04">Abril</option>
-      <option value="05">Maio</option>
-      <option value="06">Junho</option>
-      <option value="07">Julho</option>
-      <option value="08">Agosto</option>
-      <option value="09">Setembro</option>
-      <option value="10">Outubro</option>
-      <option value="11">Novembro</option>
-      <option value="12">Dezembro</option>
-    </select>
+  <section id="dashTab"></section>
+  <section id="cliTab" style="display:none"></section>
+  <section id="estTab" style="display:none"></section>
+  <section id="venTab" style="display:none"></section>
+  <section id="osTab" style="display:none"></section>
+  <section id="orcTab" style="display:none"></section>
 
-    <select id="filtroAno" onchange="updateDash()">
-      <option value="">Ano</option>
-      <option>2024</option>
-      <option>2025</option>
-      <option>2026</option>
-    </select>
-  </div>
+</main>
 
-  <!-- CARDS -->
-  <div class="grid-dash">
-    <div class="dash-card">
-    Último Dia com Vendas
-    <h3 id="vDia" style="color:var(--hx-accent)">R$ 0,00</h3>
-    </div>
-
-    <div class="dash-card">
-      Lucro Hoje
-      <h3 id="lDia" style="color:#00cfff">R$ 0,00</h3>
-    </div>
-
-    <div class="dash-card">
-      Vendas Mês
-      <h3 id="vMes">R$ 0,00</h3>
-    </div>
-
-      <div class="dash-card">
-  Lucro do Mês
-  <h3 id="lMes" style="color:#00cfff">R$ 0,00</h3>
-</div>
-
-
-    <div class="dash-card">
-      Estoque Crítico
-      <h3 id="qtdCrit" style="color:var(--hx-danger)">0 Itens</h3>
-    </div>
-  </div>
-
-  <!-- GRÁFICO -->
-  <div class="card">
-    <h4>Histórico de Vendas Recentes</h4>
-    <canvas id="chartDiario" height="100"></canvas>
-  </div>
-</section>
-
-
-    <section id="cliTab" style="display:none">
-        <h2>👤 Gestão de Clientes</h2>
-        <div class="card">
-            <input id="cNome" placeholder="Nome Completo">
-            <input id="cTel" placeholder="Telefone">
-            <button class="btn btn-add" onclick="saveCli()">CADASTRAR</button>
-        </div>
-        <div class="card">
-            <input id="sCli" placeholder="🔍 Pesquisar cliente..." oninput="renderCli()">
-            <div id="listCli" style="margin-top:15px"></div>
-        </div>
-    </section>
-
-<section id="estTab" style="display:none">
-    <h2>📦 Controle de Estoque</h2>
-
-    <!-- CADASTRO -->
-    <div class="card">
-        <input id="pNome" placeholder="Produto">
-        <input id="pQtd" type="number" placeholder="Quantidade">
-        <input id="pMin" type="number" placeholder="Mínimo para Alerta">
-        <input id="pCusto" type="number" placeholder="Preço Custo">
-        <input id="pRev" type="number" placeholder="Preço Venda">
-        <button class="btn btn-add" onclick="saveProd()">ADICIONAR</button>
-    </div>
-
-    <!-- 🔍 PESQUISA NO ESTOQUE -->
-    <div class="card">
-        <input id="sEstoque"
-               placeholder="🔍 Buscar por nome ou data (AAAA-MM-DD)"
-               oninput="renderEst()">
-    </div>
-
-    <!-- LISTA -->
-    <div class="card">
-        <div id="listEst"></div>
-    </div>
-</section>
-
-
-    <section id="venTab" style="display:none">
-        <h2>💵 Registro de Vendas</h2>
-        <div class="card">
-            <select id="vCliSelect"></select>
-            <select id="vProdSelect" onchange="updateVendaPrice()"></select>
-            <select id="vTipoPagamento">
-  <option value="Dinheiro">💵 Dinheiro</option>
-  <option value="Cartão">💳 Cartão</option>
-  <option value="Pix">📲 Pix</option>
-</select>
-
-            <input id="vQtd" type="number" value="1" oninput="updateVendaPrice()">
-            <p>Total Estimado: <strong id="vTotalLabel">R$ 0,00</strong></p>
-            <button class="btn btn-add" onclick="doVenda()">FINALIZAR VENDA</button>
-        </div>
-        <div class="card">
-            <div style="display: flex; gap: 10px;">
-                <input id="sVenNome" placeholder="🔍 Por cliente..." oninput="renderVen()">
-                <input id="sVenData" type="date" onchange="renderVen()">
-            </div>
-            <div id="listVen"></div>
-        </div>
-    </section>
-
-    <section id="osTab" style="display:none">
-        <h2>🛠 Ordens de Serviço</h2>
-        <div class="card">
-            <select id="osCliSelect"></select>
-            <textarea id="osDesc" placeholder="Descrição do problema/serviço..."></textarea>
-            <button class="btn btn-add" onclick="saveOS()">ABRIR O.S.</button>
-        </div>
-        <div id="listOS"></div>
-    </section>
-<nav id="sidebar">
-    <div style="padding:20px; font-weight:bold; color:var(--hx-accent); font-size:1.2rem;">
-        PAINEL HX
-    </div>
-
-    <button onclick="changeTab('dashTab', this)" class="active">📊 Dashboard</button>
-    <button onclick="changeTab('cliTab', this)">👤 Clientes</button>
-    <button onclick="changeTab('estTab', this)">📦 Estoque</button>
-    <button onclick="changeTab('venTab', this)">💵 Vendas</button>
-    <button onclick="changeTab('osTab', this)">🛠 Ordem de Serviço</button>
-    <button onclick="changeTab('orcTab', this)">📝 Orçamentos</button>
-
-    <!-- 🔻 BOTÃO SAIR (SEMPRE O ÚLTIMO DA SIDEBAR) -->
-    <button 
-        onclick="logout()"
-        style="
-            margin-top:auto;
-            color: var(--hx-danger);
-            border-top:1px solid #333;
-        ">
-        🚪 Sair
-    </button>
-</nav>
-
+</body>
 
     
 
@@ -720,6 +563,7 @@ async function logout() {
 </script>
 </body>
 </html>
+
 
 
 
