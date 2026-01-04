@@ -6,6 +6,7 @@
 
 <script src="https://cdn.jsdelivr.net/npm/chart.js/dist/chart.umd.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 
 <style>
 :root{
@@ -24,7 +25,7 @@ main{margin-left:240px;flex:1;padding:25px}
 .card{background:#181818;padding:20px;border-radius:8px;
 margin-bottom:20px;border:1px solid #333}
 .grid-dash{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:15px}
-input,select,textarea{width:100%;padding:10px;margin:8px 0;
+input,select{width:100%;padding:10px;margin:8px 0;
 background:#222;border:1px solid #444;color:#fff;border-radius:4px}
 .btn{padding:10px;border:none;border-radius:4px;font-weight:bold;cursor:pointer}
 .btn-add{background:var(--hx-accent);color:#000}
@@ -44,17 +45,21 @@ background:#222;border:1px solid #444;color:#fff;border-radius:4px}
 
 <main>
 
-<!-- DASHBOARD -->
 <section id="dashTab">
  <div class="grid-dash">
   <div class="card">Vendas Hoje<h3 id="vDia">R$ 0,00</h3></div>
   <div class="card">Lucro Hoje<h3 id="lDia">R$ 0,00</h3></div>
   <div class="card">Vendas Mês<h3 id="vMes">R$ 0,00</h3></div>
+  <div class="card">Vendas Ano<h3 id="vAno">R$ 0,00</h3></div>
  </div>
- <div class="card"><canvas id="chart"></canvas></div>
+
+ <div class="card">
+  <canvas id="chartMes"></canvas>
+ </div>
+
+ <button class="btn btn-add" onclick="gerarPDF()">📄 Relatório Mensal (PDF)</button>
 </section>
 
-<!-- CLIENTES -->
 <section id="cliTab" style="display:none">
  <h2>Clientes</h2>
  <div class="card">
@@ -65,13 +70,11 @@ background:#222;border:1px solid #444;color:#fff;border-radius:4px}
  <div id="listCli"></div>
 </section>
 
-<!-- ESTOQUE -->
 <section id="estTab" style="display:none">
  <h2>Estoque</h2>
  <div id="listEst"></div>
 </section>
 
-<!-- PDV -->
 <section id="venTab" style="display:none">
  <h2>PDV</h2>
 
@@ -95,65 +98,97 @@ background:#222;border:1px solid #444;color:#fff;border-radius:4px}
 
 <script>
 const { createClient } = supabase;
-const db = createClient("https://axfccmezfofnqfsdurqb.supabase.co","eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImF4ZmNjbWV6Zm9mbnFmc2R1cnFiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjUwNzA1NDMsImV4cCI6MjA4MDY0NjU0M30.woGp6hBgiEa41opQxyxqqMULlDKMXm9T83bhJ7UEmb8"
-);
-let chart;
+const db = createClient("SUA_URL_SUPABASE","SUA_CHAVE_PUBLICA");
 
+let cl=[], pr=[], ve=[], chartMes;
+let userRole = 'caixa';
+
+/* ================= PERFIL ================= */
+async function carregarPerfil(){
+ const { data:{user} } = await db.auth.getUser();
+ if(!user) return;
+
+ const { data } = await db.from('perfis')
+  .select('role').eq('id',user.id).single();
+
+ userRole = data?.role || 'caixa';
+}
+
+/* ================= LOAD ================= */
 async function load(){
- const [{data:cl},{data:pr},{data:ve}] = await Promise.all([
+ await carregarPerfil();
+
+ const [{data:c},{data:p},{data:v}] = await Promise.all([
   db.from('clientes').select('*'),
   db.from('produtos').select('*'),
-  db.from('vendas').select('*, clientes(nome), produtos(nome)').order('id',{ascending:false})
+  db.from('vendas').select(`*, clientes(nome), produtos(nome, preco_custo, preco_revenda, quantidade)`)
  ]);
- window.cl=cl||[]; window.pr=pr||[]; window.ve=ve||[];
+
+ cl=c||[]; pr=p||[]; ve=v||[];
  renderAll();
 }
 
+/* ================= RENDER ================= */
 function renderAll(){
- // selects
  vCli.innerHTML=cl.map(c=>`<option value="${c.id}">${c.nome}</option>`).join('');
  vProd.innerHTML=pr.map(p=>`<option value="${p.id}">${p.nome}</option>`).join('');
 
- // clientes
  listCli.innerHTML=cl.map(c=>`<div class="card">${c.nome}</div>`).join('');
-
- // estoque
- listEst.innerHTML=pr.map(p=>`
-  <div class="card">${p.nome} — ${p.quantidade}</div>`).join('');
+ listEst.innerHTML=pr.map(p=>`<div class="card">${p.nome} — Estoque: ${p.quantidade||0}</div>`).join('');
 
  dashboard();
  renderVendas();
 }
 
+/* ================= DASHBOARD ================= */
 function dashboard(){
- const hoje=new Date().toLocaleDateString('pt-BR');
- const mes=new Date().toISOString().slice(0,7);
- let vd=0,ld=0,vm=0,grp={};
+ const hojeBR=new Date().toLocaleDateString('pt-BR');
+ const mesISO=new Date().toISOString().slice(0,7);
+ const ano=new Date().getFullYear();
+
+ let vd=0,ld=0,vm=0,va=0,grp={};
 
  ve.forEach(v=>{
-  const dBR=new Date(v.data).toLocaleDateString('pt-BR');
-  const dISO=v.data.slice(0,7);
-  if(dBR===hoje){vd+=v.valor;ld+=v.lucro_total}
-  if(dISO===mes){vm+=v.valor;
-   const dia=v.data.slice(8,10);
-   grp[dia]=(grp[dia]||0)+v.valor}
+  const d=new Date(v.data);
+  if(d.toLocaleDateString('pt-BR')===hojeBR){vd+=v.valor;ld+=v.lucro_total}
+  if(v.data.startsWith(mesISO)){vm+=v.valor;grp[d.getDate()]=(grp[d.getDate()]||0)+v.valor}
+  if(d.getFullYear()===ano){va+=v.valor}
  });
 
  vDia.innerText=`R$ ${vd.toFixed(2)}`;
  lDia.innerText=`R$ ${ld.toFixed(2)}`;
  vMes.innerText=`R$ ${vm.toFixed(2)}`;
+ vAno.innerText=`R$ ${va.toFixed(2)}`;
 
- if(chart)chart.destroy();
- chart=new Chart(document.getElementById('chart'),{
-  type:'line',
+ if(chartMes) chartMes.destroy();
+ chartMes=new Chart(chartMes,{
+  type:'bar',
   data:{labels:Object.keys(grp),
-  datasets:[{label:'Faturamento',data:Object.values(grp),borderColor:'#0aff9d'}]}
+  datasets:[{label:'Faturamento Mensal',data:Object.values(grp),backgroundColor:'#0aff9d'}]}
  });
 }
 
+/* ================= PDF ================= */
+function gerarPDF(){
+ const { jsPDF } = window.jspdf;
+ const pdf=new jsPDF();
+ let y=20,total=0;
+ const mes=new Date().toISOString().slice(0,7);
+
+ pdf.text(`RELATÓRIO ${mes}`,10,10);
+
+ ve.filter(v=>v.data.startsWith(mes)).forEach(v=>{
+  pdf.text(`${new Date(v.data).toLocaleDateString()} - ${v.clientes.nome} - R$ ${v.valor}`,10,y);
+  y+=8; total+=v.valor;
+ });
+
+ pdf.text(`TOTAL: R$ ${total.toFixed(2)}`,10,y+10);
+ pdf.save(`relatorio_${mes}.pdf`);
+}
+
+/* ================= CRUD ================= */
 async function addCliente(){
- await db.from('clientes').insert({
-  nome:cliNome.value,telefone:cliTel.value});
+ await db.from('clientes').insert({nome:cliNome.value,telefone:cliTel.value});
  cliNome.value='';cliTel.value='';
  load();
 }
@@ -161,10 +196,10 @@ async function addCliente(){
 async function vender(){
  const prod=pr.find(p=>p.id==vProd.value);
  const qtd=Number(vQtd.value);
+ if(qtd>prod.quantidade) return alert('Estoque insuficiente');
+
  await db.from('vendas').insert({
-  cliente_id:vCli.value,
-  produto_id:prod.id,
-  quantidade:qtd,
+  cliente_id:vCli.value, produto_id:prod.id, quantidade:qtd,
   valor:prod.preco_revenda*qtd,
   lucro_total:(prod.preco_revenda-prod.preco_custo)*qtd,
   data:new Date().toISOString()
@@ -173,37 +208,16 @@ async function vender(){
 }
 
 function renderVendas(){
- const n=fNome.value.toLowerCase();
- const d=fData.value;
- listVen.innerHTML=ve.filter(v=>
-  (!n||v.clientes.nome.toLowerCase().includes(n)) &&
-  (!d||v.data.startsWith(d))
- ).map(v=>`
-  <div class="card">
-   ${v.clientes.nome} — ${v.produtos.nome} — R$ ${v.valor}
-   <button class="btn" onclick="recibo(${v.id})">🖨️</button>
-   <button class="btn btn-del" onclick="del(${v.id})">🗑️</button>
-  </div>`).join('');
-}
-
-function recibo(id){
- const v=ve.find(x=>x.id==id);
- const w=window.open('', '', 'width=300');
- w.document.write(`<body style="font-family:monospace;width:80mm">
- <h3>RECIBO</h3>
- Cliente:${v.clientes.nome}<br>
- Produto:${v.produtos.nome}<br>
- Valor:R$ ${v.valor}<br>
- ${new Date(v.data).toLocaleString()}
- <script>window.print()</script>
- </body>`);
+ listVen.innerHTML=ve.map(v=>`
+ <div class="card">
+  ${v.clientes.nome} — ${v.produtos.nome} — R$ ${v.valor}
+  ${userRole==='admin'?`<button class="btn-del" onclick="del(${v.id})">🗑️</button>`:''}
+ </div>`).join('');
 }
 
 async function del(id){
- if(confirm('Excluir?')){
-  await db.from('vendas').delete().eq('id',id);
-  load();
- }
+ await db.from('vendas').delete().eq('id',id);
+ load();
 }
 
 function tab(id,b){
@@ -215,6 +229,5 @@ function tab(id,b){
 
 load();
 </script>
-
 </body>
 </html>
