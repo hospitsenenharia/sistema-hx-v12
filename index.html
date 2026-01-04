@@ -242,22 +242,18 @@ Data: ${new Date(v.data).toLocaleString("pt-BR")}
     w.document.close();
 }
 
-
 async function login() {
-    const email = document.getElementById('lEmail').value;
-    const password = document.getElementById('lPass').value;
+  const email = document.getElementById('lEmail').value;
+  const password = document.getElementById('lPass').value;
 
-    const { data, error } = await db.auth.signInWithPassword({
-        email,
-        password
-    });
-    
-    if (error) {
-        document.getElementById('lErr').innerText = "Erro: " + error.message;
-    } else {
-        document.getElementById('loginOverlay').style.display = 'none';
-        loadAll();
-    }
+  const { error } = await db.auth.signInWithPassword({ email, password });
+
+  if (error) {
+    alert(error.message);
+  } else {
+    document.getElementById('loginOverlay').style.display = 'none';
+    loadAll();
+  }
 }
 
 
@@ -616,10 +612,20 @@ async function logout() {
     await db.auth.signOut();
     location.reload();
 }
-
+/* ========= EVENTOS ========= */
+window.onload = async () => {
+  const { data } = await db.auth.getSession();
+  if (data.session) {
+    document.getElementById('loginOverlay').style.display = 'none';
+    loadAll();
+  } else {
+    document.getElementById('loginOverlay').style.display = 'flex';
+  }
+};
 </script>
 </body>
 </html>
+
 
 
 
