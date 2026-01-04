@@ -282,34 +282,6 @@ Data: ${new Date(v.data).toLocaleString("pt-BR")}
     w.document.close();
 }
 
-
-
-
-
-
-
-        <div class="center">
-            <strong>SISTEMA HX</strong><br>
-            CUPOM NÃO FISCAL
-        </div>
-        <hr>
-        Cliente: ${v.clientes?.nome || "-"}<br>
-        Produto: ${v.produtos?.nome || "-"}<br>
-        Quantidade: ${v.quantidade || 1}<br>
-        Total: R$ ${Number(v.valor || 0).toFixed(2)}<br>
-        Pagamento: ${v.tipo_pagamento || "N/I"}<br>
-        Data: ${new Date(v.data).toLocaleString("pt-BR")}
-        <hr>
-        <div class="center">
-            Obrigado pela preferência!
-        </div>
-    </body>
-    </html>
-    `);
-
-    w.document.close();
-}
-
            <div class="center">
         <strong>SISTEMA HX</strong><br>
         CUPOM NÃO FISCAL
@@ -335,36 +307,7 @@ Data: ${new Date(v.data).toLocaleString("pt-BR")}
     `);
 
     w.document.close();
-}
-
-
-      <div class="center">
-        <strong>SISTEMA HX</strong><br>
-        CUPOM NÃO FISCAL
-      </div>
-      <hr>
-      Cliente: ${v.clientes?.nome || "-"}<br>
-      Produto: ${v.produtos?.nome || "-"}<br>
-      Quantidade: ${v.quantidade || 1}<br>
-      Total: R$ ${Number(v.valor || 0).toFixed(2)}<br>
-      Pagamento: ${v.tipo_pagamento || "N/I"}<br>
-      Data: ${new Date(v.data).toLocaleString("pt-BR")}
-      <hr>
-      <div class="center">
-        Obrigado pela preferência!
-      </div>
-
-      <script>
-        window.print();
-        window.close();
-      <\/script>
-    </body>
-    </html>
-    `);
-
-    w.document.close();
-}
-
+};
 
 async function login() {
     const email = document.getElementById('lEmail').value;
@@ -697,6 +640,7 @@ window.onload = async () => {
 </script>
 </body>
 </html>
+
 
 
 
