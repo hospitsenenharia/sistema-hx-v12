@@ -70,26 +70,30 @@
 const { createClient } = supabase;
 const db = createClient(
   "https://axfccmezfofnqfsdurqb.supabase.co",
-  "SUA_CHAVE_ANON_AQUI"
-);
+  ""eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImF4ZmNjbWV6Zm9mbnFmc2R1cnFiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjUwNzA1NDMsImV4cCI6MjA4MDY0NjU0M30.woGp6hBgiEa41opQxyxqqMULlDKMXm9T83bhJ7UEmb8"
+);"
+
 
 /* ===== VARIÁVEIS ===== */
 let _vens = [];
 let chartInstance = null;
 
 /* ===== LOGIN ===== */
+<script>
+/* ================= LOGIN ================= */
 async function login() {
-  const email = document.getElementById("lEmail").value;
-  const senha = document.getElementById("lPass").value;
-  const msg = document.getElementById("lErr");
+  const email = document.getElementById('lEmail').value;
+  const senha = document.getElementById('lPass').value;
+  const msg = document.getElementById('lErr');
 
   if (!email || !senha) {
-    msg.innerText = "Preencha email e senha";
+    msg.innerText = "Preencha email e senha!";
     return;
   }
 
   const { error } = await db.auth.signInWithPassword({
-    email, password: senha
+    email,
+    password: senha
   });
 
   if (error) {
@@ -97,9 +101,16 @@ async function login() {
     return;
   }
 
-  document.getElementById("loginOverlay").style.display = "none";
-  loadAll();
+  msg.innerText = "";
+  document.getElementById('loginOverlay').style.display = "none";
+
+  // ✅ AGORA FUNCIONA
+  if (typeof loadAll === "function") {
+    loadAll();
+  }
 }
+</script>
+
 
 /* ===== LOAD ===== */
 async function loadAll() {
@@ -140,3 +151,4 @@ window.onload = async () => {
 
 </body>
 </html>
+
