@@ -50,60 +50,61 @@
 </div>
 
 <nav id="sidebar">
-    <div style="padding:20px; font-weight:bold; color:var(--hx-accent); font-size:1.2rem; border-bottom:1px solid #333;">PAINEL HX</div>
-    <button onclick="changeTab('dashTab', this)" class="active">📊 Dashboard</button>
-    <button onclick="changeTab('cliTab', this)">👤 Clientes</button>
-    <button onclick="changeTab('estTab', this)">📦 Estoque</button>
-    <button onclick="changeTab('venTab', this)">💵 Vendas</button>
-    <button onclick="changeTab('osTab', this)">🛠 Ordem de Serviço</button>
-    <button onclick="changeTab('orcTab', this)">📝 Orçamentos</button>
+  <div style="padding:20px; font-weight:bold; color:var(--hx-accent); font-size:1.2rem; border-bottom:1px solid #333;">
+    PAINEL HX
+  </div>
+
+  <button onclick="changeTab('dashTab', this)" class="active">📊 Dashboard</button>
+  <button onclick="changeTab('cliTab', this)">👤 Clientes</button>
+  <button onclick="changeTab('estTab', this)">📦 Estoque</button>
+  <button onclick="changeTab('venTab', this)">💵 Vendas</button>
+  <button onclick="changeTab('osTab', this)">🛠 Ordem de Serviço</button>
+  <button onclick="changeTab('orcTab', this)">📝 Orçamentos</button>
+
+  <!-- 🚪 SAIR -->
+  <button onclick="logout()" style="margin-top:auto; color:#ff5566;">
+    🚪 Sair
+  </button>
 </nav>
 
-<main>
-    <section id="dashTab">
-        <h2 style="color:var(--hx-accent)">📊 Dashboard Financeiro</h2>
-        <div class="grid-dash">
+<section id="dashTab">
+  <h2 style="color:var(--hx-accent)">📊 Dashboard Financeiro</h2>
+
+  <!-- 🔘 BOTÕES RÁPIDOS -->
+  <div style="display:flex; gap:10px; margin-bottom:15px; flex-wrap:wrap;">
+    <button class="btn btn-add" onclick="setHoje()">Hoje</button>
+    <button class="btn btn-add" onclick="setSemana()">Semana</button>
+    <button class="btn btn-add" onclick="setMes()">Mês</button>
+  </div>
+
+  <!-- 📊 CARDS -->
+  <div class="grid-dash">
     <div class="dash-card">
-        Vendas Hoje
-        <h3 id="vDia" style="color:var(--hx-accent)">R$ 0,00</h3>
+      Vendas Hoje
+      <h3 id="vDia">R$ 0,00</h3>
     </div>
 
     <div class="dash-card">
-        Lucro Hoje
-        <h3 id="lDia" style="color:#00cfff">R$ 0,00</h3>
+      Lucro Hoje
+      <h3 id="lDia">R$ 0,00</h3>
     </div>
 
     <div class="dash-card">
-        Vendas Mês
-        <h3 id="vMes">R$ 0,00</h3>
+      Vendas Mês
+      <h3 id="vMes">R$ 0,00</h3>
     </div>
 
     <div class="dash-card">
-        Lucro do Mês
-        <h3 id="lMes" style="color:#00cfff">R$ 0,00</h3>
+      Lucro do Mês
+      <h3 id="lMes">R$ 0,00</h3>
     </div>
 
     <div class="dash-card">
-        Estoque Crítico
-        <h3 id="qtdCrit" style="color:var(--hx-danger)">0 Itens</h3>
+      Estoque Crítico
+      <h3 id="qtdCrit">0 Itens</h3>
     </div>
-</div>
-
-        <div class="card"><h4>Histórico de Vendas Recentes</h4><canvas id="chartDiario" height="100"></canvas></div>
-    </section>
-
-    <section id="cliTab" style="display:none">
-        <h2>👤 Gestão de Clientes</h2>
-        <div class="card">
-            <input id="cNome" placeholder="Nome Completo">
-            <input id="cTel" placeholder="Telefone">
-            <button class="btn btn-add" onclick="saveCli()">CADASTRAR</button>
-        </div>
-        <div class="card">
-            <input id="sCli" placeholder="🔍 Pesquisar cliente..." oninput="renderCli()">
-            <div id="listCli" style="margin-top:15px"></div>
-        </div>
-    </section>
+  </div>
+</section>
 
     <section id="estTab" style="display:none">
         <h2>📦 Controle de Estoque</h2>
@@ -120,23 +121,41 @@
         </div>
     </section>
 
-    <section id="venTab" style="display:none">
-        <h2>💵 Registro de Vendas</h2>
-        <div class="card">
-            <select id="vCliSelect"></select>
-            <select id="vProdSelect" onchange="updateVendaPrice()"></select>
-            <input id="vQtd" type="number" value="1" oninput="updateVendaPrice()">
-            <p>Total Estimado: <strong id="vTotalLabel">R$ 0,00</strong></p>
-            <button class="btn btn-add" onclick="doVenda()">FINALIZAR VENDA</button>
-        </div>
-        <div class="card">
-            <div style="display: flex; gap: 10px;">
-                <input id="sVenNome" placeholder="🔍 Por cliente..." oninput="renderVen()">
-                <input id="sVenData" type="date" onchange="renderVen()">
-            </div>
-            <div id="listVen"></div>
-        </div>
-    </section>
+   <section id="venTab" style="display:none">
+  <h2>💵 Registro de Vendas</h2>
+
+  <div class="card">
+    <select id="vCliSelect" required></select>
+
+    <select id="vProdSelect" onchange="updateVendaPrice()" required></select>
+
+    <input
+      id="vQtd"
+      type="number"
+      value="1"
+      min="1"
+      oninput="updateVendaPrice()"
+      required
+    >
+
+    <p>Total Estimado:
+      <strong id="vTotalLabel">R$ 0,00</strong>
+    </p>
+
+    <!-- 🔽 AQUI É O LUGAR CERTO -->
+    <select id="vTipoPagamento" required>
+      <option value="">Selecione a forma de pagamento</option>
+      <option value="Pix">📲 Pix</option>
+      <option value="Dinheiro">💵 Dinheiro</option>
+      <option value="Cartão">💳 Cartão</option>
+    </select>
+
+    <button class="btn btn-add" onclick="doVenda()">
+      FINALIZAR VENDA
+    </button>
+  </div>
+</section>
+
 
     <section id="osTab" style="display:none">
         <h2>🛠 Ordens de Serviço</h2>
@@ -160,25 +179,73 @@
 </main>
 
 <script>
+// ================= SUPABASE =================
 // CONFIGURAÇÃO SUPABASE
 const { createClient } = window.supabase;
 const db = createClient("https://axfccmezfofnqfsdurqb.supabase.co", "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImF4ZmNjbWV6Zm9mbnFmc2R1cnFiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjUwNzA1NDMsImV4cCI6MjA4MDY0NjU0M30.woGp6hBgiEa41opQxyxqqMULlDKMXm9T83bhJ7UEmb8"
 );
+
 let _clis = [], _prods = [], _vens = [], _oss = [], _orcs = [];
 let chartInstance = null;
 
-async function login() {
-    const email = document.getElementById('lEmail').value;
-    const password = document.getElementById('lPass').value;
-    const { data, error } = await db.auth.signInWithPassword({ email, password });
-    
-    if(error) {
-        document.getElementById('lErr').innerText = "Erro: " + error.message;
-    } else {
-        document.getElementById('loginOverlay').style.display = 'none';
-        loadAll();
-    }
+// ================= INATIVIDADE =================
+const TEMPO_INATIVIDADE = 15 * 60 * 1000; // 15 minutos
+let timerInatividade;
+
+function resetarInatividade() {
+  clearTimeout(timerInatividade);
+  timerInatividade = setTimeout(logoutPorInatividade, TEMPO_INATIVIDADE);
 }
+
+["mousemove", "keydown", "click", "scroll"].forEach(evento => {
+  document.addEventListener(evento, resetarInatividade);
+});
+
+// ================= LOGOUT =================
+async function logout() {
+  clearTimeout(timerInatividade);
+
+  const confirmacao = confirm("Deseja realmente sair do sistema?");
+  if (!confirmacao) return;
+
+  await db.auth.signOut();
+  limparSessao();
+}
+
+async function logoutPorInatividade() {
+  alert("Sessão encerrada por inatividade.");
+  await db.auth.signOut();
+  limparSessao();
+}
+
+function limparSessao() {
+  _clis = [];
+  _prods = [];
+  _vens = [];
+  _oss = [];
+  _orcs = [];
+
+  document.getElementById('loginOverlay').style.display = 'flex';
+}
+
+// ================= LOGIN =================
+async function login() {
+  const email = document.getElementById('lEmail').value;
+  const password = document.getElementById('lPass').value;
+
+  const { error } = await db.auth.signInWithPassword({ email, password });
+
+  if (error) {
+    document.getElementById('lErr').innerText = "Erro: " + error.message;
+  } else {
+    document.getElementById('loginOverlay').style.display = 'none';
+    loadAll();
+    resetarInatividade(); // inicia o timer
+  }
+}
+</script>
+
+
 
 function changeTab(id, btn) {
     document.querySelectorAll('main section').forEach(s => s.style.display = 'none');
@@ -209,6 +276,9 @@ function refreshSelects() {
 }
 
 // DASHBOARD CALCULATIONS
+
+
+    
 function updateDash() {
     let totalHoje = 0;
     let lucroHoje = 0;
@@ -300,10 +370,16 @@ function updateVendaPrice() {
 
 async function doVenda() {
     const p = _prods.find(x => x.id == document.getElementById('vProdSelect').value);
-    const q = Number(document.getElementById('vQtd').value);
-    const estoqueAtual = (p.q_id || p.qnt || 0);
+    if (!p) return alert("Produto inválido");
 
-    if(estoqueAtual < q) return alert("Estoque insuficiente!");
+    const q = Number(document.getElementById('vQtd').value);
+    if (q <= 0) return alert("Quantidade inválida");
+
+    const tipoPagamento = document.getElementById('vTipoPagamento').value;
+    if (!tipoPagamento) return alert("Selecione a forma de pagamento");
+
+    const estoqueAtual = (p.q_id || p.qnt || 0);
+    if (estoqueAtual < q) return alert("Estoque insuficiente!");
 
     const valorTotal = p.preco_revenda * q;
     const lucro = valorTotal - (p.preco_custo * q);
@@ -314,13 +390,87 @@ async function doVenda() {
         quantidade: q,
         valor: valorTotal,
         lucro_total: lucro,
+        tipo_pagamento: tipoPagamento,
         data: new Date().toISOString()
     });
 
-    await db.from('produtos').update({ q_id: estoqueAtual - q, qnt: estoqueAtual - q }).eq('id', p.id);
+    await db.from('produtos')
+      .update({ q_id: estoqueAtual - q, qnt: estoqueAtual - q })
+      .eq('id', p.id);
+
     loadAll();
 }
 
+function imprimirVenda(id) {
+  const v = _vens.find(x => x.id === id);
+  if (!v) return alert("Venda não encontrada");
+
+  const w = window.open("", "_blank", "width=300,height=600");
+
+  w.document.write(`
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+<meta charset="UTF-8">
+<title>Cupom Não Fiscal</title>
+<style>
+  @page {
+    size: 80mm auto;
+    margin: 0;
+  }
+  body {
+    width: 80mm;
+    margin: 0;
+    padding: 6px;
+    font-family: monospace;
+    font-size: 12px;
+  }
+  .center {
+    text-align: center;
+  }
+  hr {
+    border: none;
+    border-top: 1px dashed #000;
+    margin: 6px 0;
+  }
+</style>
+</head>
+
+<body onload="window.print(); window.close();">
+
+<div class="center">
+  <strong>SISTEMA HX</strong><br>
+  CUPOM NÃO FISCAL
+</div>
+
+<hr>
+
+Cliente: ${v.clientes?.nome || "Não informado"}<br>
+Produto: ${v.produtos?.nome || "-"}<br>
+Qtd: ${v.quantidade}<br>
+Pagamento: ${v.tipo_pagamento || "N/I"}<br>
+
+<hr>
+
+<strong>TOTAL: R$ ${Number(v.valor).toFixed(2)}</strong><br>
+Data: ${new Date(v.data).toLocaleString("pt-BR")}
+
+<hr>
+
+<div class="center">
+  Obrigado pela preferência!
+</div>
+
+</body>
+</html>
+  `);
+
+  w.document.close();
+}
+
+
+
+        
 // GENERAL ACTIONS: RENDER, EDIT, DELETE
 async function delItem(tab, id) {
     if(confirm("Deseja realmente excluir este registro?")) {
@@ -330,18 +480,33 @@ async function delItem(tab, id) {
 }
 
 function renderVen() {
-    const sNome = document.getElementById('sVenNome').value.toLowerCase();
-    const sData = document.getElementById('sVenData').value;
-    
-    document.getElementById('listVen').innerHTML = _vens.filter(v => 
-        (v.clientes?.nome?.toLowerCase().includes(sNome)) && (sData ? v.data.startsWith(sData) : true)
-    ).map(v => `
-        <div style="padding:10px; border-bottom:1px solid #333; display:flex; justify-content:space-between;">
-            <span>${v.data.split('T')[0]} - <strong>${v.clientes?.nome}</strong>: ${v.produtos?.nome} (R$ ${v.valor.toFixed(2)})</span>
-            <button class="btn btn-del" onclick="delItem('vendas', ${v.id})">🗑️</button>
+  const sNome = document.getElementById('sVenNome').value.toLowerCase();
+  const sData = document.getElementById('sVenData').value;
+
+  document.getElementById('listVen').innerHTML = _vens
+    .filter(v =>
+      (v.clientes?.nome?.toLowerCase().includes(sNome)) &&
+      (sData ? v.data.startsWith(sData) : true)
+    )
+    .map(v => `
+      <div style="padding:10px; border-bottom:1px solid #333; display:flex; justify-content:space-between; align-items:center;">
+        <span>
+          ${v.data.split('T')[0]} -
+          <strong>${v.clientes?.nome}</strong> |
+          ${v.produtos?.nome} |
+          R$ ${Number(v.valor).toFixed(2)} |
+          ${v.tipo_pagamento || "N/I"}
+        </span>
+
+        <div style="display:flex; gap:5px;">
+          <button class="btn btn-add" onclick="imprimirVenda(${v.id})">🖨️</button>
+          <button class="btn btn-edit" onclick="editarVenda(${v.id})">✏️</button>
+          <button class="btn btn-del" onclick="delItem('vendas', ${v.id})">🗑️</button>
         </div>
+      </div>
     `).join('');
 }
+
 
 // STOQUE RENDER WITH ALERT
 function renderEst() {
@@ -403,6 +568,43 @@ function renderOS() {
     `).join('');
 }
 
+
+async function editarVenda(id) {
+  const v = _vens.find(x => x.id === id);
+  if (!v) return alert("Venda não encontrada");
+
+  const novaQtd = prompt("Quantidade:", v.quantidade);
+  if (novaQtd === null || isNaN(novaQtd) || Number(novaQtd) <= 0) {
+    return alert("Quantidade inválida");
+  }
+
+  const novoValor = prompt("Valor total:", v.valor);
+  if (novoValor === null || isNaN(novoValor) || Number(novoValor) < 0) {
+    return alert("Valor inválido");
+  }
+
+  const novoTipo = prompt(
+    "Forma de pagamento (Pix / Dinheiro / Cartão):",
+    v.tipo_pagamento || "Pix"
+  );
+  if (!novoTipo) return;
+
+  // 🔒 VALIDAÇÃO DO TIPO DE PAGAMENTO (AQUI 👇)
+  const tipoValido = ["Pix", "Dinheiro", "Cartão"];
+  if (!tipoValido.includes(novoTipo)) {
+    return alert("Use apenas: Pix, Dinheiro ou Cartão");
+  }
+
+  // 💾 ATUALIZA NO BANCO
+  await db.from('vendas').update({
+    quantidade: Number(novaQtd),
+    valor: Number(novoValor),
+    tipo_pagamento: novoTipo
+  }).eq('id', id);
+
+  loadAll();
+}
+            
 // ORCAMENTOS
 async function saveOrc() {
     await db.from('orcamentos').insert({
@@ -435,6 +637,7 @@ window.onload = async () => {
 </script>
 </body>
 </html>
+
 
 
 
