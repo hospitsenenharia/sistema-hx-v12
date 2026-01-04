@@ -139,26 +139,44 @@
         </div>
     </section>
 
-    <section id="estTab" style="display:none">
-        <h2>📦 Controle de Estoque</h2>
-        <div class="card">
-            <input id="pNome" placeholder="Produto">
-            <input id="pQtd" type="number" placeholder="Quantidade">
-            <input id="pMin" type="number" placeholder="Mínimo para Alerta">
-            <input id="pCusto" type="number" placeholder="Preço Custo">
-            <input id="pRev" type="number" placeholder="Preço Venda">
-            <button class="btn btn-add" onclick="saveProd()">ADICIONAR</button>
-        </div>
-        <div class="card">
-            <div id="listEst"></div>
-        </div>
-    </section>
+<section id="estTab" style="display:none">
+    <h2>📦 Controle de Estoque</h2>
+
+    <!-- CADASTRO -->
+    <div class="card">
+        <input id="pNome" placeholder="Produto">
+        <input id="pQtd" type="number" placeholder="Quantidade">
+        <input id="pMin" type="number" placeholder="Mínimo para Alerta">
+        <input id="pCusto" type="number" placeholder="Preço Custo">
+        <input id="pRev" type="number" placeholder="Preço Venda">
+        <button class="btn btn-add" onclick="saveProd()">ADICIONAR</button>
+    </div>
+
+    <!-- 🔍 PESQUISA NO ESTOQUE -->
+    <div class="card">
+        <input id="sEstoque"
+               placeholder="🔍 Buscar por nome ou data (AAAA-MM-DD)"
+               oninput="renderEst()">
+    </div>
+
+    <!-- LISTA -->
+    <div class="card">
+        <div id="listEst"></div>
+    </div>
+</section>
+
 
     <section id="venTab" style="display:none">
         <h2>💵 Registro de Vendas</h2>
         <div class="card">
             <select id="vCliSelect"></select>
             <select id="vProdSelect" onchange="updateVendaPrice()"></select>
+            <select id="vTipoPagamento">
+  <option value="Dinheiro">💵 Dinheiro</option>
+  <option value="Cartão">💳 Cartão</option>
+  <option value="Pix">📲 Pix</option>
+</select>
+
             <input id="vQtd" type="number" value="1" oninput="updateVendaPrice()">
             <p>Total Estimado: <strong id="vTotalLabel">R$ 0,00</strong></p>
             <button class="btn btn-add" onclick="doVenda()">FINALIZAR VENDA</button>
@@ -193,6 +211,8 @@
     </section>
 </main>
 
+    
+
 <script>
 // CONFIGURAÇÃO SUPABASE
 const { createClient } = window.supabase;
@@ -200,6 +220,55 @@ const db = createClient("https://axfccmezfofnqfsdurqb.supabase.co", "eyJhbGciOiJ
 );
 let _clis = [], _prods = [], _vens = [], _oss = [], _orcs = [];
 let chartInstance = null;
+    function imprimirVenda(id) {
+    const v = _vens.find(x => x.id === id);
+    if (!v) return;
+
+    const w = window.open("", "PRINT", "width=300,height=600");
+
+    w.document.write(`
+    <html>
+    <head>
+      <title>Cupom Não Fiscal</title>
+     <style>
+  body { width:80mm; font-family: monospace; font-size:12px; }
+  .center { text-align:center; }
+  hr { border:1px dashed #000; }
+
+  @media print {
+    body { margin: 0; }
+  }
+</style>
+
+    </head>
+    <body>
+      <div class="center">
+        <strong>SISTEMA HX</strong><br>
+        CUPOM NÃO FISCAL
+      </div>
+      <hr>
+      Cliente: ${v.clientes?.nome || "-"}<br>
+      Produto: ${v.produtos?.nome || "-"}<br>
+      Quantidade: ${v.quantidade || 1}<br>
+      Total: R$ ${Number(v.valor || 0).toFixed(2)}<br>
+      Pagamento: ${v.tipo_pagamento || "N/I"}<br>
+      Data: ${new Date(v.data).toLocaleString("pt-BR")}
+      <hr>
+      <div class="center">
+        Obrigado pela preferência!
+      </div>
+
+      <script>
+        window.print();
+        window.close();
+      <\/script>
+    </body>
+    </html>
+    `);
+
+    w.document.close();
+}
+
 
 async function login() {
     const email = document.getElementById('lEmail').value;
@@ -384,14 +453,16 @@ async function doVenda() {
     const valorTotal = p.preco_revenda * q;
     const lucro = valorTotal - (p.preco_custo * q);
 
-    await db.from('vendas').insert({
-        cliente_id: document.getElementById('vCliSelect').value,
-        produto_id: p.id,
-        quantidade: q,
-        valor: valorTotal,
-        lucro_total: lucro,
-        data: new Date().toISOString()
-    });
+await db.from('vendas').insert({
+    cliente_id: document.getElementById('vCliSelect').value,
+    produto_id: p.id,
+    quantidade: q,
+    valor: valorTotal,
+    lucro_total: lucro,
+    tipo_pagamento: document.getElementById("vTipoPagamento").value,
+    data: new Date().toISOString()
+});
+
 
     await db.from('produtos').update({ q_id: estoqueAtual - q, qnt: estoqueAtual - q }).eq('id', p.id);
     loadAll();
@@ -408,25 +479,50 @@ async function delItem(tab, id) {
 function renderVen() {
     const sNome = document.getElementById('sVenNome').value.toLowerCase();
     const sData = document.getElementById('sVenData').value;
-    
-    document.getElementById('listVen').innerHTML = _vens.filter(v => 
-        (v.clientes?.nome?.toLowerCase().includes(sNome)) && (sData ? v.data.startsWith(sData) : true)
-    ).map(v => `
-        <div style="padding:10px; border-bottom:1px solid #333; display:flex; justify-content:space-between;">
-            <span>${v.data.split('T')[0]} - <strong>${v.clientes?.nome}</strong>: ${v.produtos?.nome} (R$ ${v.valor.toFixed(2)})</span>
-            <button class="btn btn-del" onclick="delItem('vendas', ${v.id})">🗑️</button>
-        </div>
-    `).join('');
+
+    document.getElementById('listVen').innerHTML = _vens
+        .filter(v =>
+            (v.clientes?.nome?.toLowerCase().includes(sNome)) &&
+            (sData ? v.data.startsWith(sData) : true)
+        )
+        .map(v => `
+            <div style="padding:10px; border-bottom:1px solid #333; display:flex; justify-content:space-between; align-items:center;">
+                <span>
+                    ${v.data.split('T')[0]} -
+                    <strong>${v.clientes?.nome}</strong> :
+                    ${v.produtos?.nome}
+                    (R$ ${Number(v.valor).toFixed(2)})
+                </span>
+
+                <div style="display:flex; gap:6px;">
+                    <!-- 🖨️ IMPRIMIR -->
+                    <button class="btn btn-add" onclick="imprimirVenda(${v.id})">🖨️</button>
+
+                    <!-- 🗑️ EXCLUIR -->
+                    <button class="btn btn-del" onclick="delItem('vendas', ${v.id})">🗑️</button>
+                </div>
+            </div>
+        `)
+        .join('');
 }
+
 
 // STOQUE RENDER WITH ALERT
 function renderEst() {
-    document.getElementById('listEst').innerHTML = _prods.map(p => {
+    const busca = document.getElementById("sEstoque")?.value.toLowerCase() || "";
+
+    document.getElementById('listEst').innerHTML = _prods.filter(p => {
+        const nome = p.nome?.toLowerCase() || "";
+        const data = p.created_at ? p.created_at.split("T")[0] : "";
+
+        return nome.includes(busca) || data.includes(busca);
+    }).map(p => {
         const estoque = (p.q_id || p.qnt || 0);
         const critico = estoque <= (p.estoque_minimo || 0);
+
         return `
         <div style="padding:10px; border-bottom:1px solid #333; display:flex; justify-content:space-between; ${critico ? 'color:var(--hx-danger)' : ''}">
-            <span>${p.nome} | Estoque: <strong>${estoque}</strong> ${critico ? '<span class="critical">⚠️ BAIXO</span>' : ''}</span>
+            <span>${p.nome} | Estoque: <strong>${estoque}</strong></span>
             <div>
                 <button class="btn btn-edit" onclick="editProd(${p.id})">✏️</button>
                 <button class="btn btn-del" onclick="delItem('produtos', ${p.id})">🗑️</button>
@@ -434,6 +530,7 @@ function renderEst() {
         </div>`;
     }).join('');
 }
+
 
 async function editProd(id) {
     const p = _prods.find(x => x.id === id);
@@ -512,4 +609,5 @@ window.onload = async () => {
 </script>
 </body>
 </html>
+
 
