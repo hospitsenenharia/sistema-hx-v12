@@ -216,23 +216,30 @@ function updateDash() {
     let lucroMes = 0;
 
     const hoje = new Date();
-    const diaHoje = hoje.toLocaleDateString("pt-BR");
-    const mesAtual = hoje.getMonth();
-    const anoAtual = hoje.getFullYear();
+    const dia = hoje.getDate();
+    const mes = hoje.getMonth();
+    const ano = hoje.getFullYear();
 
     _vens.forEach(v => {
-        if (!v.created_at) return;
+        if (!v.data) return;
 
-        const d = new Date(v.created_at);
+        const d = new Date(v.data);
 
-        // 🔹 Hoje
-        if (d.toLocaleDateString("pt-BR") === diaHoje) {
+        // 🔹 HOJE
+        if (
+            d.getDate() === dia &&
+            d.getMonth() === mes &&
+            d.getFullYear() === ano
+        ) {
             totalHoje += Number(v.valor || 0);
             lucroHoje += Number(v.lucro_total || 0);
         }
 
-        // 🔹 Mês atual
-        if (d.getMonth() === mesAtual && d.getFullYear() === anoAtual) {
+        // 🔹 MÊS ATUAL
+        if (
+            d.getMonth() === mes &&
+            d.getFullYear() === ano
+        ) {
             totalMes += Number(v.valor || 0);
             lucroMes += Number(v.lucro_total || 0);
         }
@@ -267,7 +274,7 @@ function renderChart() {
         type: 'line',
         data: {
             labels: ultimasVendas.map(v =>
-                new Date(v.created_at).toLocaleDateString("pt-BR")
+                new Date(v.data).toLocaleDateString("pt-BR")
             ),
             datasets: [{
                 label: 'Vendas Recentes',
@@ -280,6 +287,7 @@ function renderChart() {
         }
     });
 }
+
 
 
 
@@ -427,6 +435,7 @@ window.onload = async () => {
 </script>
 </body>
 </html>
+
 
 
 
