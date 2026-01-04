@@ -224,15 +224,14 @@ function updateDash() {
         if (!v.data) return;
 
         const d = new Date(v.data);
-        const diaVenda = d.toLocaleDateString("pt-BR");
 
-        // 📌 HOJE
-        if (diaVenda === diaHoje) {
+        // 🔹 Hoje
+        if (d.toLocaleDateString("pt-BR") === diaHoje) {
             totalHoje += Number(v.valor || 0);
             lucroHoje += Number(v.lucro_total || 0);
         }
 
-        // 📌 MÊS ATUAL
+        // 🔹 Mês atual
         if (d.getMonth() === mesAtual && d.getFullYear() === anoAtual) {
             totalMes += Number(v.valor || 0);
             lucroMes += Number(v.lucro_total || 0);
@@ -243,14 +242,15 @@ function updateDash() {
         (p.q_id || p.qnt || 0) <= (p.estoque_minimo || 0)
     ).length;
 
-    document.getElementById("vDia").innerText = `R$ ${totalHoje.toFixed(2)}`;
-    document.getElementById("lDia").innerText = `R$ ${lucroHoje.toFixed(2)}`;
-    document.getElementById("vMes").innerText = `R$ ${totalMes.toFixed(2)}`;
-    document.getElementById("lMes").innerText = `R$ ${lucroMes.toFixed(2)}`;
-    document.getElementById("qtdCrit").innerText = `${criticos} Itens`;
+    document.getElementById('vDia').innerText = `R$ ${totalHoje.toFixed(2)}`;
+    document.getElementById('lDia').innerText = `R$ ${lucroHoje.toFixed(2)}`;
+    document.getElementById('vMes').innerText = `R$ ${totalMes.toFixed(2)}`;
+    document.getElementById('lMes').innerText = `R$ ${lucroMes.toFixed(2)}`;
+    document.getElementById('qtdCrit').innerText = `${criticos} Itens`;
 
     renderChart();
 }
+
 
 
 
@@ -432,5 +432,6 @@ window.onload = async () => {
 </script>
 </body>
 </html>
+
 
 
