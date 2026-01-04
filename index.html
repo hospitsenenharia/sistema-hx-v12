@@ -227,42 +227,69 @@ function imprimirVenda(id) {
     const w = window.open("", "_blank", "width=300,height=600");
 
     w.document.write(`
-    <html>
-    <head>
-        <title>Cupom Não Fiscal</title>
-        <style>
-            body {
-                width: 80mm;
-                margin: 0;
-                font-family: monospace;
-                font-size: 12px;
-            }
-            .center { text-align: center; }
-            hr { border: 1px dashed #000; }
-        </style>
-    </head>
-    <body onload="window.print(); window.close();">
-        <div class="center">
-            <strong>SISTEMA HX</strong><br>
-            CUPOM NÃO FISCAL
-        </div>
-        <hr>
-        Cliente: ${v.clientes?.nome || "-"}<br>
-        Produto: ${v.produtos?.nome || "-"}<br>
-        Quantidade: ${v.quantidade || 1}<br>
-        Total: R$ ${Number(v.valor || 0).toFixed(2)}<br>
-        Pagamento: ${v.tipo_pagamento || "N/I"}<br>
-        Data: ${new Date(v.data).toLocaleString("pt-BR")}
-        <hr>
-        <div class="center">
-            Obrigado pela preferência!
-        </div>
-    </body>
-    </html>
+   function imprimirVenda(id) {
+    const v = _vens.find(x => x.id === id);
+    if (!v) {
+        alert("Venda não encontrada");
+        return;
+    }
+
+    const w = window.open("", "_blank", "width=300,height=600");
+
+    w.document.write(`
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="utf-8">
+    <title>Cupom Não Fiscal</title>
+    <style>
+        body {
+            width: 80mm;
+            margin: 0;
+            padding: 5px;
+            font-family: monospace;
+            font-size: 12px;
+        }
+        .center {
+            text-align: center;
+        }
+        hr {
+            border: none;
+            border-top: 1px dashed #000;
+            margin: 6px 0;
+        }
+    </style>
+</head>
+<body onload="window.print(); window.close();">
+
+    <div class="center">
+        <strong>SISTEMA HX</strong><br>
+        CUPOM NÃO FISCAL
+    </div>
+
+    <hr>
+
+    Cliente: ${v.clientes?.nome || "-"}<br>
+    Produto: ${v.produtos?.nome || "-"}<br>
+    Quantidade: ${v.quantidade || 1}<br>
+    Total: R$ ${Number(v.valor || 0).toFixed(2)}<br>
+    Pagamento: ${v.tipo_pagamento || "N/I"}<br>
+    Data: ${new Date(v.data).toLocaleString("pt-BR")}
+
+    <hr>
+
+    <div class="center">
+        Obrigado pela preferência!
+    </div>
+
+</body>
+</html>
     `);
 
     w.document.close();
 }
+
+
 
         <div class="center">
             <strong>SISTEMA HX</strong><br>
@@ -673,6 +700,7 @@ window.onload = async () => {
 </script>
 </body>
 </html>
+
 
 
 
