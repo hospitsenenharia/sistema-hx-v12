@@ -306,6 +306,7 @@ Data: ${new Date(v.data).toLocaleString("pt-BR")}
   w.document.close();
 }
 
+
     
 </script>
 
@@ -318,20 +319,35 @@ function changeTab(id, btn) {
     btn.classList.add('active');
 }
 
+<script>
 async function loadAll() {
-    const [{data: c}, {data: p}, {data: v}, {data: o}, {data: r}] = await Promise.all([
-        db.from('clientes').select('*').order('nome'),
-        db.from('produtos').select('*').order('nome'),
-        db.from('vendas').select('*, clientes(nome), produtos(nome)').order('data', {ascending: false}),
-        db.from('ordens_servico').select('*, clientes(nome)').order('id', {ascending: false}),
-        db.from('orcamentos').select('*, clientes(nome)').order('id', {ascending: false})
+  const [{ data: c }, { data: p }, { data: v }, { data: o }, { data: r }] =
+    await Promise.all([
+      db.from('clientes').select('*').order('nome'),
+      db.from('produtos').select('*').order('nome'),
+      db.from('vendas')
+        .select('*, clientes(nome), produtos(nome)')
+        .order('data', { ascending: false }),
+      db.from('ordens_servico').select('*, clientes(nome)').order('id', { ascending: false }),
+      db.from('orcamentos').select('*, clientes(nome)').order('id', { ascending: false })
     ]);
 
-    _clis = c || []; _prods = p || []; _vens = v || []; _oss = o || []; _orcs = r || [];
-    
-    refreshSelects();
-    renderCli(); renderEst(); renderVen(); renderOS(); renderOrc(); updateDash();
+  _clis = c || [];
+  _prods = p || [];
+  _vens = v || [];
+  _oss = o || [];
+  _orcs = r || [];
+
+  refreshSelects();
+  renderCli();
+  renderEst();
+  renderVen();
+  renderOS();
+  renderOrc();
+  updateDash();
 }
+</script>
+
 
 function refreshSelects() {
     const cliOptions = _clis.map(c => `<option value="${c.id}">${c.nome}</option>`).join('');
@@ -544,28 +560,34 @@ async function delItem(tab, id) {
 }
 
 function renderVen() {
-  document.getElementById('listVen').innerHTML = _vens.map(v => `
-    <div style="padding:10px; border-bottom:1px solid #333; display:flex; justify-content:space-between; align-items:center;">
-      <span>
-        ${v.data.split('T')[0]} -
-        <strong>${v.clientes?.nome}</strong>
-        (${v.tipo_pagamento || "N/I"})
-        R$ ${Number(v.valor).toFixed(2)}
-      </span>
+  const sNome = document.getElementById('sVenNome')?.value?.toLowerCase() || "";
+  const sData = document.getElementById('sVenData')?.value || "";
 
-      <div style="display:flex; gap:6px;">
-        <!-- 🖨️ IMPRIMIR -->
-        <button class="btn btn-add" onclick="imprimirVenda(${v.id})">🖨️</button>
+  document.getElementById('listVen').innerHTML = _vens
+    .filter(v =>
+      (v.clientes?.nome?.toLowerCase().includes(sNome)) &&
+      (sData ? v.data.startsWith(sData) : true)
+    )
+    .map(v => `
+      <div style="padding:10px; border-bottom:1px solid #333; display:flex; justify-content:space-between; align-items:center;">
+        <div>
+          <strong>${v.clientes?.nome || "Cliente"}</strong><br>
+          ${v.produtos?.nome || "-"} |
+          Qtd: ${v.quantidade} |
+          R$ ${Number(v.valor).toFixed(2)}<br>
+          💳 ${v.tipo_pagamento || "N/I"}
+        </div>
 
-        <!-- ✏️ EDITAR -->
-        <button class="btn btn-edit" onclick="editarVenda(${v.id})">✏️</button>
-
-        <!-- 🗑️ EXCLUIR -->
-        <button class="btn btn-del" onclick="delItem('vendas', ${v.id})">🗑️</button>
+        <div style="display:flex; gap:6px;">
+          <button class="btn btn-add" onclick="imprimirVenda(${v.id})">🖨️</button>
+          <button class="btn btn-edit" onclick="editarVenda(${v.id})">✏️</button>
+          <button class="btn btn-del" onclick="delItem('vendas', ${v.id})">🗑️</button>
+        </div>
       </div>
-    </div>
-  `).join('');
+    `)
+    .join('');
 }
+
 
 
 
@@ -698,6 +720,7 @@ window.onload = async () => {
 </script>
 </body>
 </html>
+
 
 
 
