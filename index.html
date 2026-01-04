@@ -18,20 +18,10 @@
         .btn { padding: 10px; border: none; border-radius: 4px; font-weight: bold; cursor: pointer; }
         .btn-add { background: var(--hx-accent); color: #000; }
         .btn-del { background: var(--hx-danger); color: #fff; }
-        #loginOverlay { position: fixed; inset: 0; background: #000; z-index: 9999; display: flex; align-items: center; justify-content: center; }
+        .badge-critico { background: var(--hx-danger); color: white; padding: 2px 8px; border-radius: 4px; font-size: 11px; }
     </style>
 </head>
 <body>
-
-<div id="loginOverlay">
-    <div class="card" style="width: 320px; border: 1px solid var(--hx-accent);">
-        <h2 style="text-align:center; color:var(--hx-accent);">SISTEMA HX</h2>
-        <input id="lEmail" type="email" placeholder="admin@hx.com">
-        <input id="lPass" type="password" placeholder="Senha">
-        <button class="btn btn-add" style="width:100%" onclick="login()">ENTRAR</button>
-        <p id="lErr" style="color:var(--hx-danger); text-align:center; margin-top:10px; font-size: 12px;"></p>
-    </div>
-</div>
 
 <nav id="sidebar">
     <div style="padding:20px; font-weight:bold; color:var(--hx-accent)">PAINEL HX</div>
@@ -41,179 +31,189 @@
     <button onclick="tab('venTab',this)">💵 Vendas</button>
     <button onclick="tab('orcTab',this)">📝 Orçamentos</button>
     <button onclick="tab('osTab',this)">🛠 Ordem de Serviço</button>
-    <button onclick="logout()" style="margin-top:auto; color:var(--hx-danger); padding:15px; cursor:pointer; background:none; border:none; text-align:left;">🚪 Sair do Sistema</button>
+    <button onclick="logout()" style="margin-top:auto; color:var(--hx-danger); background:none; border:none; padding:15px; text-align:left; cursor:pointer;">Sair</button>
 </nav>
 
 <main>
     <section id="dashTab">
         <div class="grid-dash">
-            <div class="card">Vendas Hoje<h3 id="vDia">R$ 0,00</h3></div>
-            <div class="card">Lucro Hoje<h3 id="lDia">R$ 0,00</h3></div>
-            <div class="card">Vendas Mês<h3 id="vMes">R$ 0,00</h3></div>
-            <div class="card">Estoque Crítico<h3 id="qtdCrit">0 Itens</h3></div>
+            <div class="card">Vendas Hoje <h3 id="vDia">R$ 0,00</h3></div>
+            <div class="card">Lucro Hoje <h3 id="lDia">R$ 0,00</h3></div>
+            <div class="card">Vendas Mês <h3 id="vMes">R$ 0,00</h3></div>
+            <div class="card">Estoque Crítico <h3 id="qtdCrit" style="color:var(--hx-danger)">0 Itens</h3></div>
         </div>
         <div class="card"><canvas id="chartDiario"></canvas></div>
     </section>
 
-    <section id="cliTab" style="display:none">
-        <h2>👤 Clientes</h2>
-        <div class="card">
-            <input id="cliNome" placeholder="Nome">
-            <input id="cliTel" placeholder="Telefone">
-            <button class="btn btn-add" onclick="addCliente()">Cadastrar Cliente</button>
-        </div>
-        <div id="listCli"></div>
-    </section>
-
     <section id="estTab" style="display:none">
-        <h2>📦 Estoque</h2>
+        <h2>📦 Gestão de Estoque</h2>
+        <div class="card">
+            <input id="pNome" placeholder="Nome do Produto">
+            <input id="pQtd" type="number" placeholder="Quantidade Atual">
+            <input id="pMin" type="number" placeholder="Mínimo Alerta">
+            <input id="pCusto" type="number" placeholder="Preço Custo">
+            <input id="pRev" type="number" placeholder="Preço Venda">
+            <button class="btn btn-add" onclick="addProduto()">ADICIONAR PRODUTO</button>
+        </div>
+        <div class="card">
+            <input id="buscaEst" placeholder="🔍 Pesquisar material no estoque..." oninput="renderEst()">
+        </div>
         <div id="listEst"></div>
     </section>
 
     <section id="venTab" style="display:none">
-        <h2>💵 PDV</h2>
+        <h2>💵 PDV Organizado</h2>
         <div class="card">
             <select id="vCliSelect"></select>
             <select id="vProdSelect"></select>
             <input id="vQtd" type="number" value="1">
+            <select id="vPagamento">
+                <option value="Dinheiro">Dinheiro</option>
+                <option value="Pix">Pix</option>
+                <option value="Cartão">Cartão</option>
+            </select>
             <button class="btn btn-add" onclick="vender()">Finalizar Venda</button>
         </div>
-        <div id="listVen"></div>
+        <div class="card">
+            <div style="display:flex; gap:10px;">
+                <input id="fNome" placeholder="🔍 Por Cliente" oninput="renderVendas()">
+                <input id="fData" type="date" onchange="renderVendas()">
+            </div>
+            <div id="listVen" style="margin-top:15px"></div>
+        </div>
     </section>
 
-    <section id="orcTab" style="display:none">
-        <h2>📝 Orçamentos</h2>
-        <div class="card">
-            <select id="orcClienteSelect"></select>
-            <textarea id="orcDesc" placeholder="Descrição do orçamento"></textarea>
-            <input id="orcValor" type="number" placeholder="Valor Estimado">
-            <button class="btn btn-add" onclick="criarOrc()">Salvar Orçamento</button>
-        </div>
-        <div id="listOrc"></div>
-    </section>
-
-    <section id="osTab" style="display:none">
-        <h2>🛠 Ordens de Serviço</h2>
-        <div class="card">
-            <select id="osClienteSelect"></select>
-            <textarea id="osDesc" placeholder="Descrição do serviço"></textarea>
-            <button class="btn btn-add" onclick="criarOS()">Abrir O.S.</button>
-        </div>
-        <div id="listOS"></div>
-    </section>
+    <section id="cliTab" style="display:none"><h2>Clientes</h2><div id="listCli"></div></section>
+    <section id="orcTab" style="display:none"><h2>Orçamentos</h2><div id="listOrc"></div></section>
+    <section id="osTab" style="display:none"><h2>Ordens de Serviço</h2><div id="listOS"></div></section>
 </main>
 
 <script>
 const { createClient } = supabase;
 const db = createClient("https://axfccmezfofnqfsdurqb.supabase.co","eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImF4ZmNjbWV6Zm9mbnFmc2R1cnFiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjUwNzA1NDMsImV4cCI6MjA4MDY0NjU0M30.woGp6hBgiEa41opQxyxqqMULlDKMXm9T83bhJ7UEmb8");
 
-let cl=[], pr=[], ve=[], orc=[], os=[], chartInstance;
-
-async function login() {
-    const { error } = await db.auth.signInWithPassword({
-        email: lEmail.value, password: lPass.value
-    });
-    if(error) lErr.innerText = "Chave ou senha inválida!";
-    else { loginOverlay.style.display='none'; load(); }
-}
-
-async function logout() { await db.auth.signOut(); location.reload(); }
+let _clis=[], _prods=[], _vens=[], chartInstance=null;
 
 async function load() {
-    const [{data:c},{data:p},{data:v},{data:o},{data:s}] = await Promise.all([
+    const [{data:c},{data:p},{data:v}] = await Promise.all([
         db.from('clientes').select('*'),
         db.from('produtos').select('*'),
-        db.from('vendas').select('*'),
-        db.from('orcamentos').select('*, clientes(nome)'),
-        db.from('ordens_servico').select('*, clientes(nome)')
+        db.from('vendas').select('*, clientes(nome), produtos(nome, preco_custo, preco_revenda, quantidade)')
     ]);
-    cl=c||[]; pr=p||[]; ve=v||[]; orc=o||[]; os=s||[];
+    _clis=c||[]; _prods=p||[]; _vens=v||[];
     renderAll();
 }
 
 function renderAll() {
-    // Popular Selects
-    const cliOpts = cl.map(c=>`<option value="${c.id}">${c.nome}</option>`).join('');
-    vCliSelect.innerHTML = cliOpts;
-    orcClienteSelect.innerHTML = cliOpts;
-    osClienteSelect.innerHTML = cliOpts;
-    vProdSelect.innerHTML = pr.map(p=>`<option value="${p.id}">${p.nome} (Est: ${p.quantidade || 0})</option>`).join('');
-
-    // Listagens
-    listCli.innerHTML = cl.map(c=>`<div class="card">${c.nome} - ${c.telefone || ''}</div>`).join('');
-    listEst.innerHTML = pr.map(p=>`<div class="card">${p.nome} — Estoque: ${p.quantidade || 0}</div>`).join('');
-    listOrc.innerHTML = orc.map(o=>`<div class="card">ORC #${o.id} - ${o.clientes?.nome} <button onclick="printOrc(${o.id})">🖨️</button></div>`).join('');
-    listOS.innerHTML = os.map(s=>`<div class="card">OS #${s.id} - ${s.clientes?.nome} <button onclick="printOS(${s.id})">🖨️</button></div>`).join('');
-
+    refreshSelects();
+    renderEst();
+    renderVendas();
     updateDashboard();
 }
 
 function updateDashboard() {
-    const hojePTBR = new Date().toLocaleDateString('pt-BR'); // Correção fuso
-    const mesAtual = new Date().toISOString().slice(0, 7);
-
-    const vHoje = ve.filter(v => new Date(v.data).toLocaleDateString('pt-BR') === hojePTBR);
-    const vMes = ve.filter(v => v.data?.startsWith(mesAtual));
-
-    vDia.innerText = "R$ " + vHoje.reduce((t,v)=> t + Number(v.valor||0), 0).toFixed(2);
-    lDia.innerText = "R$ " + vHoje.reduce((t,v)=> t + Number(v.lucro_total||0), 0).toFixed(2);
-    vMes.innerText = "R$ " + vMes.reduce((t,v)=> t + Number(v.valor||0), 0).toFixed(2);
-    qtdCrit.innerText = pr.filter(p => (p.quantidade||0) <= (p.estoque_minimo||2)).length + " Itens";
-
-    renderChart(vMes); // Ativa gráfico mensal
+    const hoje = new Date().toLocaleDateString('pt-BR');
+    const vHoje = _vens.filter(v => new Date(v.data).toLocaleDateString('pt-BR') === hoje);
+    
+    document.getElementById('vDia').innerText = "R$ " + vHoje.reduce((t,v) => t + Number(v.valor||0), 0).toFixed(2);
+    document.getElementById('lDia').innerText = "R$ " + vHoje.reduce((t,v) => t + Number(v.lucro_total||0), 0).toFixed(2);
+    document.getElementById('qtdCrit').innerText = _prods.filter(p => (p.quantidade||0) <= (p.estoque_minimo||2)).length + " Itens";
 }
 
-function renderChart(vendas) {
-    const porDia = {};
-    vendas.forEach(v => { const d = v.data.slice(0, 10); porDia[d] = (porDia[d]||0) + Number(v.valor||0); });
-    const labels = Object.keys(porDia);
-    const valores = Object.values(porDia);
+function renderEst() {
+    const busca = document.getElementById('buscaEst').value.toLowerCase();
+    document.getElementById('listEst').innerHTML = _prods.filter(p => p.nome.toLowerCase().includes(busca)).map(p => `
+        <div class="card" style="display:flex; justify-content:space-between; align-items:center;">
+            <span><b>${p.nome}</b> — Estoque: ${p.quantidade || 0} ${ (p.quantidade || 0) <= (p.estoque_minimo || 2) ? '<span class="badge-critico">BAIXO</span>' : ''}</span>
+            <div>
+                <button class="btn" onclick="editarEstoque(${p.id})">✏️</button>
+                <button class="btn btn-del" onclick="deletarItem('produtos', ${p.id})">🗑️</button>
+            </div>
+        </div>`).join('');
+}
 
-    if(chartInstance) chartInstance.destroy();
-    chartInstance = new Chart(document.getElementById('chartDiario'), {
-        type: 'bar',
-        data: { labels, datasets: [{ label: 'Vendas (R$)', data: valores, backgroundColor: '#0aff9d' }] },
-        options: { plugins: { legend: { labels: { color: '#fff' } } } }
+function renderVendas() {
+    const nome = fNome.value.toLowerCase();
+    const data = fData.value;
+    listVen.innerHTML = _vens.filter(v => 
+        (!nome || v.clientes?.nome.toLowerCase().includes(nome)) && 
+        (!data || v.data.startsWith(data))
+    ).map(v => `
+        <div class="card" style="display:flex; justify-content:space-between; align-items:center;">
+            <span>${new Date(v.data).toLocaleDateString()} — <b>${v.clientes?.nome}</b>: R$ ${v.valor.toFixed(2)} [${v.tipo_venda || 'N/A'}]</span>
+            <div>
+                <button class="btn" onclick="imprimirRecibo(${v.id})">🖨️</button>
+                <button class="btn btn-del" onclick="deletarItem('vendas', ${v.id})">🗑️</button>
+            </div>
+        </div>`).join('');
+}
+
+async function addProduto() {
+    await db.from('produtos').insert({ 
+        nome: pNome.value, 
+        quantidade: pQtd.value, 
+        estoque_minimo: pMin.value, 
+        preco_custo: pCusto.value, 
+        preco_revenda: pRev.value 
     });
-}
-
-// FUNÇÕES DE CRIAÇÃO
-async function addCliente() {
-    await db.from('clientes').insert({ nome: cliNome.value, telefone: cliTel.value });
-    cliNome.value=''; cliTel.value=''; load();
-}
-
-async function criarOrc() {
-    await db.from('orcamentos').insert({ cliente_id: orcClienteSelect.value, descricao: orcDesc.value, valor_total: orcValor.value, data: new Date().toISOString() });
-    load();
-}
-
-async function criarOS() {
-    await db.from('ordens_servico').insert({ cliente_id: osClienteSelect.value, descricao: osDesc.value, status: 'Aberta', data_abertura: new Date().toISOString() });
     load();
 }
 
 async function vender() {
-    const p = pr.find(x=>x.id==vProdSelect.value);
+    const p = _prods.find(x => x.id == vProdSelect.value);
     const q = Number(vQtd.value);
     if(q > (p.quantidade||0)) return alert('Estoque insuficiente');
 
-    await db.from('vendas').insert({ cliente_id: vCliSelect.value, produto_id: p.id, quantidade: q, valor: p.preco_revenda*q, lucro_total: (p.preco_revenda-p.preco_custo)*q, data: new Date().toISOString() });
+    await db.from('vendas').insert({
+        cliente_id: vCliSelect.value,
+        produto_id: p.id,
+        quantidade: q,
+        valor: p.preco_revenda * q,
+        lucro_total: (p.preco_revenda - p.preco_custo) * q,
+        tipo_venda: vPagamento.value,
+        data: new Date().toISOString()
+    });
     await db.from('produtos').update({ quantidade: (p.quantidade||0) - q }).eq('id', p.id);
     load();
 }
 
-function tab(id, b) {
+function imprimirRecibo(id) {
+    const v = _vens.find(x => x.id == id);
+    const w = window.open('','','width=300');
+    w.document.write(`<body style="font-family:monospace;width:80mm">
+        <h3>HX ACESSÓRIOS</h3>
+        <p>Data: ${new Date(v.data).toLocaleString()}</p>
+        <p>Cliente: ${v.clientes.nome}</p>
+        <hr>
+        <p>${v.produtos.nome} x${v.quantidade}</p>
+        <p>PAGAMENTO: ${v.tipo_venda || 'Não informado'}</p>
+        <h3>TOTAL: R$ ${v.valor.toFixed(2)}</h3>
+        <script>window.print();<\/script>
+    </body>`);
+}
+
+async function deletarItem(tabela, id) {
+    if(confirm('Excluir permanentemente?')) {
+        await db.from(tabela).delete().eq('id', id);
+        load();
+    }
+}
+
+function refreshSelects() {
+    vCliSelect.innerHTML = _clis.map(c => `<option value="${c.id}">${c.nome}</option>`).join('');
+    vProdSelect.innerHTML = _prods.map(p => `<option value="${p.id}">${p.nome} (Est: ${p.quantidade || 0})</option>`).join('');
+}
+
+function tab(id,b){
     document.querySelectorAll('section').forEach(s=>s.style.display='none');
     document.getElementById(id).style.display='block';
     document.querySelectorAll('#sidebar button').forEach(x=>x.classList.remove('active'));
     b.classList.add('active');
 }
 
-window.onload = async () => {
-    const { data } = await db.auth.getSession();
-    if (data.session) { loginOverlay.style.display='none'; load(); }
-};
+async function logout() { await db.auth.signOut(); location.reload(); }
+
+load();
 </script>
 </body>
 </html>
