@@ -38,16 +38,16 @@
 <body>
 
 <div id="loginOverlay">
-    <div class="login-card">
-        <h2 style="text-align:center; color:var(--hx-accent); margin-bottom: 20px;">SISTEMA HX</h2>
-        <label>E-mail</label>
-        <input id="lEmail" type="email" placeholder="admin@hx.com">
-        <label>Senha</label>
-        <input id="lPass" type="password">
-        <button class="btn btn-add" style="width:100%; margin-top: 10px;" onclick="login()">ENTRAR</button>
-        <p id="lErr" style="color:var(--hx-danger); font-size:12px; text-align:center; margin-top:10px;"></p>
-    </div>
+  <div class="login-card">
+    <h2>SISTEMA HX</h2>
+
+    <input id="lEmail">
+    <input id="lPass" type="password">
+
+    <button class="btn btn-add" onclick="login()">ENTRAR</button>
+  </div>
 </div>
+
 
 <nav id="sidebar">
     <div style="padding:20px; font-weight:bold; color:var(--hx-accent); font-size:1.2rem; border-bottom:1px solid #333;">PAINEL HX</div>
@@ -277,7 +277,7 @@ Data: ${new Date(v.data).toLocaleString("pt-BR")}
 
 </body>
 </html>
-    `);
+`);
 
     w.document.close();
 }
@@ -697,6 +697,7 @@ window.onload = async () => {
 </script>
 </body>
 </html>
+
 
 
 
