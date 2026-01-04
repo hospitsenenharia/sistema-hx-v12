@@ -220,7 +220,7 @@ const db = createClient("https://axfccmezfofnqfsdurqb.supabase.co", "eyJhbGciOiJ
 );
 let _clis = [], _prods = [], _vens = [], _oss = [], _orcs = [];
 let chartInstance = null;
- function imprimirVenda(id) {
+function imprimirVenda(id) {
     const v = _vens.find(x => x.id === id);
     if (!v) return;
 
@@ -263,6 +263,56 @@ let chartInstance = null;
 
     w.document.close();
 }
+
+        <div class="center">
+            <strong>SISTEMA HX</strong><br>
+            CUPOM NÃO FISCAL
+        </div>
+        <hr>
+        Cliente: ${v.clientes?.nome || "-"}<br>
+        Produto: ${v.produtos?.nome || "-"}<br>
+        Quantidade: ${v.quantidade || 1}<br>
+        Total: R$ ${Number(v.valor || 0).toFixed(2)}<br>
+        Pagamento: ${v.tipo_pagamento || "N/I"}<br>
+        Data: ${new Date(v.data).toLocaleString("pt-BR")}
+        <hr>
+        <div class="center">
+            Obrigado pela preferência!
+        </div>
+    </body>
+    </html>
+    `);
+
+    w.document.close();
+}
+
+           <div class="center">
+        <strong>SISTEMA HX</strong><br>
+        CUPOM NÃO FISCAL
+      </div>
+      <hr>
+      Cliente: ${v.clientes?.nome || "-"}<br>
+      Produto: ${v.produtos?.nome || "-"}<br>
+      Quantidade: ${v.quantidade || 1}<br>
+      Total: R$ ${Number(v.valor || 0).toFixed(2)}<br>
+      Pagamento: ${v.tipo_pagamento || "N/I"}<br>
+      Data: ${new Date(v.data).toLocaleString("pt-BR")}
+      <hr>
+      <div class="center">
+        Obrigado pela preferência!
+      </div>
+
+      <script>
+        window.print();
+        window.close();
+      <\/script>
+    </body>
+    </html>
+    `);
+
+    w.document.close();
+}
+
 
       <div class="center">
         <strong>SISTEMA HX</strong><br>
@@ -623,6 +673,7 @@ window.onload = async () => {
 </script>
 </body>
 </html>
+
 
 
 
