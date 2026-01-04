@@ -221,9 +221,9 @@ function updateDash() {
     const anoAtual = hoje.getFullYear();
 
     _vens.forEach(v => {
-        if (!v.data) return;
+        if (!v.created_at) return;
 
-        const d = new Date(v.data);
+        const d = new Date(v.created_at);
 
         // 🔹 Hoje
         if (d.toLocaleDateString("pt-BR") === diaHoje) {
@@ -254,6 +254,7 @@ function updateDash() {
 
 
 
+
 function renderChart() {
     if (!_vens.length) return;
 
@@ -265,7 +266,9 @@ function renderChart() {
     chartInstance = new Chart(ctx, {
         type: 'line',
         data: {
-            labels: ultimasVendas.map(v => v.data.split('T')[0]),
+            labels: ultimasVendas.map(v =>
+                new Date(v.created_at).toLocaleDateString("pt-BR")
+            ),
             datasets: [{
                 label: 'Vendas Recentes',
                 data: ultimasVendas.map(v => Number(v.valor || 0)),
@@ -274,18 +277,10 @@ function renderChart() {
                 tension: 0.3,
                 fill: true
             }]
-        },
-        options: {
-            plugins: {
-                legend: { labels: { color: "#eaeaea" } }
-            },
-            scales: {
-                x: { ticks: { color: "#aaa" } },
-                y: { ticks: { color: "#aaa" } }
-            }
         }
     });
 }
+
 
 
 // VENDAS LOGIC
@@ -432,6 +427,7 @@ window.onload = async () => {
 </script>
 </body>
 </html>
+
 
 
 
