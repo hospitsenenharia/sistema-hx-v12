@@ -241,7 +241,7 @@ Data: ${new Date(v.data).toLocaleString("pt-BR")}
 
     w.document.close();
 }
-
+<script>
 async function login() {
   const email = document.getElementById('lEmail').value;
   const password = document.getElementById('lPass').value;
@@ -256,7 +256,7 @@ async function login() {
   }
 }
 
-
+</script>
 function changeTab(id, btn) {
     document.querySelectorAll('main section').forEach(s => s.style.display = 'none');
     document.getElementById(id).style.display = 'block';
@@ -293,6 +293,17 @@ function refreshSelects() {
     ).join('');
   }
 }
+</script>
+
+<!-- 🔐 LOGIN (AGORA FORA DO SCRIPT) -->
+<div id="loginOverlay">
+  <div class="login-card">
+    <h2>SISTEMA HX</h2>
+    <input id="lEmail" placeholder="Email">
+    <input id="lPass" type="password" placeholder="Senha">
+    <button class="btn btn-add" onclick="login()">ENTRAR</button>
+  </div>
+</div>
 
 async function loadAll() {
   const [{ data: c }, { data: p }, { data: v }, { data: o }, { data: r }] =
@@ -625,6 +636,7 @@ window.onload = async () => {
 </script>
 </body>
 </html>
+
 
 
 
