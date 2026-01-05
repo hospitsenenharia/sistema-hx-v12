@@ -1,328 +1,447 @@
 <!DOCTYPE html>
 <html lang="pt-br">
 <head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Sistema HX — Gestão Administrativa</title>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Sistema HX — Gestão Administrativa</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js/dist/chart.umd.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+    <style>
+        :root { --hx-dark: #0d0d0d; --hx-dark2: #151515; --hx-accent: #0aff9d; --hx-text: #eaeaea; --hx-danger: #ff5566; }
+        body { margin: 0; background: var(--hx-dark); color: var(--hx-text); font-family: 'Segoe UI', sans-serif; display: flex; overflow-x: hidden; }
+        
+        /* Sidebar */
+        #sidebar { width: 240px; background: var(--hx-dark2); height: 100vh; position: fixed; border-right: 1px solid #333; display: flex; flex-direction: column; }
+        #sidebar button { background: none; border: none; color: #fff; padding: 15px; text-align: left; cursor: pointer; border-left: 3px solid transparent; transition: 0.3s; }
+        #sidebar button.active { background: #1f1f1f; color: var(--hx-accent); border-left-color: var(--hx-accent); }
+        
+        main { margin-left: 240px; flex: 1; padding: 25px; min-height: 100vh; }
+        .card { background: #181818; padding: 20px; border-radius: 8px; margin-bottom: 20px; border: 1px solid #333; }
+        
+        /* Dashboard Cards */
+        .grid-dash { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-bottom: 20px; }
+        .dash-card { background: #181818; padding: 20px; border-radius: 8px; border-left: 4px solid var(--hx-accent); }
 
-  <!-- Chart.js -->
-  <script src="https://cdn.jsdelivr.net/npm/chart.js/dist/chart.umd.min.js"></script>
-
-  <!-- Supabase -->
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
-
-  <style>
-    :root {
-      --hx-dark:#0d0d0d;
-      --hx-dark2:#151515;
-      --hx-accent:#0aff9d;
-      --hx-text:#eaeaea;
-      --hx-danger:#ff5566;
-    }
-    body {
-      margin:0;
-      background:var(--hx-dark);
-      color:var(--hx-text);
-      font-family:Segoe UI, sans-serif;
-      display:flex;
-    }
-    #sidebar {
-      width:240px;
-      background:var(--hx-dark2);
-      height:100vh;
-      position:fixed;
-      border-right:1px solid #333;
-      display:flex;
-      flex-direction:column;
-    }
-    #sidebar button {
-      background:none;
-      border:none;
-      color:#fff;
-      padding:15px;
-      text-align:left;
-      cursor:pointer;
-      border-left:3px solid transparent;
-    }
-    #sidebar button.active {
-      background:#1f1f1f;
-      color:var(--hx-accent);
-      border-left-color:var(--hx-accent);
-    }
-    main {
-      margin-left:240px;
-      padding:25px;
-      width:100%;
-    }
-    .card {
-      background:#181818;
-      padding:20px;
-      border-radius:8px;
-      border:1px solid #333;
-      margin-bottom:20px;
-    }
-    input, select {
-      width:100%;
-      padding:10px;
-      margin:6px 0;
-      background:#222;
-      border:1px solid #444;
-      color:#fff;
-      border-radius:4px;
-    }
-    .btn {
-      padding:10px;
-      border:none;
-      border-radius:4px;
-      cursor:pointer;
-      font-weight:bold;
-    }
-    .btn-add { background:var(--hx-accent); color:#000; }
-    #loginOverlay {
-      position:fixed;
-      inset:0;
-      background:#000;
-      display:flex;
-      align-items:center;
-      justify-content:center;
-      z-index:9999;
-    }
-    .login-card {
-      background:#181818;
-      padding:30px;
-      border-radius:10px;
-      border:1px solid var(--hx-accent);
-      width:320px;
-    }
-  </style>
+        input, select, textarea { width: 100%; padding: 10px; margin: 8px 0; background: #222; border: 1px solid #444; color: #fff; border-radius: 4px; box-sizing: border-box; }
+        .btn { padding: 10px 15px; border-radius: 4px; border: none; cursor: pointer; font-weight: bold; transition: 0.2s; }
+        .btn-add { background: var(--hx-accent); color: #000; }
+        .btn-del { background: var(--hx-danger); color: #fff; }
+        
+        /* Login */
+        #loginOverlay { position: fixed; inset: 0; background: #000; z-index: 9999; display: flex; align-items: center; justify-content: center; }
+        .login-card { background: #181818; padding: 30px; border-radius: 12px; border: 1px solid var(--hx-accent); width: 320px; }
+        
+        .critical { color: var(--hx-danger); font-weight: bold; animation: pulse 1.5s infinite; }
+        @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.5; } 100% { opacity: 1; } }
+    </style>
 </head>
 <body>
 
-<!-- LOGIN -->
 <div id="loginOverlay">
-  <div class="login-card">
-    <h2 style="text-align:center;color:var(--hx-accent)">SISTEMA HX</h2>
-    <input id="lEmail" type="email" placeholder="E-mail">
-    <input id="lPass" type="password" placeholder="Senha">
-    <button class="btn btn-add" style="width:100%" onclick="login()">ENTRAR</button>
-    <p id="lErr" style="color:var(--hx-danger);text-align:center"></p>
-  </div>
+    <div class="login-card">
+        <h2 style="text-align:center; color:var(--hx-accent); margin-bottom: 20px;">SISTEMA HX</h2>
+        <label>E-mail</label>
+        <input id="lEmail" type="email" placeholder="admin@hx.com">
+        <label>Senha</label>
+        <input id="lPass" type="password">
+        <button class="btn btn-add" style="width:100%; margin-top: 10px;" onclick="login()">ENTRAR</button>
+        <p id="lErr" style="color:var(--hx-danger); font-size:12px; text-align:center; margin-top:10px;"></p>
+    </div>
 </div>
 
-<!-- SIDEBAR -->
 <nav id="sidebar">
-  <div style="padding:20px;color:var(--hx-accent);font-weight:bold">PAINEL HX</div>
-  <button class="active" onclick="changeTab('dashTab',this)">📊 Dashboard</button>
-  <button onclick="changeTab('venTab',this)">💵 Vendas</button>
-  <button onclick="logout()" style="margin-top:auto;color:#ff5566">🚪 Sair</button>
+    <div style="padding:20px; font-weight:bold; color:var(--hx-accent); font-size:1.2rem; border-bottom:1px solid #333;">PAINEL HX</div>
+    <button onclick="changeTab('dashTab', this)" class="active">📊 Dashboard</button>
+    <button onclick="changeTab('cliTab', this)">👤 Clientes</button>
+    <button onclick="changeTab('estTab', this)">📦 Estoque</button>
+    <button onclick="changeTab('venTab', this)">💵 Vendas</button>
+    <button onclick="changeTab('osTab', this)">🛠 Ordem de Serviço</button>
+    <button onclick="changeTab('orcTab', this)">📝 Orçamentos</button>
 </nav>
 
 <main>
-  <section id="dashTab">
-    <h2>📊 Dashboard</h2>
-    <h3 id="vDia">R$ 0,00</h3>
-    <canvas id="chartDiario"></canvas>
-  </section>
+    <section id="dashTab">
+        <h2 style="color:var(--hx-accent)">📊 Dashboard Financeiro</h2>
+        <div class="grid-dash">
+            <div class="dash-card">Vendas Hoje <h3 id="vDia" style="color:var(--hx-accent)">R$ 0,00</h3></div>
+            <div class="dash-card">Lucro Hoje <h3 id="lDia" style="color:#00cfff">R$ 0,00</h3></div>
+            <div class="dash-card">Vendas Mês <h3 id="vMes">R$ 0,00</h3></div>
+            <div class="dash-card">Estoque Crítico <h3 id="qtdCrit" style="color:var(--hx-danger)">0 Itens</h3></div>
+        </div>
+        <div class="card"><h4>Histórico de Vendas Recentes</h4><canvas id="chartDiario" height="100"></canvas></div>
+    </section>
 
-  <section id="venTab" style="display:none">
-    <h2>💵 Vendas</h2>
-    <div class="card">
-      <select id="vCliSelect"></select>
-      <select id="vProdSelect" onchange="updateVendaPrice()"></select>
-      <input id="vQtd" type="number" value="1" min="1">
-      <strong id="vTotalLabel">R$ 0,00</strong>
-      <select id="vTipoPagamento">
-        <option>Pix</option>
-        <option>Dinheiro</option>
-        <option>Cartão</option>
-      </select>
-      <button class="btn btn-add" onclick="doVenda()">FINALIZAR</button>
-    </div>
-    <div id="listVen"></div>
-  </section>
+    <section id="cliTab" style="display:none">
+        <h2>👤 Gestão de Clientes</h2>
+        <div class="card">
+            <input id="cNome" placeholder="Nome Completo">
+            <input id="cTel" placeholder="Telefone">
+            <button class="btn btn-add" onclick="saveCli()">CADASTRAR</button>
+        </div>
+        <div class="card">
+            <input id="sCli" placeholder="🔍 Pesquisar cliente..." oninput="renderCli()">
+            <div id="listCli" style="margin-top:15px"></div>
+        </div>
+    </section>
+
+    <section id="estTab" style="display:none">
+        <h2>📦 Controle de Estoque</h2>
+        <div class="card">
+            <input id="pNome" placeholder="Produto">
+            <input id="pQtd" type="number" placeholder="Quantidade">
+            <input id="pMin" type="number" placeholder="Mínimo para Alerta">
+            <input id="pCusto" type="number" placeholder="Preço Custo">
+            <input id="pRev" type="number" placeholder="Preço Venda">
+            <button class="btn btn-add" onclick="saveProd()">ADICIONAR</button>
+        </div>
+        <div class="card">
+            <div id="listEst"></div>
+        </div>
+    </section>
+
+    <section id="venTab" style="display:none">
+        <h2>💵 Registro de Vendas</h2>
+        <div class="card">
+            <select id="vCliSelect"></select>
+            <select id="vProdSelect" onchange="updateVendaPrice()"></select>
+            <input id="vQtd" type="number" value="1" oninput="updateVendaPrice()">
+            <p>Total Estimado: <strong id="vTotalLabel">R$ 0,00</strong></p>
+            <button class="btn btn-add" onclick="doVenda()">FINALIZAR VENDA</button>
+        </div>
+        <div class="card">
+            <div style="display: flex; gap: 10px;">
+                <input id="sVenNome" placeholder="🔍 Por cliente..." oninput="renderVen()">
+                <input id="sVenData" type="date" onchange="renderVen()">
+            </div>
+            <div id="listVen"></div>
+        </div>
+    </section>
+
+    <section id="osTab" style="display:none">
+        <h2>🛠 Ordens de Serviço</h2>
+        <div class="card">
+            <select id="osCliSelect"></select>
+            <textarea id="osDesc" placeholder="Descrição do problema/serviço..."></textarea>
+            <button class="btn btn-add" onclick="saveOS()">ABRIR O.S.</button>
+        </div>
+        <div id="listOS"></div>
+    </section>
+
+    <section id="orcTab" style="display:none">
+        <h2>📝 Orçamentos</h2>
+        <div class="card">
+            <select id="orcCliSelect"></select>
+            <textarea id="orcDesc" placeholder="Itens e valores do orçamento..."></textarea>
+            <button class="btn btn-add" onclick="saveOrc()">GERAR ORÇAMENTO</button>
+        </div>
+        <div id="listOrc"></div>
+    </section>
 </main>
 
 <script>
-/* ================= SUPABASE ================= */
+// CONFIGURAÇÃO SUPABASE
 const { createClient } = window.supabase;
-const db = createClient(
-  "https://axfccmezfofnqfsdurqb.supabase.co",
-  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImF4ZmNjbWV6Zm9mbnFmc2R1cnFiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjUwNzA1NDMsImV4cCI6MjA4MDY0NjU0M30.woGp6hBgiEa41opQxyxqqMULlDKMXm9T83bhJ7UEmb8"
+const db = createClient("https://axfccmezfofnqfsdurqb.supabase.co", "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImF4ZmNjbWV6Zm9mbnFmc2R1cnFiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjUwNzA1NDMsImV4cCI6MjA4MDY0NjU0M30.woGp6hBgiEa41opQxyxqqMULlDKMXm9T83bhJ7UEmb8"
 );
-
-/* ================= VARIÁVEIS ================= */
-let _clis = [];
-let _prods = [];
-let _vens = [];
+let _clis = [], _prods = [], _vens = [], _oss = [], _orcs = [];
 let chartInstance = null;
 
-/* ================= LOGIN ================= */
 async function login() {
-  const email = document.getElementById("lEmail").value;
-  const password = document.getElementById("lPass").value;
-
-  const { error } = await db.auth.signInWithPassword({
-    email,
-    password
-  });
-
-  if (error) {
-    document.getElementById("lErr").innerText = error.message;
-  } else {
-    document.getElementById("loginOverlay").style.display = "none";
-    loadAll();
-  }
+    const email = document.getElementById('lEmail').value;
+    const password = document.getElementById('lPass').value;
+    const { data, error } = await db.auth.signInWithPassword({ email, password });
+    
+    if(error) {
+        document.getElementById('lErr').innerText = "Erro: " + error.message;
+    } else {
+        document.getElementById('loginOverlay').style.display = 'none';
+        loadAll();
+    }
 }
 
-async function logout() {
-  await db.auth.signOut();
-  loginOverlay.style.display = "flex";
-}
-
-/* TABS */
 function changeTab(id, btn) {
-  document.querySelectorAll("main section").forEach(s => s.style.display = "none");
-  document.getElementById(id).style.display = "block";
-  document.querySelectorAll("#sidebar button").forEach(b => b.classList.remove("active"));
-  btn.classList.add("active");
+    document.querySelectorAll('main section').forEach(s => s.style.display = 'none');
+    document.getElementById(id).style.display = 'block';
+    document.querySelectorAll('#sidebar button').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
 }
 
-/* LOAD */
 async function loadAll() {
-  const [{ data: c }, { data: p }, { data: v }] = await Promise.all([
-    db.from("clientes").select("*"),
-    db.from("produtos").select("*"),
-    db.from("vendas").select("*").order("data", { ascending: false })
-  ]);
+    const [{data: c}, {data: p}, {data: v}, {data: o}, {data: r}] = await Promise.all([
+        db.from('clientes').select('*').order('nome'),
+        db.from('produtos').select('*').order('nome'),
+        db.from('vendas').select('*, clientes(nome), produtos(nome)').order('data', {ascending: false}),
+        db.from('ordens_servico').select('*, clientes(nome)').order('id', {ascending: false}),
+        db.from('orcamentos').select('*, clientes(nome)').order('id', {ascending: false})
+    ]);
 
-  _clis = c || [];
-  _prods = p || [];
-  _vens = v || [];
-
-  refreshSelects();
-  renderVen();
-  updateDash();
-  renderChart();
+    _clis = c || []; _prods = p || []; _vens = v || []; _oss = o || []; _orcs = r || [];
+    
+    refreshSelects();
+    renderCli(); renderEst(); renderVen(); renderOS(); renderOrc(); updateDash();
 }
 
 function refreshSelects() {
-  vCliSelect.innerHTML = _clis.map(c => `<option value="${c.id}">${c.nome}</option>`).join("");
-  vProdSelect.innerHTML = _prods.map(p => `<option value="${p.id}">${p.nome}</option>`).join("");
+    const cliOptions = _clis.map(c => `<option value="${c.id}">${c.nome}</option>`).join('');
+    ['vCliSelect', 'osCliSelect', 'orcCliSelect'].forEach(id => document.getElementById(id).innerHTML = cliOptions);
+    document.getElementById('vProdSelect').innerHTML = _prods.map(p => `<option value="${p.id}">${p.nome} (Estoque: ${p.q_id || p.qnt || 0})</option>`).join('');
 }
 
-/* VENDAS */
-function updateVendaPrice() {
-  const p = _prods.find(x => x.id == vProdSelect.value);
-  if (p) vTotalLabel.innerText = `R$ ${(p.preco_revenda * vQtd.value).toFixed(2)}`;
-}
-
-async function doVenda() {
-  const p = _prods.find(x => x.id == vProdSelect.value);
-  await db.from("vendas").insert({
-    cliente_id: vCliSelect.value,
-    produto_id: p.id,
-    quantidade: Number(vQtd.value),
-    valor: p.preco_revenda * vQtd.value,
-    tipo_pagamento: vTipoPagamento.value,
-    data: new Date().toISOString()
-  });
-  loadAll();
-}
-
-function renderVen() {
-  listVen.innerHTML = _vens.map(v => `
-    <div class="card">
-      Venda R$ ${v.valor}
-      <button onclick="imprimirVenda(${v.id})">🖨️</button>
-    </div>
-  `).join("");
-}
-
-  function imprimirVenda(id) {
-  const v = _vens.find(x => x.id === id);
-  if (!v) return;
-
-  const w = window.open("", "_blank", "width=300,height=600");
-
-  w.document.write(`
-<!DOCTYPE html>
-<html lang="pt-br">
-<head>
-<meta charset="UTF-8">
-<title>Cupom Não Fiscal</title>
-<style>
-  @page { size: 80mm auto; margin: 0; }
-  body {
-    width: 80mm;
-    margin: 0;
-    padding: 6px;
-    font-family: monospace;
-    font-size: 12px;
-  }
-  .center { text-align: center; }
-  hr {
-    border: none;
-    border-top: 1px dashed #000;
-    margin: 6px 0;
-  }
-</style>
-</head>
-
-<body>
-  <div class="center">
-    <strong>SISTEMA HX</strong><br>
-    CUPOM NÃO FISCAL
-  </div>
-
-  <hr>
-
-  Cliente: ${v.clientes?.nome || "Não informado"}<br>
-  Produto: ${v.produtos?.nome || "-"}<br>
-  Qtd: ${v.quantidade}<br>
-  Pagamento: ${v.tipo_pagamento || "N/I"}<br>
-
-  <hr>
-
-  <strong>TOTAL: R$ ${Number(v.valor).toFixed(2)}</strong><br>
-  ${new Date(v.data).toLocaleString("pt-BR")}
-
-  <hr>
-  <div class="center">Obrigado pela preferência!</div>
-
-  <script>
-    window.onload = function () {
-      window.print();
-      window.close();
-    };
-  </script>
-</body>
-</html>
-  `);
-
-  w.document.close();
-}
-
-
-/* DASH */
+// DASHBOARD CALCULATIONS
 function updateDash() {
-  let total = 0;
-  _vens.forEach(v => total += Number(v.valor || 0));
-  vDia.innerText = `R$ ${total.toFixed(2)}`;
+    const hoje = new Date().toISOString().split('T')[0];
+    const mes = hoje.substring(0, 7);
+
+    const vHoje = _vens.filter(v => v.data.startsWith(hoje));
+    const totalHoje = vHoje.reduce((a, b) => a + (b.valor || 0), 0);
+    const lucroHoje = vHoje.reduce((a, b) => a + (b.lucro_total || 0), 0);
+    const totalMes = _vens.filter(v => v.data.startsWith(mes)).reduce((a, b) => a + (b.valor || 0), 0);
+    const criticos = _prods.filter(p => (p.q_id || p.qnt || 0) <= (p.estoque_minimo || 0)).length;
+
+    document.getElementById('vDia').innerText = `R$ ${totalHoje.toFixed(2)}`;
+    document.getElementById('lDia').innerText = `R$ ${lucroHoje.toFixed(2)}`;
+    document.getElementById('vMes').innerText = `R$ ${totalMes.toFixed(2)}`;
+    document.getElementById('qtdCrit').innerText = `${criticos} Itens`;
+
+    renderChart();
 }
 
 function renderChart() {
-  if (chartInstance) chartInstance.destroy();
-  chartInstance = new Chart(chartDiario, {
-    type: "line",
-    data: {
-      labels: _vens.map(v => new Date(v.data).toLocaleDateString("pt-BR")),
-      datasets: [{ data: _vens.map(v => v.valor), borderColor: "#0aff9d" }]
-    }
-  });
+    const ctx = document.getElementById('chartDiario').getContext('2d');
+    if(chartInstance) chartInstance.destroy();
+    
+    const ultimasVendas = _vens.slice(0, 7).reverse();
+    chartInstance = new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: ultimasVendas.map(v => v.data.split('T')[0]),
+            datasets: [{ label: 'Vendas Recentes', data: ultimasVendas.map(v => v.valor), borderColor: '#0aff9d', tension: 0.3, fill: true, backgroundColor: 'rgba(10, 255, 157, 0.1)' }]
+        }
+    });
 }
-</script>
 
+// VENDAS LOGIC
+function updateVendaPrice() {
+    const p = _prods.find(x => x.id == document.getElementById('vProdSelect').value);
+    const q = document.getElementById('vQtd').value;
+    if(p) document.getElementById('vTotalLabel').innerText = `R$ ${(p.preco_revenda * q).toFixed(2)}`;
+}
+
+async function doVenda() {
+    const p = _prods.find(x => x.id == document.getElementById('vProdSelect').value);
+    const q = Number(document.getElementById('vQtd').value);
+    const estoqueAtual = (p.q_id || p.qnt || 0);
+
+    if(estoqueAtual < q) return alert("Estoque insuficiente!");
+
+    const valorTotal = p.preco_revenda * q;
+    const lucro = valorTotal - (p.preco_custo * q);
+
+    await db.from('vendas').insert({
+        cliente_id: document.getElementById('vCliSelect').value,
+        produto_id: p.id,
+        quantidade: q,
+        valor: valorTotal,
+        lucro_total: lucro,
+        data: new Date().toISOString()
+    });
+
+
+
+    await db.from('produtos').update({ q_id: estoqueAtual - q, qnt: estoqueAtual - q }).eq('id', p.id);
+    loadAll();
+}
+
+
+
+// GENERAL ACTIONS: RENDER, EDIT, DELETE
+async function delItem(tab, id) {
+    if(confirm("Deseja realmente excluir este registro?")) {
+        await db.from(tab).delete().eq('id', id);
+        loadAll();
+    }
+}
+
+async function editarVenda(id) {
+    const v = _vens.find(x => x.id === id);
+    if (!v) return;
+
+    const novaQtd = prompt(
+        `Editar quantidade (${v.produtos?.nome})`,
+        v.quantidade
+    );
+
+    if (novaQtd === null) return;
+
+    const qtd = Number(novaQtd);
+    if (isNaN(qtd) || qtd <= 0) {
+        alert("Quantidade inválida");
+        return;
+    }
+
+    const precoUnit = v.valor / v.quantidade;
+    const custoUnit = v.lucro_total
+        ? (v.valor - v.lucro_total) / v.quantidade
+        : 0;
+
+    const novoValor = precoUnit * qtd;
+    const novoLucro = novoValor - (custoUnit * qtd);
+
+    await db.from('vendas')
+        .update({
+            quantidade: qtd,
+            valor: novoValor,
+            lucro_total: novoLucro
+        })
+        .eq('id', id);
+
+    loadAll();
+}
+
+
+function renderVen() {
+    const sNome =
+      document.getElementById('sVenNome')?.value?.toLowerCase() || "";
+
+    const sData =
+      document.getElementById('sVenData')?.value || "";
+
+    document.getElementById('listVen').innerHTML = _vens
+        .filter(v =>
+            (v.clientes?.nome?.toLowerCase().includes(sNome)) &&
+            (sData ? v.data.startsWith(sData) : true)
+        )
+        .map(v => `
+        <div style="padding:10px; border-bottom:1px solid #333; display:flex; justify-content:space-between; align-items:center;">
+            <span>
+              ${v.data.split('T')[0]} -
+              <strong>${v.clientes?.nome}</strong><br>
+              ${v.produtos?.nome} | Qtd: ${v.quantidade} | R$ ${Number(v.valor).toFixed(2)}
+            </span>
+
+            <div style="display:flex; gap:6px;">
+                <button class="btn btn-add" onclick="editarVenda(${v.id})">✏️</button>
+                <button class="btn btn-add" onclick="imprimirVenda(${v.id})">🖨️</button>
+                <button class="btn btn-del" onclick="delItem('vendas', ${v.id})">🗑️</button>
+            </div>
+        </div>
+    `).join('');
+}
+
+
+function imprimirVenda(id) {
+    const v = _vens.find(x => x.id === id);
+    if (!v) return alert("Venda não encontrada");
+
+    const w = window.open("", "_blank", "width=300,height=600");
+
+    w.document.write(`
+      <html>
+      <head>
+        <style>
+          body { font-family: monospace; font-size: 12px; }
+        </style>
+      </head>
+      <body onload="window.print(); window.close()">
+        <strong>SISTEMA HX</strong><br>
+        CUPOM NÃO FISCAL<br><br>
+        Cliente: ${v.clientes?.nome || "-"}<br>
+        Produto: ${v.produtos?.nome || "-"}<br>
+        Qtd: ${v.quantidade}<br>
+        Total: R$ ${Number(v.valor).toFixed(2)}<br>
+        Data: ${new Date(v.data).toLocaleString("pt-BR")}
+      </body>
+      </html>
+    `);
+
+    w.document.close();
+}
+
+
+
+// STOQUE RENDER WITH ALERT
+function renderEst() {
+    document.getElementById('listEst').innerHTML = _prods.map(p => {
+        const estoque = (p.q_id || p.qnt || 0);
+        const critico = estoque <= (p.estoque_minimo || 0);
+        return `
+        <div style="padding:10px; border-bottom:1px solid #333; display:flex; justify-content:space-between; ${critico ? 'color:var(--hx-danger)' : ''}">
+            <span>${p.nome} | Estoque: <strong>${estoque}</strong> ${critico ? '<span class="critical">⚠️ BAIXO</span>' : ''}</span>
+            <div>
+                <button class="btn btn-edit" onclick="editProd(${p.id})">✏️</button>
+                <button class="btn btn-del" onclick="delItem('produtos', ${p.id})">🗑️</button>
+            </div>
+        </div>`;
+    }).join('');
+}
+
+async function editProd(id) {
+    const p = _prods.find(x => x.id === id);
+    const novaQtd = prompt(`Nova quantidade para ${p.nome}:`, (p.q_id || p.qnt || 0));
+    if(novaQtd !== null) {
+        await db.from('produtos').update({ q_id: Number(novaQtd), qnt: Number(novaQtd) }).eq('id', id);
+        loadAll();
+    }
+}
+
+function renderCli() {
+    const s = document.getElementById('sCli').value.toLowerCase();
+    document.getElementById('listCli').innerHTML = _clis.filter(c => c.nome.toLowerCase().includes(s)).map(c => `
+        <div style="padding:10px; border-bottom:1px solid #333; display:flex; justify-content:space-between;">
+            <span>${c.nome} - ${c.telefone || 'Sem fone'}</span>
+            <div>
+                <button class="btn btn-del" onclick="delItem('clientes', ${c.id})">🗑️</button>
+            </div>
+        </div>
+    `).join('');
+}
+
+// OS AND ORC
+async function saveOS() {
+    await db.from('ordens_servico').insert({
+        cliente_id: document.getElementById('osCliSelect').value,
+        descricao: document.getElementById('osDesc').value,
+        status: 'Aberta'
+    });
+    document.getElementById('osDesc').value = "";
+    loadAll();
+}
+
+function renderOS() {
+    document.getElementById('listOS').innerHTML = _oss.map(o => `
+        <div class="card">
+            <div style="display:flex; justify-content:space-between">
+                <strong>OS #${o.id} - ${o.clientes?.nome}</strong>
+                <button class="btn btn-del" onclick="delItem('ordens_servico', ${o.id})">🗑️</button>
+            </div>
+            <p>${o.descricao}</p>
+        </div>
+    `).join('');
+}
+
+// ORCAMENTOS
+async function saveOrc() {
+    await db.from('orcamentos').insert({
+        cliente_id: document.getElementById('orcCliSelect').value,
+        descricao: document.getElementById('orcDesc').value
+    });
+    document.getElementById('orcDesc').value = "";
+    loadAll();
+}
+
+function renderOrc() {
+    document.getElementById('listOrc').innerHTML = _orcs.map(r => `
+        <div class="card">
+            <div style="display:flex; justify-content:space-between">
+                <strong>Orç. #${r.id} - ${r.clientes?.nome}</strong>
+                <button class="btn btn-del" onclick="delItem('orcamentos', ${r.id})">🗑️</button>
+            </div>
+            <p>${r.descricao}</p>
+        </div>
+    `).join('');
+}
+
+window.onload = () => { if(db.auth.getSession()) loadAll(); };
+</script>
 </body>
 </html>
-
-
