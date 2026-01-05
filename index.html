@@ -351,4 +351,160 @@ function renderChart(){
 </body>
 </html>
 
+<script>
+/* ================= SUPABASE ================= */
+const { createClient } = window.supabase;
+const db = createClient(
+  "https://axfccmezfofnqfsdurqb.supabase.co",
+  "SUA_CHAVE_ANON_PUBLIC"
+);
+
+/* ================= VARIÁVEIS ================= */
+let _clis = [], _prods = [], _vens = [];
+let chartInstance = null;
+
+/* ================= LOGIN ================= */
+async function login() {
+  const { error } = await db.auth.signInWithPassword({
+    email: lEmail.value,
+    password: lPass.value
+  });
+
+  if (error) {
+    lErr.innerText = error.message;
+  } else {
+    loginOverlay.style.display = "none";
+    loadAll();
+  }
+}
+
+async function logout() {
+  await db.auth.signOut();
+  loginOverlay.style.display = "flex";
+}
+
+/* ================= TABS ================= */
+function changeTab(id, btn) {
+  document.querySelectorAll("main section").forEach(s => s.style.display = "none");
+  document.getElementById(id).style.display = "block";
+  document.querySelectorAll("#sidebar button").forEach(b => b.classList.remove("active"));
+  btn.classList.add("active");
+}
+
+/* ================= LOAD ================= */
+async function loadAll() {
+  const [{ data: c }, { data: p }, { data: v }] = await Promise.all([
+    db.from("clientes").select("*"),
+    db.from("produtos").select("*"),
+    db.from("vendas")
+      .select("*, clientes(nome), produtos(nome)")
+      .order("data", { ascending: false })
+  ]);
+
+  _clis = c || [];
+  _prods = p || [];
+  _vens = v || [];
+
+  refreshSelects();
+  renderVen();
+  updateDash();
+  renderChart();
+}
+
+/* ================= SELECTS ================= */
+function refreshSelects() {
+  vCliSelect.innerHTML = _clis.map(c =>
+    `<option value="${c.id}">${c.nome}</option>`
+  ).join("");
+
+  vProdSelect.innerHTML = _prods.map(p =>
+    `<option value="${p.id}">${p.nome}</option>`
+  ).join("");
+}
+
+/* ================= VENDAS ================= */
+function updateVendaPrice() {
+  const p = _prods.find(x => x.id == vProdSelect.value);
+  if (p) vTotalLabel.innerText = `R$ ${(p.preco_revenda * vQtd.value).toFixed(2)}`;
+}
+
+async function doVenda() {
+  const p = _prods.find(x => x.id == vProdSelect.value);
+  if (!p) return alert("Produto inválido");
+
+  await db.from("vendas").insert({
+    cliente_id: vCliSelect.value,
+    produto_id: p.id,
+    quantidade: vQtd.value,
+    valor: p.preco_revenda * vQtd.value,
+    tipo_pagamento: vTipoPagamento.value,
+    data: new Date().toISOString()
+  });
+
+  loadAll();
+}
+
+/* ================= LISTA ================= */
+function renderVen() {
+  listVen.innerHTML = _vens.map(v => `
+    <div class="card">
+      ${v.clientes?.nome || "Cliente"} - R$ ${Number(v.valor).toFixed(2)}
+      <button class="btn btn-add" onclick="imprimirVenda(${v.id})">🖨️</button>
+    </div>
+  `).join("");
+}
+
+/* ================= CUPOM ================= */
+function imprimirVenda(id) {
+  const v = _vens.find(x => x.id === id);
+  if (!v) return;
+
+  const w = window.open("", "_blank", "width=300,height=600");
+  w.document.write(`
+    <body onload="window.print();window.close()"
+      style="font-family:monospace;width:80mm">
+      <h3>SISTEMA HX</h3>
+      CUPOM NÃO FISCAL<br><hr>
+      Cliente: ${v.clientes?.nome}<br>
+      Total: R$ ${Number(v.valor).toFixed(2)}
+    </body>
+  `);
+}
+
+/* ================= DASH ================= */
+function updateDash() {
+  const hoje = new Date().toDateString();
+  let dia = 0, mes = 0;
+
+  _vens.forEach(v => {
+    const d = new Date(v.data);
+    if (d.toDateString() === hoje) dia += Number(v.valor);
+    if (d.getMonth() === new Date().getMonth()) mes += Number(v.valor);
+  });
+
+  vDia.innerText = `R$ ${dia.toFixed(2)}`;
+  vMes.innerText = `R$ ${mes.toFixed(2)}`;
+}
+
+function renderChart() {
+  if (chartInstance) chartInstance.destroy();
+
+  chartInstance = new Chart(chartDiario, {
+    type: "line",
+    data: {
+      labels: _vens.slice(0, 7).reverse().map(v =>
+        new Date(v.data).toLocaleDateString("pt-BR")
+      ),
+      datasets: [{
+        data: _vens.slice(0, 7).reverse().map(v => v.valor),
+        borderColor: "#0aff9d"
+      }]
+    }
+  });
+}
+</script>
+
+</body>
+</html>
+
 
