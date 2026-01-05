@@ -393,24 +393,31 @@ function imprimirVenda(id) {
     w.document.close();
 }
 
+// ==================== ESTOQUE ====================
 
-
-// STOQUE RENDER WITH ALERT
+// RENDER ESTOQUE COM ALERTA
 function renderEst() {
-    document.getElementById('listEst').innerHTML = _prods.map(p => {
-        const estoque = (p.q_id || p.qnt || 0);
-        const critico = estoque <= (p.estoque_minimo || 0);
-        return `
-        <div style="padding:10px; border-bottom:1px solid #333; display:flex; justify-content:space-between; ${critico ? 'color:var(--hx-danger)' : ''}">
-            <span>${p.nome} | Estoque: <strong>${estoque}</strong> ${critico ? '<span class="critical">⚠️ BAIXO</span>' : ''}</span>
-            <div>
-                <button class="btn btn-edit" onclick="editProd(${p.id})">✏️</button>
-                <button class="btn btn-del" onclick="delItem('produtos', ${p.id})">🗑️</button>
-            </div>
-        </div>`;
-    }).join('');
+  document.getElementById('listEst').innerHTML = _prods.map(p => {
+    const estoque = (p.q_id || p.qnt || 0);
+    const critico = estoque <= (p.estoque_minimo || 0);
+
+    return `
+      <div style="padding:10px; border-bottom:1px solid #333; display:flex; justify-content:space-between; ${critico ? 'color:var(--hx-danger)' : ''}">
+        <span>
+          ${p.nome} | Estoque: <strong>${estoque}</strong>
+          ${critico ? '<span class="critical"> ⚠️ BAIXO</span>' : ''}
+        </span>
+
+        <div>
+          <button class="btn btn-edit" onclick="editProd(${p.id})">✏️</button>
+          <button class="btn btn-del" onclick="delItem('produtos', ${p.id})">🗑️</button>
+        </div>
+      </div>
+    `;
+  }).join('');
 }
 
+// ==================== EDITAR (MODAL) ====================
 function editProd(id) {
   const p = _prods.find(x => x.id === id);
   if (!p) return;
@@ -426,8 +433,33 @@ function editProd(id) {
   document.getElementById("modalEditProd").style.display = "flex";
 }
 
+// SALVAR EDIÇÃO (MODAL)
+async function salvarEdicaoProd() {
+  const dados = {
+    nome: eNome.value,
+    q_id: Number(eQtd.value),
+    qnt: Number(eQtd.value),
+    estoque_minimo: Number(eMin.value),
+    preco_custo: Number(eCusto.value),
+    preco_revenda: Number(eRev.value)
+  };
 
-    async function saveProd() {
+  await db.from('produtos')
+    .update(dados)
+    .eq('id', prodEditId);
+
+  fecharModalProd();
+  loadAll();
+}
+
+// FECHAR MODAL
+function fecharModalProd() {
+  prodEditId = null;
+  document.getElementById("modalEditProd").style.display = "none";
+}
+
+// ==================== ADICIONAR PRODUTO ====================
+async function saveProd() {
   const dados = {
     nome: pNome.value,
     q_id: Number(pQtd.value),
@@ -437,16 +469,7 @@ function editProd(id) {
     preco_revenda: Number(pRev.value)
   };
 
-  if (prodEditId) {
-    await db.from('produtos')
-      .update(dados)
-      .eq('id', prodEditId);
-
-    prodEditId = null;
-    document.querySelector("#estTab .btn-add").innerText = "ADICIONAR";
-  } else {
-    await db.from('produtos').insert(dados);
-  }
+  await db.from('produtos').insert(dados);
 
   pNome.value = "";
   pQtd.value = "";
@@ -553,6 +576,7 @@ window.onload = () => { if(db.auth.getSession()) loadAll(); };
 
 </body>
 </html>
+
 
 
 
