@@ -58,56 +58,85 @@
     <button onclick="changeTab('osTab', this)">🛠 Ordem de Serviço</button>
     <button onclick="changeTab('orcTab', this)">📝 Orçamentos</button>
 </nav>
+
 <main>
-  <section id="dashTab">
-    <h2 style="color:var(--hx-accent)">📊 Dashboard Financeiro</h2>
+    <section id="dashTab">
+        <h2 style="color:var(--hx-accent)">📊 Dashboard Financeiro</h2>
+        <div class="grid-dash">
+            <div class="dash-card">Vendas Hoje <h3 id="vDia" style="color:var(--hx-accent)">R$ 0,00</h3></div>
+            <div class="dash-card">Lucro Hoje <h3 id="lDia" style="color:#00cfff">R$ 0,00</h3></div>
+            <div class="dash-card">Vendas Mês <h3 id="vMes">R$ 0,00</h3></div>
+            <div class="dash-card">Estoque Crítico <h3 id="qtdCrit" style="color:var(--hx-danger)">0 Itens</h3></div>
+        </div>
+        <div class="card"><h4>Histórico de Vendas Recentes</h4><canvas id="chartDiario" height="100"></canvas></div>
+    </section>
 
-    <!-- 🔎 FILTROS DO DASHBOARD -->
-    <div style="display:flex; gap:10px; margin-bottom:15px; flex-wrap:wrap;">
-      <input type="date" id="fDataInicio" onchange="updateDash()">
-      <input type="date" id="fDataFim" onchange="updateDash()">
+    <section id="cliTab" style="display:none">
+        <h2>👤 Gestão de Clientes</h2>
+        <div class="card">
+            <input id="cNome" placeholder="Nome Completo">
+            <input id="cTel" placeholder="Telefone">
+            <button class="btn btn-add" onclick="saveCli()">CADASTRAR</button>
+        </div>
+        <div class="card">
+            <input id="sCli" placeholder="🔍 Pesquisar cliente..." oninput="renderCli()">
+            <div id="listCli" style="margin-top:15px"></div>
+        </div>
+    </section>
 
-      <input
-        type="number"
-        id="fAno"
-        placeholder="Ano (ex: 2025)"
-        onchange="updateDash()"
-        style="max-width:150px"
-      >
-    </div>
+    <section id="estTab" style="display:none">
+        <h2>📦 Controle de Estoque</h2>
+        <div class="card">
+            <input id="pNome" placeholder="Produto">
+            <input id="pQtd" type="number" placeholder="Quantidade">
+            <input id="pMin" type="number" placeholder="Mínimo para Alerta">
+            <input id="pCusto" type="number" placeholder="Preço Custo">
+            <input id="pRev" type="number" placeholder="Preço Venda">
+            <button class="btn btn-add" onclick="saveProd()">ADICIONAR</button>
+        </div>
+        <div class="card">
+            <div id="listEst"></div>
+        </div>
+    </section>
 
-    <!-- 📊 CARDS -->
-    <div class="grid-dash">
-      <div class="dash-card">
-        Vendas
-        <h3 id="vDia" style="color:var(--hx-accent)">R$ 0,00</h3>
-      </div>
+    <section id="venTab" style="display:none">
+        <h2>💵 Registro de Vendas</h2>
+        <div class="card">
+            <select id="vCliSelect"></select>
+            <select id="vProdSelect" onchange="updateVendaPrice()"></select>
+            <input id="vQtd" type="number" value="1" oninput="updateVendaPrice()">
+            <p>Total Estimado: <strong id="vTotalLabel">R$ 0,00</strong></p>
+            <button class="btn btn-add" onclick="doVenda()">FINALIZAR VENDA</button>
+        </div>
+        <div class="card">
+            <div style="display: flex; gap: 10px;">
+                <input id="sVenNome" placeholder="🔍 Por cliente..." oninput="renderVen()">
+                <input id="sVenData" type="date" onchange="renderVen()">
+            </div>
+            <div id="listVen"></div>
+        </div>
+    </section>
 
-      <div class="dash-card">
-        Lucro
-        <h3 id="lDia" style="color:#00cfff">R$ 0,00</h3>
-      </div>
+    <section id="osTab" style="display:none">
+        <h2>🛠 Ordens de Serviço</h2>
+        <div class="card">
+            <select id="osCliSelect"></select>
+            <textarea id="osDesc" placeholder="Descrição do problema/serviço..."></textarea>
+            <button class="btn btn-add" onclick="saveOS()">ABRIR O.S.</button>
+        </div>
+        <div id="listOS"></div>
+    </section>
 
-      <div class="dash-card">
-        Vendas Mês
-        <h3 id="vMes">R$ 0,00</h3>
-      </div>
-
-      <div class="dash-card">
-        Estoque Crítico
-        <h3 id="qtdCrit" style="color:var(--hx-danger)">0 Itens</h3>
-      </div>
-    </div>
-
-    <!-- 📈 GRÁFICO -->
-    <div class="card">
-      <h4>Histórico de Vendas Recentes</h4>
-      <canvas id="chartDiario" height="100"></canvas>
-    </div>
-
-  </section>
+    <section id="orcTab" style="display:none">
+        <h2>📝 Orçamentos</h2>
+        <div class="card">
+            <select id="orcCliSelect"></select>
+            <textarea id="orcDesc" placeholder="Itens e valores do orçamento..."></textarea>
+            <button class="btn btn-add" onclick="saveOrc()">GERAR ORÇAMENTO</button>
+        </div>
+        <div id="listOrc"></div>
+    </section>
 </main>
-
 
 <script>
 // CONFIGURAÇÃO SUPABASE
@@ -160,37 +189,22 @@ function refreshSelects() {
 
 // DASHBOARD CALCULATIONS
 function updateDash() {
-    let totalVendas = 0;
-    let totalLucro = 0;
+    const hoje = new Date().toISOString().split('T')[0];
+    const mes = hoje.substring(0, 7);
 
-    const dataInicio = document.getElementById('fDataInicio')?.value;
-    const dataFim = document.getElementById('fDataFim')?.value;
-    const ano = document.getElementById('fAno')?.value;
+    const vHoje = _vens.filter(v => v.data.startsWith(hoje));
+    const totalHoje = vHoje.reduce((a, b) => a + (b.valor || 0), 0);
+    const lucroHoje = vHoje.reduce((a, b) => a + (b.lucro_total || 0), 0);
+    const totalMes = _vens.filter(v => v.data.startsWith(mes)).reduce((a, b) => a + (b.valor || 0), 0);
+    const criticos = _prods.filter(p => (p.q_id || p.qnt || 0) <= (p.estoque_minimo || 0)).length;
 
-    _vens.forEach(v => {
-        if (!v.data) return;
+    document.getElementById('vDia').innerText = `R$ ${totalHoje.toFixed(2)}`;
+    document.getElementById('lDia').innerText = `R$ ${lucroHoje.toFixed(2)}`;
+    document.getElementById('vMes').innerText = `R$ ${totalMes.toFixed(2)}`;
+    document.getElementById('qtdCrit').innerText = `${criticos} Itens`;
 
-        const dataVenda = v.data.split('T')[0];
-        const anoVenda = new Date(v.data).getFullYear();
-
-        // 📅 filtro por data
-        if (dataInicio && dataVenda < dataInicio) return;
-        if (dataFim && dataVenda > dataFim) return;
-
-        // 📆 filtro por ano
-        if (ano && anoVenda !== Number(ano)) return;
-
-        totalVendas += Number(v.valor || 0);
-        totalLucro += Number(v.lucro_total || 0);
-    });
-
-    document.getElementById('vDia').innerText =
-        `R$ ${totalVendas.toFixed(2)}`;
-
-    document.getElementById('lDia').innerText =
-        `R$ ${totalLucro.toFixed(2)}`;
+    renderChart();
 }
-
 
 function renderChart() {
     const ctx = document.getElementById('chartDiario').getContext('2d');
@@ -250,62 +264,39 @@ async function delItem(tab, id) {
 
 async function editarVenda(id) {
     const v = _vens.find(x => x.id === id);
-    if (!v) return alert("Venda não encontrada");
+    if (!v) return;
 
-    const p = _prods.find(x => x.id === v.produto_id);
-    if (!p) return alert("Produto não encontrado");
-
-    const estoqueAtual = (p.q_id || p.qnt || 0);
-    const qtdAtual = v.quantidade;
-
-    const novaQtdStr = prompt(
-        `Editar quantidade (${p.nome})`,
-        qtdAtual
+    const novaQtd = prompt(
+        `Editar quantidade (${v.produtos?.nome})`,
+        v.quantidade
     );
 
-    if (novaQtdStr === null) return;
+    if (novaQtd === null) return;
 
-    const novaQtd = Number(novaQtdStr);
-    if (isNaN(novaQtd) || novaQtd <= 0) {
-        return alert("Quantidade inválida");
+    const qtd = Number(novaQtd);
+    if (isNaN(qtd) || qtd <= 0) {
+        alert("Quantidade inválida");
+        return;
     }
 
-    // 🔄 diferença de estoque
-    const diferenca = novaQtd - qtdAtual;
+    const precoUnit = v.valor / v.quantidade;
+    const custoUnit = v.lucro_total
+        ? (v.valor - v.lucro_total) / v.quantidade
+        : 0;
 
-    if (diferenca > 0 && diferenca > estoqueAtual) {
-        return alert("Estoque insuficiente para aumentar a venda");
-    }
+    const novoValor = precoUnit * qtd;
+    const novoLucro = novoValor - (custoUnit * qtd);
 
-    // 💰 recalcula valores
-    const precoUnit = v.valor / qtdAtual;
-    const custoUnit = (v.valor - v.lucro_total) / qtdAtual;
-
-    const novoValor = precoUnit * novaQtd;
-    const novoLucro = novoValor - (custoUnit * novaQtd);
-
-    // 📝 atualiza venda
     await db.from('vendas')
         .update({
-            quantidade: novaQtd,
+            quantidade: qtd,
             valor: novoValor,
             lucro_total: novoLucro
         })
         .eq('id', id);
 
-    // 📦 ajusta estoque
-    const novoEstoque = estoqueAtual - diferenca;
-
-    await db.from('produtos')
-        .update({
-            q_id: novoEstoque,
-            qnt: novoEstoque
-        })
-        .eq('id', p.id);
-
     loadAll();
 }
-
 
 
 function renderVen() {
@@ -454,4 +445,3 @@ window.onload = () => { if(db.auth.getSession()) loadAll(); };
 </script>
 </body>
 </html>
-
