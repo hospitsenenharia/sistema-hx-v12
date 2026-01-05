@@ -19,7 +19,6 @@
       --hx-text:#eaeaea;
       --hx-danger:#ff5566;
     }
-
     body {
       margin:0;
       background:var(--hx-dark);
@@ -27,8 +26,6 @@
       font-family:Segoe UI, sans-serif;
       display:flex;
     }
-
-    /* SIDEBAR */
     #sidebar {
       width:240px;
       background:var(--hx-dark2);
@@ -38,7 +35,6 @@
       display:flex;
       flex-direction:column;
     }
-
     #sidebar button {
       background:none;
       border:none;
@@ -48,19 +44,16 @@
       cursor:pointer;
       border-left:3px solid transparent;
     }
-
     #sidebar button.active {
       background:#1f1f1f;
       color:var(--hx-accent);
       border-left-color:var(--hx-accent);
     }
-
     main {
       margin-left:240px;
       padding:25px;
       width:100%;
     }
-
     .card {
       background:#181818;
       padding:20px;
@@ -68,8 +61,7 @@
       border:1px solid #333;
       margin-bottom:20px;
     }
-
-    input, select, textarea {
+    input, select {
       width:100%;
       padding:10px;
       margin:6px 0;
@@ -78,7 +70,6 @@
       color:#fff;
       border-radius:4px;
     }
-
     .btn {
       padding:10px;
       border:none;
@@ -86,11 +77,7 @@
       cursor:pointer;
       font-weight:bold;
     }
-
     .btn-add { background:var(--hx-accent); color:#000; }
-    .btn-del { background:var(--hx-danger); color:#fff; }
-
-    /* LOGIN */
     #loginOverlay {
       position:fixed;
       inset:0;
@@ -100,7 +87,6 @@
       justify-content:center;
       z-index:9999;
     }
-
     .login-card {
       background:#181818;
       padding:30px;
@@ -108,26 +94,10 @@
       border:1px solid var(--hx-accent);
       width:320px;
     }
-
-    /* DASH */
-    .grid-dash {
-      display:grid;
-      grid-template-columns:repeat(auto-fit,minmax(200px,1fr));
-      gap:15px;
-      margin-bottom:20px;
-    }
-
-    .dash-card {
-      background:#181818;
-      padding:20px;
-      border-radius:8px;
-      border-left:4px solid var(--hx-accent);
-    }
   </style>
 </head>
 <body>
 
-<!-- LOGIN -->
 <div id="loginOverlay">
   <div class="login-card">
     <h2 style="text-align:center;color:var(--hx-accent)">SISTEMA HX</h2>
@@ -138,221 +108,46 @@
   </div>
 </div>
 
-<!-- SIDEBAR -->
 <nav id="sidebar">
   <div style="padding:20px;color:var(--hx-accent);font-weight:bold">PAINEL HX</div>
   <button class="active" onclick="changeTab('dashTab',this)">📊 Dashboard</button>
   <button onclick="changeTab('venTab',this)">💵 Vendas</button>
-  <button onclick="changeTab('cliTab',this)">👤 Clientes</button>
-  <button onclick="changeTab('estTab',this)">📦 Estoque</button>
-  <button onclick="changeTab('osTab',this)">🛠 OS</button>
-  <button onclick="changeTab('orcTab',this)">📝 Orçamentos</button>
   <button onclick="logout()" style="margin-top:auto;color:#ff5566">🚪 Sair</button>
 </nav>
 
 <main>
+  <section id="dashTab">
+    <h2>📊 Dashboard</h2>
+    <h3 id="vDia">R$ 0,00</h3>
+    <canvas id="chartDiario"></canvas>
+  </section>
 
-<section id="dashTab">
-  <h2>📊 Dashboard</h2>
-  <div class="grid-dash">
-    <div class="dash-card">Vendas Hoje <h3 id="vDia">R$ 0,00</h3></div>
-    <div class="dash-card">Lucro Hoje <h3 id="lDia">R$ 0,00</h3></div>
-    <div class="dash-card">Vendas Mês <h3 id="vMes">R$ 0,00</h3></div>
-    <div class="dash-card">Lucro Mês <h3 id="lMes">R$ 0,00</h3></div>
-  </div>
-  <canvas id="chartDiario"></canvas>
-</section>
-
-<section id="venTab" style="display:none">
-  <h2>💵 Vendas</h2>
-  <div class="card">
-    <select id="vCliSelect"></select>
-    <select id="vProdSelect" onchange="updateVendaPrice()"></select>
-    <input id="vQtd" type="number" value="1" min="1" oninput="updateVendaPrice()">
-    <strong id="vTotalLabel">R$ 0,00</strong>
-
-    <select id="vTipoPagamento">
-      <option value="">Pagamento</option>
-      <option>Pix</option>
-      <option>Dinheiro</option>
-      <option>Cartão</option>
-    </select>
-
-    <button class="btn btn-add" onclick="doVenda()">FINALIZAR</button>
-  </div>
-
-  <div id="listVen"></div>
-</section>
-<script>
-let _clis=[], _prods=[], _vens=[];
-let chartInstance=null;
-
-/* LOGIN */
-async function login(){
-  const { error } = await db.auth.signInWithPassword({
-    email:lEmail.value,
-    password:lPass.value
-  });
-  if(error) lErr.innerText=error.message;
-  else { loginOverlay.style.display="none"; loadAll(); }
-}
-
-async function logout(){
-  await db.auth.signOut();
-  loginOverlay.style.display="flex";
-}
-
-/* TABS */
-function changeTab(id,btn){
-  document.querySelectorAll("main section").forEach(s=>s.style.display="none");
-  document.getElementById(id).style.display="block";
-  document.querySelectorAll("#sidebar button").forEach(b=>b.classList.remove("active"));
-  btn.classList.add("active");
-}
-
-/* LOAD */
-async function loadAll(){
-  const [{data:c},{data:p},{data:v}] = await Promise.all([
-    db.from("clientes").select("*"),
-    db.from("produtos").select("*"),
-    db.from("vendas").select("*,clientes(nome),produtos(nome)").order("data",{ascending:false})
-  ]);
-  _clis=c||[]; _prods=p||[]; _vens=v||[];
-  refreshSelects(); renderVen(); updateDash(); renderChart();
-}
-
-function refreshSelects(){
-  vCliSelect.innerHTML=_clis.map(c=>`<option value="${c.id}">${c.nome}</option>`).join("");
-  vProdSelect.innerHTML=_prods.map(p=>`<option value="${p.id}">${p.nome}</option>`).join("");
-}
-
-/* VENDAS */
-function updateVendaPrice(){
-  const p=_prods.find(x=>x.id==vProdSelect.value);
-  if(p) vTotalLabel.innerText=`R$ ${(p.preco_revenda*vQtd.value).toFixed(2)}`;
-}
-
-async function doVenda(){
-  const p=_prods.find(x=>x.id==vProdSelect.value);
-  await db.from("vendas").insert({
-    cliente_id:vCliSelect.value,
-    produto_id:p.id,
-    quantidade:vQtd.value,
-    valor:p.preco_revenda*vQtd.value,
-    tipo_pagamento:vTipoPagamento.value,
-    data:new Date().toISOString()
-  });
-  loadAll();
-}
-
-function renderVen(){
-  listVen.innerHTML=_vens.map(v=>`
+  <section id="venTab" style="display:none">
+    <h2>💵 Vendas</h2>
     <div class="card">
-      ${v.clientes?.nome} - R$ ${v.valor}
-<button class="btn btn-add" onclick="imprimirVenda(${v.id})">🖨️</button>
-</div>`).join("");
-}
-
-/* CUPOM NÃO FISCAL */
-function imprimirVenda(id) {
-  const v = _vens.find(x => x.id === id);
-  if (!v) {
-    alert("Venda não encontrada");
-    return;
-  }
-
-  const w = window.open("", "_blank", "width=300,height=600");
-
-  w.document.write(`
-<!DOCTYPE html>
-<html lang="pt-br">
-<head>
-  <meta charset="UTF-8">
-  <title>Cupom Não Fiscal</title>
-  <style>
-    @page {
-      size: 80mm auto;
-      margin: 0;
-    }
-    body {
-      width: 80mm;
-      margin: 0;
-      padding: 6px;
-      font-family: monospace;
-      font-size: 12px;
-    }
-    .center {
-      text-align: center;
-    }
-    hr {
-      border: none;
-      border-top: 1px dashed #000;
-      margin: 6px 0;
-    }
-  </style>
-</head>
-
-<body onload="window.print(); window.close();">
-
-  <div class="center">
-    <strong>SISTEMA HX</strong><br>
-    CUPOM NÃO FISCAL
-  </div>
-
-  <hr>
-
-  Cliente: ${v.clientes?.nome || "Não informado"}<br>
-  Produto: ${v.produtos?.nome || "-"}<br>
-  Quantidade: ${v.quantidade}<br>
-  Pagamento: ${v.tipo_pagamento || "N/I"}<br>
-
-  <hr>
-
-  <strong>TOTAL: R$ ${Number(v.valor).toFixed(2)}</strong><br>
-  Data: ${new Date(v.data).toLocaleString("pt-BR")}
-
-  <hr>
-
-  <div class="center">
-    Obrigado pela preferência!
-  </div>
-
-</body>
-</html>
-  `);
-
-  w.document.close();
-}
-
-
-/* DASH */
-function updateDash(){
-  let total=0;
-  _vens.forEach(v=>total+=Number(v.valor||0));
-  vDia.innerText=`R$ ${total.toFixed(2)}`;
-}
-
-function renderChart(){
-  if(chartInstance) chartInstance.destroy();
-  chartInstance=new Chart(chartDiario,{
-    type:"line",
-    data:{
-      labels:_vens.map(v=>new Date(v.data).toLocaleDateString()),
-      datasets:[{data:_vens.map(v=>v.valor),borderColor:"#0aff9d"}]
-    }
-  });
-}
-</script>
+      <select id="vCliSelect"></select>
+      <select id="vProdSelect" onchange="updateVendaPrice()"></select>
+      <input id="vQtd" type="number" value="1" min="1">
+      <strong id="vTotalLabel">R$ 0,00</strong>
+      <select id="vTipoPagamento">
+        <option>Pix</option>
+        <option>Dinheiro</option>
+        <option>Cartão</option>
+      </select>
+      <button class="btn btn-add" onclick="doVenda()">FINALIZAR</button>
+    </div>
+    <div id="listVen"></div>
+  </section>
 </main>
-</body>
-</html>
+
+
 
 <script>
 /* ================= SUPABASE ================= */
 const { createClient } = window.supabase;
 
 const SUPABASE_URL = "https://axfccmezfofnqfsdurqb.supabase.co";
-const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImF4ZmNjbWV6Zm9mbnFmc2R1cnFiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjUwNzA1NDMsImV4cCI6MjA4MDY0NjU0M30.woGp6hBgiEa41opQxyxqqMULlDKMXm9T83bhJ7UEmb8";
+const SUPABASE_KEY = "SUA_CHAVE_ANON_PUBLICA_AQUI";
 
 const db = createClient(SUPABASE_URL, SUPABASE_KEY);
 
@@ -364,22 +159,22 @@ let chartInstance = null;
 
 /* ================= LOGIN ================= */
 async function login() {
-  const email = document.getElementById("lEmail").value;
-  const password = document.getElementById("lPass").value;
+  const email = lEmail.value;
+  const password = lPass.value;
 
   const { error } = await db.auth.signInWithPassword({ email, password });
 
   if (error) {
-    document.getElementById("lErr").innerText = error.message;
+    lErr.innerText = error.message;
   } else {
-    document.getElementById("loginOverlay").style.display = "none";
+    loginOverlay.style.display = "none";
     loadAll();
   }
 }
 
 async function logout() {
   await db.auth.signOut();
-  document.getElementById("loginOverlay").style.display = "flex";
+  loginOverlay.style.display = "flex";
 }
 
 /* ================= TABS ================= */
@@ -395,9 +190,7 @@ async function loadAll() {
   const [{ data: c }, { data: p }, { data: v }] = await Promise.all([
     db.from("clientes").select("*"),
     db.from("produtos").select("*"),
-    db.from("vendas")
-      .select("*, clientes(nome), produtos(nome)")
-      .order("data", { ascending: false })
+    db.from("vendas").select("*").order("data", { ascending: false })
   ]);
 
   _clis = c || [];
@@ -410,53 +203,19 @@ async function loadAll() {
   renderChart();
 }
 
-/* ================= SELECTS ================= */
 function refreshSelects() {
-  document.getElementById("vCliSelect").innerHTML =
-    _clis.map(c => `<option value="${c.id}">${c.nome}</option>`).join("");
-
-  document.getElementById("vProdSelect").innerHTML =
-    _prods.map(p => `<option value="${p.id}">${p.nome}</option>`).join("");
-}
-
-/* ================= DASH ================= */
-function updateDash() {
-  let total = 0;
-  _vens.forEach(v => total += Number(v.valor || 0));
-  document.getElementById("vDia").innerText = `R$ ${total.toFixed(2)}`;
-}
-
-/* ================= GRÁFICO ================= */
-function renderChart() {
-  if (chartInstance) chartInstance.destroy();
-
-  chartInstance = new Chart(
-    document.getElementById("chartDiario"),
-    {
-      type: "line",
-      data: {
-        labels: _vens.map(v => new Date(v.data).toLocaleDateString("pt-BR")),
-        datasets: [{
-          label: "Vendas",
-          data: _vens.map(v => Number(v.valor || 0)),
-          borderColor: "#0aff9d"
-        }]
-      }
-    }
-  );
+  vCliSelect.innerHTML = _clis.map(c => `<option value="${c.id}">${c.nome}</option>`).join("");
+  vProdSelect.innerHTML = _prods.map(p => `<option value="${p.id}">${p.nome}</option>`).join("");
 }
 
 /* ================= VENDAS ================= */
 function updateVendaPrice() {
   const p = _prods.find(x => x.id == vProdSelect.value);
-  if (p) {
-    vTotalLabel.innerText = `R$ ${(p.preco_revenda * vQtd.value).toFixed(2)}`;
-  }
+  if (p) vTotalLabel.innerText = `R$ ${(p.preco_revenda * vQtd.value).toFixed(2)}`;
 }
 
 async function doVenda() {
   const p = _prods.find(x => x.id == vProdSelect.value);
-
   await db.from("vendas").insert({
     cliente_id: vCliSelect.value,
     produto_id: p.id,
@@ -465,33 +224,44 @@ async function doVenda() {
     tipo_pagamento: vTipoPagamento.value,
     data: new Date().toISOString()
   });
-
   loadAll();
+}
+
+function renderVen() {
+  listVen.innerHTML = _vens.map(v => `
+    <div class="card">
+      Venda R$ ${v.valor}
+      <button onclick="imprimirVenda(${v.id})">🖨️</button>
+    </div>
+  `).join("");
 }
 
 /* ================= CUPOM ================= */
 function imprimirVenda(id) {
   const v = _vens.find(x => x.id === id);
-  if (!v) return;
+  const w = window.open("", "", "width=300,height=600");
+  w.document.write(`<body onload="window.print();window.close()">TOTAL R$ ${v.valor}</body>`);
+}
 
-  const w = window.open("", "_blank", "width=300,height=600");
+/* ================= DASH ================= */
+function updateDash() {
+  let total = 0;
+  _vens.forEach(v => total += Number(v.valor || 0));
+  vDia.innerText = `R$ ${total.toFixed(2)}`;
+}
 
-  w.document.write(`
-    <body onload="window.print(); window.close()">
-      CUPOM NÃO FISCAL<br>
-      TOTAL: R$ ${Number(v.valor).toFixed(2)}
-    </body>
-  `);
+function renderChart() {
+  if (chartInstance) chartInstance.destroy();
+  chartInstance = new Chart(chartDiario, {
+    type: "line",
+    data: {
+      labels: _vens.map(v => new Date(v.data).toLocaleDateString("pt-BR")),
+      datasets: [{ data: _vens.map(v => v.valor), borderColor: "#0aff9d" }]
+    }
+  });
 }
 </script>
 
-
-
 </body>
 </html>
-
-
-
-
-
 
