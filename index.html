@@ -37,20 +37,25 @@
 </head>
 <body>
 
+<!-- ================= LOGIN ================= -->
 <div id="loginOverlay">
-    <div class="login-card">
-        <h2 style="text-align:center; color:var(--hx-accent); margin-bottom: 20px;">SISTEMA HX</h2>
-        <label>E-mail</label>
-        <input id="lEmail" type="email" placeholder="admin@hx.com">
-        <label>Senha</label>
-        <input id="lPass" type="password">
-        <button class="btn btn-add" style="width:100%; margin-top: 10px;" onclick="login()">ENTRAR</button>
-        <p id="lErr" style="color:var(--hx-danger); font-size:12px; text-align:center; margin-top:10px;"></p>
-    </div>
+  <div class="login-card">
+    <h2 style="text-align:center; color:var(--hx-accent)">SISTEMA HX</h2>
+
+    <label>E-mail</label>
+    <input id="lEmail" type="email">
+
+    <label>Senha</label>
+    <input id="lPass" type="password">
+
+    <button class="btn btn-add" style="width:100%" onclick="login()">ENTRAR</button>
+    <p id="lErr" style="color:#ff5566; font-size:12px; text-align:center"></p>
+  </div>
 </div>
 
+<!-- ================= SIDEBAR ================= -->
 <nav id="sidebar">
-  <div style="padding:20px; font-weight:bold; color:var(--hx-accent); font-size:1.2rem; border-bottom:1px solid #333;">
+  <div style="padding:20px; font-weight:bold; color:var(--hx-accent)">
     PAINEL HX
   </div>
 
@@ -58,248 +63,202 @@
   <button onclick="changeTab('cliTab', this)">👤 Clientes</button>
   <button onclick="changeTab('estTab', this)">📦 Estoque</button>
   <button onclick="changeTab('venTab', this)">💵 Vendas</button>
-  <button onclick="changeTab('osTab', this)">🛠 Ordem de Serviço</button>
+  <button onclick="changeTab('osTab', this)">🛠 OS</button>
   <button onclick="changeTab('orcTab', this)">📝 Orçamentos</button>
 
-  <!-- 🚪 SAIR -->
-  <button onclick="logout()" style="margin-top:auto; color:#ff5566;">
+  <button onclick="logout()" style="margin-top:auto; color:#ff5566">
     🚪 Sair
   </button>
 </nav>
 
+<!-- ================= CONTEÚDO ================= -->
+<main>
+
+<!-- DASHBOARD -->
 <section id="dashTab">
   <h2 style="color:var(--hx-accent)">📊 Dashboard Financeiro</h2>
 
-  <!-- 🔘 BOTÕES RÁPIDOS -->
-  <div style="display:flex; gap:10px; margin-bottom:15px; flex-wrap:wrap;">
-    <button class="btn btn-add" onclick="setHoje()">Hoje</button>
-    <button class="btn btn-add" onclick="setSemana()">Semana</button>
-    <button class="btn btn-add" onclick="setMes()">Mês</button>
-  </div>
-
-  <!-- 📊 CARDS -->
   <div class="grid-dash">
-    <div class="dash-card">
-      Vendas Hoje
-      <h3 id="vDia">R$ 0,00</h3>
-    </div>
-
-    <div class="dash-card">
-      Lucro Hoje
-      <h3 id="lDia">R$ 0,00</h3>
-    </div>
-
-    <div class="dash-card">
-      Vendas Mês
-      <h3 id="vMes">R$ 0,00</h3>
-    </div>
-
-    <div class="dash-card">
-      Lucro do Mês
-      <h3 id="lMes">R$ 0,00</h3>
-    </div>
-
-    <div class="dash-card">
-      Estoque Crítico
-      <h3 id="qtdCrit">0 Itens</h3>
-    </div>
+    <div class="dash-card">Vendas Hoje <h3 id="vDia">R$ 0,00</h3></div>
+    <div class="dash-card">Lucro Hoje <h3 id="lDia">R$ 0,00</h3></div>
+    <div class="dash-card">Vendas Mês <h3 id="vMes">R$ 0,00</h3></div>
+    <div class="dash-card">Lucro Mês <h3 id="lMes">R$ 0,00</h3></div>
+    <div class="dash-card">Estoque Crítico <h3 id="qtdCrit">0</h3></div>
   </div>
-</section>
-
-    <section id="estTab" style="display:none">
-        <h2>📦 Controle de Estoque</h2>
-        <div class="card">
-            <input id="pNome" placeholder="Produto">
-            <input id="pQtd" type="number" placeholder="Quantidade">
-            <input id="pMin" type="number" placeholder="Mínimo para Alerta">
-            <input id="pCusto" type="number" placeholder="Preço Custo">
-            <input id="pRev" type="number" placeholder="Preço Venda">
-            <button class="btn btn-add" onclick="saveProd()">ADICIONAR</button>
-        </div>
-        <div class="card">
-            <div id="listEst"></div>
-        </div>
-    </section>
-
-   <section id="venTab" style="display:none">
-  <h2>💵 Registro de Vendas</h2>
 
   <div class="card">
-    <select id="vCliSelect" required></select>
-
-    <select id="vProdSelect" onchange="updateVendaPrice()" required></select>
-
-    <input
-      id="vQtd"
-      type="number"
-      value="1"
-      min="1"
-      oninput="updateVendaPrice()"
-      required
-    >
-
-    <p>Total Estimado:
-      <strong id="vTotalLabel">R$ 0,00</strong>
-    </p>
-
-    <!-- 🔽 AQUI É O LUGAR CERTO -->
-    <select id="vTipoPagamento" required>
-      <option value="">Selecione a forma de pagamento</option>
-      <option value="Pix">📲 Pix</option>
-      <option value="Dinheiro">💵 Dinheiro</option>
-      <option value="Cartão">💳 Cartão</option>
-    </select>
-
-    <button class="btn btn-add" onclick="doVenda()">
-      FINALIZAR VENDA
-    </button>
+    <h4>Histórico de Vendas</h4>
+    <canvas id="chartDiario"></canvas>
   </div>
 </section>
 
+<!-- CLIENTES -->
+<section id="cliTab" style="display:none">
+  <h2>👤 Clientes</h2>
+  <div id="listCli"></div>
+</section>
 
-    <section id="osTab" style="display:none">
-        <h2>🛠 Ordens de Serviço</h2>
-        <div class="card">
-            <select id="osCliSelect"></select>
-            <textarea id="osDesc" placeholder="Descrição do problema/serviço..."></textarea>
-            <button class="btn btn-add" onclick="saveOS()">ABRIR O.S.</button>
-        </div>
-        <div id="listOS"></div>
-    </section>
+<!-- ESTOQUE -->
+<section id="estTab" style="display:none">
+  <h2>📦 Estoque</h2>
+  <div id="listEst"></div>
+</section>
 
-    <section id="orcTab" style="display:none">
-        <h2>📝 Orçamentos</h2>
-        <div class="card">
-            <select id="orcCliSelect"></select>
-            <textarea id="orcDesc" placeholder="Itens e valores do orçamento..."></textarea>
-            <button class="btn btn-add" onclick="saveOrc()">GERAR ORÇAMENTO</button>
-        </div>
-        <div id="listOrc"></div>
-    </section>
+<!-- VENDAS -->
+<section id="venTab" style="display:none">
+  <h2>💵 Vendas</h2>
+
+  <div class="card">
+    <select id="vCliSelect"></select>
+    <select id="vProdSelect" onchange="updateVendaPrice()"></select>
+    <input id="vQtd" type="number" value="1" min="1" oninput="updateVendaPrice()">
+
+    <p>Total: <strong id="vTotalLabel">R$ 0,00</strong></p>
+
+    <select id="vTipoPagamento">
+      <option value="">Forma de pagamento</option>
+      <option value="Pix">Pix</option>
+      <option value="Dinheiro">Dinheiro</option>
+      <option value="Cartão">Cartão</option>
+    </select>
+
+    <button class="btn btn-add" onclick="doVenda()">FINALIZAR</button>
+  </div>
+
+  <div id="listVen"></div>
+</section>
+
+<!-- OS -->
+<section id="osTab" style="display:none">
+  <h2>🛠 Ordens de Serviço</h2>
+  <div id="listOS"></div>
+</section>
+
+<!-- ORÇAMENTOS -->
+<section id="orcTab" style="display:none">
+  <h2>📝 Orçamentos</h2>
+  <div id="listOrc"></div>
+</section>
+
 </main>
 
+<!-- ================= SCRIPT ÚNICO ================= -->
 <script>
-// ================= SUPABASE =================
-// CONFIGURAÇÃO SUPABASE
+/* ========= SUPABASE ========= */
 const { createClient } = window.supabase;
-const db = createClient("https://axfccmezfofnqfsdurqb.supabase.co", "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImF4ZmNjbWV6Zm9mbnFmc2R1cnFiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjUwNzA1NDMsImV4cCI6MjA4MDY0NjU0M30.woGp6hBgiEa41opQxyxqqMULlDKMXm9T83bhJ7UEmb8"
-);
+const db = createClient("SUA_URL_SUPABASE", "SUA_KEY");
 
-let _clis = [], _prods = [], _vens = [], _oss = [], _orcs = [];
-let chartInstance = null;
+/* ========= VARIÁVEIS ========= */
+let _clis=[], _prods=[], _vens=[], _oss=[], _orcs=[];
+let chartInstance=null;
 
-// ================= INATIVIDADE =================
-const TEMPO_INATIVIDADE = 15 * 60 * 1000; // 15 minutos
-let timerInatividade;
-
-function resetarInatividade() {
-  clearTimeout(timerInatividade);
-  timerInatividade = setTimeout(logoutPorInatividade, TEMPO_INATIVIDADE);
+/* ========= LOGIN / LOGOUT ========= */
+async function login(){
+  const { error } = await db.auth.signInWithPassword({
+    email:lEmail.value, password:lPass.value
+  });
+  if(error) lErr.innerText = error.message;
+  else { loginOverlay.style.display="none"; loadAll(); }
 }
 
-["mousemove", "keydown", "click", "scroll"].forEach(evento => {
-  document.addEventListener(evento, resetarInatividade);
-});
-
-// ================= LOGOUT =================
-async function logout() {
-  clearTimeout(timerInatividade);
-
-  const confirmacao = confirm("Deseja realmente sair do sistema?");
-  if (!confirmacao) return;
-
+async function logout(){
   await db.auth.signOut();
-  limparSessao();
+  loginOverlay.style.display="flex";
 }
 
-async function logoutPorInatividade() {
-  alert("Sessão encerrada por inatividade.");
-  await db.auth.signOut();
-  limparSessao();
+/* ========= TABS ========= */
+function changeTab(id, btn){
+  document.querySelectorAll("main section").forEach(s=>s.style.display="none");
+  document.getElementById(id).style.display="block";
+  document.querySelectorAll("#sidebar button").forEach(b=>b.classList.remove("active"));
+  btn.classList.add("active");
 }
 
-function limparSessao() {
-  _clis = [];
-  _prods = [];
-  _vens = [];
-  _oss = [];
-  _orcs = [];
-
-  document.getElementById('loginOverlay').style.display = 'flex';
+/* ========= LOAD ========= */
+async function loadAll(){
+  const [{data:c},{data:p},{data:v}] = await Promise.all([
+    db.from("clientes").select("*"),
+    db.from("produtos").select("*"),
+    db.from("vendas").select("*,clientes(nome),produtos(nome)").order("data",{ascending:false})
+  ]);
+  _clis=c||[]; _prods=p||[]; _vens=v||[];
+  refreshSelects(); renderVen(); updateDash(); renderChart();
 }
 
-// ================= LOGIN =================
-async function login() {
-  const email = document.getElementById('lEmail').value;
-  const password = document.getElementById('lPass').value;
-
-  const { error } = await db.auth.signInWithPassword({ email, password });
-
-  if (error) {
-    document.getElementById('lErr').innerText = "Erro: " + error.message;
-  } else {
-    document.getElementById('loginOverlay').style.display = 'none';
-    loadAll();
-    resetarInatividade(); // inicia o timer
-  }
+/* ========= SELECTS ========= */
+function refreshSelects(){
+  vCliSelect.innerHTML=_clis.map(c=>`<option value="${c.id}">${c.nome}</option>`).join("");
+  vProdSelect.innerHTML=_prods.map(p=>`<option value="${p.id}">${p.nome}</option>`).join("");
 }
-// 🖨️ IMPRIMIR CUPOM NÃO FISCAL
-function imprimirVenda(id) {
-  const v = _vens.find(x => x.id === id);
-  if (!v) return alert("Venda não encontrada");
 
-  const w = window.open("", "_blank", "width=300,height=600");
+/* ========= DASH ========= */
+function updateDash(){
+  let tH=0,lH=0,tM=0,lM=0;
+  const hoje=new Date();
+  _vens.forEach(v=>{
+    const d=new Date(v.data);
+    if(d.toDateString()===hoje.toDateString()){ tH+=v.valor; lH+=v.lucro_total; }
+    if(d.getMonth()===hoje.getMonth()&&d.getFullYear()===hoje.getFullYear()){
+      tM+=v.valor; lM+=v.lucro_total;
+    }
+  });
+  vDia.innerText=`R$ ${tH.toFixed(2)}`;
+  lDia.innerText=`R$ ${lH.toFixed(2)}`;
+  vMes.innerText=`R$ ${tM.toFixed(2)}`;
+  lMes.innerText=`R$ ${lM.toFixed(2)}`;
+}
 
-  w.document.write(`
-<!DOCTYPE html>
-<html lang="pt-br">
-<head>
-<meta charset="UTF-8">
-<title>Cupom Não Fiscal</title>
-<style>
-  @page { size: 80mm auto; margin: 0; }
-  body {
-    width: 80mm;
-    margin: 0;
-    padding: 6px;
-    font-family: monospace;
-    font-size: 12px;
-  }
-  .center { text-align: center; }
-  hr {
-    border: none;
-    border-top: 1px dashed #000;
-    margin: 6px 0;
-  }
-</style>
-</head>
+/* ========= GRÁFICO ========= */
+function renderChart(){
+  if(chartInstance) chartInstance.destroy();
+  chartInstance=new Chart(chartDiario,{
+    type:"line",
+    data:{
+      labels:_vens.slice(0,7).reverse().map(v=>new Date(v.data).toLocaleDateString()),
+      datasets:[{data:_vens.slice(0,7).reverse().map(v=>v.valor),borderColor:"#0aff9d"}]
+    }
+  });
+}
 
-<body onload="window.print(); window.close();">
+/* ========= VENDAS ========= */
+function updateVendaPrice(){
+  const p=_prods.find(x=>x.id==vProdSelect.value);
+  if(p) vTotalLabel.innerText=`R$ ${(p.preco_revenda*vQtd.value).toFixed(2)}`;
+}
 
-<div class="center">
-  <strong>SISTEMA HX</strong><br>
-  CUPOM NÃO FISCAL
-</div>
+async function doVenda(){
+  const p=_prods.find(x=>x.id==vProdSelect.value);
+  await db.from("vendas").insert({
+    cliente_id:vCliSelect.value,
+    produto_id:p.id,
+    quantidade:vQtd.value,
+    valor:p.preco_revenda*vQtd.value,
+    lucro_total:0,
+    tipo_pagamento:vTipoPagamento.value,
+    data:new Date().toISOString()
+  });
+  loadAll();
+}
 
-<hr>
+/* ========= IMPRIMIR ========= */
+function imprimirVenda(id){
+  const v=_vens.find(x=>x.id===id);
+  const w=window.open("","","width=300,height=600");
+  w.document.write(`<body onload="window.print();window.close()">TOTAL R$ ${v.valor}</body>`);
+}
 
-Cliente: ${v.clientes?.nome || "Não informado"}<br>
-Produto: ${v.produtos?.nome || "-"}<br>
-Qtd: ${v.quantidade}<br>
-Pagamento: ${v.tipo_pagamento || "N/I"}<br>
-
-<hr>
-
-<strong>TOTAL: R$ ${Number(v.valor).toFixed(2)}</strong><br>
-Data: ${new Date(v.data).toLocaleString("pt-BR")}
-
-<hr>
-
-<div class="center">
-  Obrigado pela preferência!
-</div>
+/* ========= RENDER VENDAS ========= */
+function renderVen(){
+  listVen.innerHTML=_vens.map(v=>`
+    <div>
+      ${v.clientes?.nome} - R$ ${v.valor}
+      <button onclick="imprimirVenda(${v.id})">🖨️</button>
+    </div>`).join("");
+}
+</script>
 
 </body>
+
 </html>
   `);
 
@@ -720,6 +679,7 @@ window.onload = async () => {
 </script>
 </body>
 </html>
+
 
 
 
