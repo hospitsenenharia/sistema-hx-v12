@@ -238,12 +238,70 @@ function renderVen() {
   `).join("");
 }
 
-/* CUPOM */
-function imprimirVenda(id) {
+  function imprimirVenda(id) {
   const v = _vens.find(x => x.id === id);
-  const w = window.open("", "", "width=300,height=600");
-  w.document.write(`<body onload="window.print();window.close()">TOTAL R$ ${v.valor}</body>`);
+  if (!v) return;
+
+  const w = window.open("", "_blank", "width=300,height=600");
+
+  w.document.write(`
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+<meta charset="UTF-8">
+<title>Cupom Não Fiscal</title>
+<style>
+  @page { size: 80mm auto; margin: 0; }
+  body {
+    width: 80mm;
+    margin: 0;
+    padding: 6px;
+    font-family: monospace;
+    font-size: 12px;
+  }
+  .center { text-align: center; }
+  hr {
+    border: none;
+    border-top: 1px dashed #000;
+    margin: 6px 0;
+  }
+</style>
+</head>
+
+<body>
+  <div class="center">
+    <strong>SISTEMA HX</strong><br>
+    CUPOM NÃO FISCAL
+  </div>
+
+  <hr>
+
+  Cliente: ${v.clientes?.nome || "Não informado"}<br>
+  Produto: ${v.produtos?.nome || "-"}<br>
+  Qtd: ${v.quantidade}<br>
+  Pagamento: ${v.tipo_pagamento || "N/I"}<br>
+
+  <hr>
+
+  <strong>TOTAL: R$ ${Number(v.valor).toFixed(2)}</strong><br>
+  ${new Date(v.data).toLocaleString("pt-BR")}
+
+  <hr>
+  <div class="center">Obrigado pela preferência!</div>
+
+  <script>
+    window.onload = function () {
+      window.print();
+      window.close();
+    };
+  </script>
+</body>
+</html>
+  `);
+
+  w.document.close();
 }
+
 
 /* DASH */
 function updateDash() {
@@ -266,4 +324,5 @@ function renderChart() {
 
 </body>
 </html>
+
 
