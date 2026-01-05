@@ -185,7 +185,8 @@
 </section>
 <script>
 const { createClient } = window.supabase;
-const db = createClient("SUA_URL_SUPABASE", "SUA_KEY");
+const db = createClient("https://axfccmezfofnqfsdurqb.supabase.co", "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImF4ZmNjbWV6Zm9mbnFmc2R1cnFiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjUwNzA1NDMsImV4cCI6MjA4MDY0NjU0M30.woGp6hBgiEa41opQxyxqqMULlDKMXm9T83bhJ7UEmb8"
+);
 
 let _clis=[], _prods=[], _vens=[];
 let chartInstance=null;
@@ -252,17 +253,81 @@ function renderVen(){
   listVen.innerHTML=_vens.map(v=>`
     <div class="card">
       ${v.clientes?.nome} - R$ ${v.valor}
-      <button onclick="imprimirVenda(${v.id})">🖨️</button>
-    </div>`).join("");
+<button class="btn btn-add" onclick="imprimirVenda(${v.id})">🖨️</button>
+</div>`).join("");
 }
 
-/* CUPOM */
-function imprimirVenda(id){
-  const v=_vens.find(x=>x.id===id);
-  const w=window.open("","","width=300,height=600");
-  w.document.write(`<body onload="window.print();window.close()">
-  CUPOM NÃO FISCAL<br>TOTAL R$ ${v.valor}</body>`);
+/* CUPOM NÃO FISCAL */
+function imprimirVenda(id) {
+  const v = _vens.find(x => x.id === id);
+  if (!v) {
+    alert("Venda não encontrada");
+    return;
+  }
+
+  const w = window.open("", "_blank", "width=300,height=600");
+
+  w.document.write(`
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+  <meta charset="UTF-8">
+  <title>Cupom Não Fiscal</title>
+  <style>
+    @page {
+      size: 80mm auto;
+      margin: 0;
+    }
+    body {
+      width: 80mm;
+      margin: 0;
+      padding: 6px;
+      font-family: monospace;
+      font-size: 12px;
+    }
+    .center {
+      text-align: center;
+    }
+    hr {
+      border: none;
+      border-top: 1px dashed #000;
+      margin: 6px 0;
+    }
+  </style>
+</head>
+
+<body onload="window.print(); window.close();">
+
+  <div class="center">
+    <strong>SISTEMA HX</strong><br>
+    CUPOM NÃO FISCAL
+  </div>
+
+  <hr>
+
+  Cliente: ${v.clientes?.nome || "Não informado"}<br>
+  Produto: ${v.produtos?.nome || "-"}<br>
+  Quantidade: ${v.quantidade}<br>
+  Pagamento: ${v.tipo_pagamento || "N/I"}<br>
+
+  <hr>
+
+  <strong>TOTAL: R$ ${Number(v.valor).toFixed(2)}</strong><br>
+  Data: ${new Date(v.data).toLocaleString("pt-BR")}
+
+  <hr>
+
+  <div class="center">
+    Obrigado pela preferência!
+  </div>
+
+</body>
+</html>
+  `);
+
+  w.document.close();
 }
+
 
 /* DASH */
 function updateDash(){
@@ -285,4 +350,5 @@ function renderChart(){
 </main>
 </body>
 </html>
+
 
