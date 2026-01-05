@@ -98,6 +98,7 @@
 </head>
 <body>
 
+<!-- LOGIN -->
 <div id="loginOverlay">
   <div class="login-card">
     <h2 style="text-align:center;color:var(--hx-accent)">SISTEMA HX</h2>
@@ -108,6 +109,7 @@
   </div>
 </div>
 
+<!-- SIDEBAR -->
 <nav id="sidebar">
   <div style="padding:20px;color:var(--hx-accent);font-weight:bold">PAINEL HX</div>
   <button class="active" onclick="changeTab('dashTab',this)">📊 Dashboard</button>
@@ -140,32 +142,28 @@
   </section>
 </main>
 
-
+<!-- ================= SCRIPT ÚNICO ================= -->
 <script>
-/* ================= SUPABASE ================= */
+/* SUPABASE */
 const { createClient } = window.supabase;
+const db = createClient(
+  "https://axfccmezfofnqfsdurqb.supabase.co",
+  "SUA_ANON_PUBLIC_KEY"
+);
 
-const SUPABASE_URL = "https://axfccmezfofnqfsdurqb.supabase.co";
-const SUPABASE_KEY ="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImF4ZmNjbWV6Zm9mbnFmc2R1cnFiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjUwNzA1NDMsImV4cCI6MjA4MDY0NjU0M30.woGp6hBgiEa41opQxyxqqMULlDKMXm9T83bhJ7UEmb8"
-  ;
-</script>
-
-/* ================= VARIÁVEIS ================= */
-let _clis = [];
-let _prods = [];
-let _vens = [];
+/* VARIÁVEIS */
+let _clis = [], _prods = [], _vens = [];
 let chartInstance = null;
 
-/* ================= LOGIN ================= */
+/* LOGIN */
 async function login() {
   const email = lEmail.value;
   const password = lPass.value;
 
   const { error } = await db.auth.signInWithPassword({ email, password });
 
-  if (error) {
-    lErr.innerText = error.message;
-  } else {
+  if (error) lErr.innerText = error.message;
+  else {
     loginOverlay.style.display = "none";
     loadAll();
   }
@@ -176,7 +174,7 @@ async function logout() {
   loginOverlay.style.display = "flex";
 }
 
-/* ================= TABS ================= */
+/* TABS */
 function changeTab(id, btn) {
   document.querySelectorAll("main section").forEach(s => s.style.display = "none");
   document.getElementById(id).style.display = "block";
@@ -184,7 +182,7 @@ function changeTab(id, btn) {
   btn.classList.add("active");
 }
 
-/* ================= LOAD ================= */
+/* LOAD */
 async function loadAll() {
   const [{ data: c }, { data: p }, { data: v }] = await Promise.all([
     db.from("clientes").select("*"),
@@ -207,7 +205,7 @@ function refreshSelects() {
   vProdSelect.innerHTML = _prods.map(p => `<option value="${p.id}">${p.nome}</option>`).join("");
 }
 
-/* ================= VENDAS ================= */
+/* VENDAS */
 function updateVendaPrice() {
   const p = _prods.find(x => x.id == vProdSelect.value);
   if (p) vTotalLabel.innerText = `R$ ${(p.preco_revenda * vQtd.value).toFixed(2)}`;
@@ -235,14 +233,14 @@ function renderVen() {
   `).join("");
 }
 
-/* ================= CUPOM ================= */
+/* CUPOM */
 function imprimirVenda(id) {
   const v = _vens.find(x => x.id === id);
   const w = window.open("", "", "width=300,height=600");
   w.document.write(`<body onload="window.print();window.close()">TOTAL R$ ${v.valor}</body>`);
 }
 
-/* ================= DASH ================= */
+/* DASH */
 function updateDash() {
   let total = 0;
   _vens.forEach(v => total += Number(v.valor || 0));
@@ -263,8 +261,3 @@ function renderChart() {
 
 </body>
 </html>
-
-
-
-
-
