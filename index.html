@@ -354,9 +354,12 @@ function renderChart(){
 <script>
 /* ================= SUPABASE ================= */
 const { createClient } = window.supabase;
-const db = createClient(
-  "https://axfccmezfofnqfsdurqb.supabase.co",
-  "SUA_CHAVE_ANON_PUBLIC"
+
+const SUPABASE_URL = "https://axfccmezfofnqfsdurqb.supabase.co";
+const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImF4ZmNjbWV6Zm9mbnFmc2R1cnFiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjUwNzA1NDMsImV4cCI6MjA4MDY0NjU0M30.woGp6hBgiEa41opQxyxqqMULlDKMXm9T83bhJ7UEmb8"
+;
+
+const db = createClient( "https://axfccmezfofnqfsdurqb.supabase.co", const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImF4ZmNjbWV6Zm9mbnFmc2R1cnFiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjUwNzA1NDMsImV4cCI6MjA4MDY0NjU0M30.woGp6hBgiEa41opQxyxqqMULlDKMXm9T83bhJ7UEmb8"
 );
 
 /* ================= VARIÁVEIS ================= */
@@ -365,22 +368,29 @@ let chartInstance = null;
 
 /* ================= LOGIN ================= */
 async function login() {
-  const { error } = await db.auth.signInWithPassword({
-    email: lEmail.value,
-    password: lPass.value
-  });
+  try {
+    const { error } = await db.auth.signInWithPassword({
+      email: document.getElementById("lEmail").value,
+      password: document.getElementById("lPass").value
+    });
 
-  if (error) {
-    lErr.innerText = error.message;
-  } else {
-    loginOverlay.style.display = "none";
+    if (error) {
+      document.getElementById("lErr").innerText = error.message;
+      return;
+    }
+
+    document.getElementById("loginOverlay").style.display = "none";
     loadAll();
+
+  } catch (e) {
+    alert("Erro crítico no login: " + e.message);
   }
 }
 
+/* ================= LOGOUT ================= */
 async function logout() {
   await db.auth.signOut();
-  loginOverlay.style.display = "flex";
+  document.getElementById("loginOverlay").style.display = "flex";
 }
 
 /* ================= TABS ================= */
@@ -408,36 +418,55 @@ async function loadAll() {
   refreshSelects();
   renderVen();
   updateDash();
-  renderChart();
 }
 
 /* ================= SELECTS ================= */
 function refreshSelects() {
-  vCliSelect.innerHTML = _clis.map(c =>
-    `<option value="${c.id}">${c.nome}</option>`
-  ).join("");
+  document.getElementById("vCliSelect").innerHTML =
+    _clis.map(c => `<option value="${c.id}">${c.nome}</option>`).join("");
 
-  vProdSelect.innerHTML = _prods.map(p =>
-    `<option value="${p.id}">${p.nome}</option>`
-  ).join("");
+  document.getElementById("vProdSelect").innerHTML =
+    _prods.map(p => `<option value="${p.id}">${p.nome}</option>`).join("");
+}
+
+/* ================= DASH ================= */
+function updateDash() {
+  let totalHoje = 0;
+  const hoje = new Date().toDateString();
+
+  _vens.forEach(v => {
+    if (new Date(v.data).toDateString() === hoje) {
+      totalHoje += Number(v.valor || 0);
+    }
+  });
+
+  document.getElementById("vDia").innerText =
+    `R$ ${totalHoje.toFixed(2)}`;
 }
 
 /* ================= VENDAS ================= */
 function updateVendaPrice() {
-  const p = _prods.find(x => x.id == vProdSelect.value);
-  if (p) vTotalLabel.innerText = `R$ ${(p.preco_revenda * vQtd.value).toFixed(2)}`;
+  const p = _prods.find(x =>
+    x.id == document.getElementById("vProdSelect").value
+  );
+  if (p) {
+    document.getElementById("vTotalLabel").innerText =
+      `R$ ${(p.preco_revenda * document.getElementById("vQtd").value).toFixed(2)}`;
+  }
 }
 
 async function doVenda() {
-  const p = _prods.find(x => x.id == vProdSelect.value);
+  const p = _prods.find(x =>
+    x.id == document.getElementById("vProdSelect").value
+  );
   if (!p) return alert("Produto inválido");
 
   await db.from("vendas").insert({
-    cliente_id: vCliSelect.value,
+    cliente_id: document.getElementById("vCliSelect").value,
     produto_id: p.id,
-    quantidade: vQtd.value,
-    valor: p.preco_revenda * vQtd.value,
-    tipo_pagamento: vTipoPagamento.value,
+    quantidade: document.getElementById("vQtd").value,
+    valor: p.preco_revenda * document.getElementById("vQtd").value,
+    tipo_pagamento: document.getElementById("vTipoPagamento").value,
     data: new Date().toISOString()
   });
 
@@ -446,12 +475,13 @@ async function doVenda() {
 
 /* ================= LISTA ================= */
 function renderVen() {
-  listVen.innerHTML = _vens.map(v => `
-    <div class="card">
-      ${v.clientes?.nome || "Cliente"} - R$ ${Number(v.valor).toFixed(2)}
-      <button class="btn btn-add" onclick="imprimirVenda(${v.id})">🖨️</button>
-    </div>
-  `).join("");
+  document.getElementById("listVen").innerHTML =
+    _vens.map(v => `
+      <div class="card">
+        ${v.clientes?.nome || "Cliente"} - R$ ${Number(v.valor).toFixed(2)}
+        <button class="btn btn-add" onclick="imprimirVenda(${v.id})">🖨️</button>
+      </div>
+    `).join("");
 }
 
 /* ================= CUPOM ================= */
@@ -461,8 +491,7 @@ function imprimirVenda(id) {
 
   const w = window.open("", "_blank", "width=300,height=600");
   w.document.write(`
-    <body onload="window.print();window.close()"
-      style="font-family:monospace;width:80mm">
+    <body onload="window.print();window.close()" style="font-family:monospace">
       <h3>SISTEMA HX</h3>
       CUPOM NÃO FISCAL<br><hr>
       Cliente: ${v.clientes?.nome}<br>
@@ -470,41 +499,11 @@ function imprimirVenda(id) {
     </body>
   `);
 }
-
-/* ================= DASH ================= */
-function updateDash() {
-  const hoje = new Date().toDateString();
-  let dia = 0, mes = 0;
-
-  _vens.forEach(v => {
-    const d = new Date(v.data);
-    if (d.toDateString() === hoje) dia += Number(v.valor);
-    if (d.getMonth() === new Date().getMonth()) mes += Number(v.valor);
-  });
-
-  vDia.innerText = `R$ ${dia.toFixed(2)}`;
-  vMes.innerText = `R$ ${mes.toFixed(2)}`;
-}
-
-function renderChart() {
-  if (chartInstance) chartInstance.destroy();
-
-  chartInstance = new Chart(chartDiario, {
-    type: "line",
-    data: {
-      labels: _vens.slice(0, 7).reverse().map(v =>
-        new Date(v.data).toLocaleDateString("pt-BR")
-      ),
-      datasets: [{
-        data: _vens.slice(0, 7).reverse().map(v => v.valor),
-        borderColor: "#0aff9d"
-      }]
-    }
-  });
-}
 </script>
+
 
 </body>
 </html>
+
 
 
