@@ -411,20 +411,21 @@ function renderEst() {
     }).join('');
 }
 
-async function editProd(id) {
+function editProd(id) {
   const p = _prods.find(x => x.id === id);
   if (!p) return;
 
-  document.getElementById('pNome').value = p.nome || "";
-  document.getElementById('pQtd').value = p.q_id || p.qnt || 0;
-  document.getElementById('pMin').value = p.estoque_minimo || 0;
-  document.getElementById('pCusto').value = p.preco_custo || 0;
-  document.getElementById('pRev').value = p.preco_revenda || 0;
-
   prodEditId = id;
 
-  document.querySelector("#estTab .btn-add").innerText = "SALVAR ALTERAÇÕES";
+  eNome.value  = p.nome || "";
+  eQtd.value   = p.q_id || p.qnt || 0;
+  eMin.value   = p.estoque_minimo || 0;
+  eCusto.value = p.preco_custo || 0;
+  eRev.value   = p.preco_revenda || 0;
+
+  document.getElementById("modalEditProd").style.display = "flex";
 }
+
 
     async function saveProd() {
   const dados = {
@@ -517,7 +518,42 @@ function renderOrc() {
 
 window.onload = () => { if(db.auth.getSession()) loadAll(); };
 </script>
+
+      <!-- MODAL DE EDIÇÃO DE PRODUTO -->
+  <div id="modalEditProd" style="
+    display:none;
+    position:fixed;
+    inset:0;
+    background:rgba(0,0,0,.7);
+    z-index:9999;
+    align-items:center;
+    justify-content:center;
+  ">
+    <div style="
+      background:#181818;
+      padding:20px;
+      border-radius:8px;
+      width:400px;
+      border:1px solid #0aff9d;
+    ">
+      <h3 style="color:#0aff9d">✏️ Editar Produto</h3>
+
+      <input id="eNome" placeholder="Produto">
+      <input id="eQtd" type="number" placeholder="Quantidade">
+      <input id="eMin" type="number" placeholder="Mínimo">
+      <input id="eCusto" type="number" placeholder="Preço Custo">
+      <input id="eRev" type="number" placeholder="Preço Venda">
+
+      <div style="display:flex; gap:10px; margin-top:10px;">
+        <button class="btn btn-add" onclick="salvarEdicaoProd()">SALVAR</button>
+        <button class="btn btn-del" onclick="fecharModalProd()">CANCELAR</button>
+      </div>
+    </div>
+  </div>
+
 </body>
 </html>
+
+
 
 
