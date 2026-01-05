@@ -145,6 +145,14 @@ const db = createClient("https://axfccmezfofnqfsdurqb.supabase.co", "eyJhbGciOiJ
 );
 let _clis = [], _prods = [], _vens = [], _oss = [], _orcs = [];
 let chartInstance = null;
+let prodEditId = null;
+
+const pNome  = document.getElementById('pNome');
+const pQtd   = document.getElementById('pQtd');
+const pMin   = document.getElementById('pMin');
+const pCusto = document.getElementById('pCusto');
+const pRev   = document.getElementById('pRev');
+ 
 
 async function login() {
     const email = document.getElementById('lEmail').value;
@@ -404,13 +412,51 @@ function renderEst() {
 }
 
 async function editProd(id) {
-    const p = _prods.find(x => x.id === id);
-    const novaQtd = prompt(`Nova quantidade para ${p.nome}:`, (p.q_id || p.qnt || 0));
-    if(novaQtd !== null) {
-        await db.from('produtos').update({ q_id: Number(novaQtd), qnt: Number(novaQtd) }).eq('id', id);
-        loadAll();
-    }
+  const p = _prods.find(x => x.id === id);
+  if (!p) return;
+
+  document.getElementById('pNome').value = p.nome || "";
+  document.getElementById('pQtd').value = p.q_id || p.qnt || 0;
+  document.getElementById('pMin').value = p.estoque_minimo || 0;
+  document.getElementById('pCusto').value = p.preco_custo || 0;
+  document.getElementById('pRev').value = p.preco_revenda || 0;
+
+  prodEditId = id;
+
+  document.querySelector("#estTab .btn-add").innerText = "SALVAR ALTERAÇÕES";
 }
+
+    async function saveProd() {
+  const dados = {
+    nome: pNome.value,
+    q_id: Number(pQtd.value),
+    qnt: Number(pQtd.value),
+    estoque_minimo: Number(pMin.value),
+    preco_custo: Number(pCusto.value),
+    preco_revenda: Number(pRev.value)
+  };
+
+  if (prodEditId) {
+    await db.from('produtos')
+      .update(dados)
+      .eq('id', prodEditId);
+
+    prodEditId = null;
+    document.querySelector("#estTab .btn-add").innerText = "ADICIONAR";
+  } else {
+    await db.from('produtos').insert(dados);
+  }
+
+  pNome.value = "";
+  pQtd.value = "";
+  pMin.value = "";
+  pCusto.value = "";
+  pRev.value = "";
+
+  loadAll();
+}
+
+
 
 function renderCli() {
     const s = document.getElementById('sCli').value.toLowerCase();
@@ -473,4 +519,5 @@ window.onload = () => { if(db.auth.getSession()) loadAll(); };
 </script>
 </body>
 </html>
+
 
