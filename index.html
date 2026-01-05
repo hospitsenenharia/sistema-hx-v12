@@ -142,29 +142,34 @@
   </section>
 </main>
 
-<!-- ================= SCRIPT ÚNICO ================= -->
 <script>
-/* SUPABASE */
+/* ================= SUPABASE ================= */
 const { createClient } = window.supabase;
 const db = createClient(
   "https://axfccmezfofnqfsdurqb.supabase.co",
-  "SUA_ANON_PUBLIC_KEY"
+  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImF4ZmNjbWV6Zm9mbnFmc2R1cnFiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjUwNzA1NDMsImV4cCI6MjA4MDY0NjU0M30.woGp6hBgiEa41opQxyxqqMULlDKMXm9T83bhJ7UEmb8"
 );
 
-/* VARIÁVEIS */
-let _clis = [], _prods = [], _vens = [];
+/* ================= VARIÁVEIS ================= */
+let _clis = [];
+let _prods = [];
+let _vens = [];
 let chartInstance = null;
 
-/* LOGIN */
+/* ================= LOGIN ================= */
 async function login() {
-  const email = lEmail.value;
-  const password = lPass.value;
+  const email = document.getElementById("lEmail").value;
+  const password = document.getElementById("lPass").value;
 
-  const { error } = await db.auth.signInWithPassword({ email, password });
+  const { error } = await db.auth.signInWithPassword({
+    email,
+    password
+  });
 
-  if (error) lErr.innerText = error.message;
-  else {
-    loginOverlay.style.display = "none";
+  if (error) {
+    document.getElementById("lErr").innerText = error.message;
+  } else {
+    document.getElementById("loginOverlay").style.display = "none";
     loadAll();
   }
 }
@@ -261,3 +266,4 @@ function renderChart() {
 
 </body>
 </html>
+
