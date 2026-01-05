@@ -160,11 +160,25 @@ async function login() {
 }
 
 function changeTab(id, btn) {
-    document.querySelectorAll('main section').forEach(s => s.style.display = 'none');
-    document.getElementById(id).style.display = 'block';
-    document.querySelectorAll('#sidebar button').forEach(b => b.classList.remove('active'));
-    btn.classList.add('active');
+  const target = document.getElementById(id);
+  if (!target) {
+    console.warn("Seção inexistente:", id);
+    return;
+  }
+
+  document.querySelectorAll("main section").forEach(s => {
+    if (s) s.style.display = "none";
+  });
+
+  target.style.display = "block";
+
+  document.querySelectorAll("#sidebar button")
+    .forEach(b => b.classList.remove("active"));
+
+  if (btn) btn.classList.add("active");
 }
+
+
 
 async function loadAll() {
     const [{data: c}, {data: p}, {data: v}, {data: o}, {data: r}] = await Promise.all([
@@ -182,10 +196,24 @@ async function loadAll() {
 }
 
 function refreshSelects() {
-    const cliOptions = _clis.map(c => `<option value="${c.id}">${c.nome}</option>`).join('');
-    ['vCliSelect', 'osCliSelect', 'orcCliSelect'].forEach(id => document.getElementById(id).innerHTML = cliOptions);
-    document.getElementById('vProdSelect').innerHTML = _prods.map(p => `<option value="${p.id}">${p.nome} (Estoque: ${p.q_id || p.qnt || 0})</option>`).join('');
+  const cliOptions = _clis
+    .map(c => `<option value="${c.id}">${c.nome}</option>`)
+    .join("");
+
+  const prodOptions = _prods
+    .map(p => `<option value="${p.id}">${p.nome}</option>`)
+    .join("");
+
+  const idsClientes = ["vCliSelect", "osCliSelect", "orcCliSelect"];
+  idsClientes.forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.innerHTML = cliOptions;
+  });
+
+  const vProd = document.getElementById("vProdSelect");
+  if (vProd) vProd.innerHTML = prodOptions;
 }
+
 
 // DASHBOARD CALCULATIONS
 function updateDash() {
@@ -445,3 +473,4 @@ window.onload = () => { if(db.auth.getSession()) loadAll(); };
 </script>
 </body>
 </html>
+
