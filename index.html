@@ -357,31 +357,26 @@ const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZ
 const db = createClient(SUPABASE_URL, SUPABASE_KEY);
 
 /* ================= VARIÁVEIS ================= */
-let _clis = [], _prods = [], _vens = [];
+let _clis = [];
+let _prods = [];
+let _vens = [];
 let chartInstance = null;
 
 /* ================= LOGIN ================= */
 async function login() {
-  try {
-    const { error } = await db.auth.signInWithPassword({
-      email: document.getElementById("lEmail").value,
-      password: document.getElementById("lPass").value
-    });
+  const email = document.getElementById("lEmail").value;
+  const password = document.getElementById("lPass").value;
 
-    if (error) {
-      document.getElementById("lErr").innerText = error.message;
-      return;
-    }
+  const { error } = await db.auth.signInWithPassword({ email, password });
 
+  if (error) {
+    document.getElementById("lErr").innerText = error.message;
+  } else {
     document.getElementById("loginOverlay").style.display = "none";
     loadAll();
-
-  } catch (e) {
-    alert("Erro crítico no login: " + e.message);
   }
 }
 
-/* ================= LOGOUT ================= */
 async function logout() {
   await db.auth.signOut();
   document.getElementById("loginOverlay").style.display = "flex";
@@ -412,6 +407,7 @@ async function loadAll() {
   refreshSelects();
   renderVen();
   updateDash();
+  renderChart();
 }
 
 /* ================= SELECTS ================= */
@@ -425,57 +421,52 @@ function refreshSelects() {
 
 /* ================= DASH ================= */
 function updateDash() {
-  let totalHoje = 0;
-  const hoje = new Date().toDateString();
+  let total = 0;
+  _vens.forEach(v => total += Number(v.valor || 0));
+  document.getElementById("vDia").innerText = `R$ ${total.toFixed(2)}`;
+}
 
-  _vens.forEach(v => {
-    if (new Date(v.data).toDateString() === hoje) {
-      totalHoje += Number(v.valor || 0);
+/* ================= GRÁFICO ================= */
+function renderChart() {
+  if (chartInstance) chartInstance.destroy();
+
+  chartInstance = new Chart(
+    document.getElementById("chartDiario"),
+    {
+      type: "line",
+      data: {
+        labels: _vens.map(v => new Date(v.data).toLocaleDateString("pt-BR")),
+        datasets: [{
+          label: "Vendas",
+          data: _vens.map(v => Number(v.valor || 0)),
+          borderColor: "#0aff9d"
+        }]
+      }
     }
-  });
-
-  document.getElementById("vDia").innerText =
-    `R$ ${totalHoje.toFixed(2)}`;
+  );
 }
 
 /* ================= VENDAS ================= */
 function updateVendaPrice() {
-  const p = _prods.find(x =>
-    x.id == document.getElementById("vProdSelect").value
-  );
+  const p = _prods.find(x => x.id == vProdSelect.value);
   if (p) {
-    document.getElementById("vTotalLabel").innerText =
-      `R$ ${(p.preco_revenda * document.getElementById("vQtd").value).toFixed(2)}`;
+    vTotalLabel.innerText = `R$ ${(p.preco_revenda * vQtd.value).toFixed(2)}`;
   }
 }
 
 async function doVenda() {
-  const p = _prods.find(x =>
-    x.id == document.getElementById("vProdSelect").value
-  );
-  if (!p) return alert("Produto inválido");
+  const p = _prods.find(x => x.id == vProdSelect.value);
 
   await db.from("vendas").insert({
-    cliente_id: document.getElementById("vCliSelect").value,
+    cliente_id: vCliSelect.value,
     produto_id: p.id,
-    quantidade: document.getElementById("vQtd").value,
-    valor: p.preco_revenda * document.getElementById("vQtd").value,
-    tipo_pagamento: document.getElementById("vTipoPagamento").value,
+    quantidade: Number(vQtd.value),
+    valor: p.preco_revenda * vQtd.value,
+    tipo_pagamento: vTipoPagamento.value,
     data: new Date().toISOString()
   });
 
   loadAll();
-}
-
-/* ================= LISTA ================= */
-function renderVen() {
-  document.getElementById("listVen").innerHTML =
-    _vens.map(v => `
-      <div class="card">
-        ${v.clientes?.nome || "Cliente"} - R$ ${Number(v.valor).toFixed(2)}
-        <button class="btn btn-add" onclick="imprimirVenda(${v.id})">🖨️</button>
-      </div>
-    `).join("");
 }
 
 /* ================= CUPOM ================= */
@@ -484,20 +475,21 @@ function imprimirVenda(id) {
   if (!v) return;
 
   const w = window.open("", "_blank", "width=300,height=600");
+
   w.document.write(`
-    <body onload="window.print();window.close()" style="font-family:monospace">
-      <h3>SISTEMA HX</h3>
-      CUPOM NÃO FISCAL<br><hr>
-      Cliente: ${v.clientes?.nome}<br>
-      Total: R$ ${Number(v.valor).toFixed(2)}
+    <body onload="window.print(); window.close()">
+      CUPOM NÃO FISCAL<br>
+      TOTAL: R$ ${Number(v.valor).toFixed(2)}
     </body>
   `);
 }
 </script>
 
 
+
 </body>
 </html>
+
 
 
 
