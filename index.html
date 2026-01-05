@@ -100,22 +100,45 @@
     </section>
 
     <section id="venTab" style="display:none">
-        <h2>💵 Registro de Vendas</h2>
-        <div class="card">
-            <select id="vCliSelect"></select>
-            <select id="vProdSelect" onchange="updateVendaPrice()"></select>
-            <input id="vQtd" type="number" value="1" oninput="updateVendaPrice()">
-            <p>Total Estimado: <strong id="vTotalLabel">R$ 0,00</strong></p>
-            <button class="btn btn-add" onclick="doVenda()">FINALIZAR VENDA</button>
-        </div>
-        <div class="card">
-            <div style="display: flex; gap: 10px;">
-                <input id="sVenNome" placeholder="🔍 Por cliente..." oninput="renderVen()">
-                <input id="sVenData" type="date" onchange="renderVen()">
-            </div>
-            <div id="listVen"></div>
-        </div>
-    </section>
+  <h2>💵 Registro de Vendas</h2>
+
+  <div class="card">
+    <select id="vCliSelect"></select>
+
+    <select id="vProdSelect" onchange="recalcularVenda()"></select>
+
+    <input id="vQtd" type="number" value="1" min="1" oninput="recalcularVenda()">
+
+    <select id="vPagamento" onchange="recalcularVenda()">
+      <option value="">Forma de pagamento</option>
+      <option value="Pix">Pix</option>
+      <option value="Dinheiro">Dinheiro</option>
+      <option value="Cartão">Cartão</option>
+    </select>
+
+    <input id="vValorManual" type="number"
+           placeholder="Valor manual (opcional)"
+           oninput="recalcularVenda()">
+
+    <input id="vDesconto" type="number"
+           placeholder="Desconto"
+           value="0"
+           oninput="recalcularVenda()">
+
+    <p>Total: <strong id="vTotalLabel">R$ 0,00</strong></p>
+
+    <button class="btn btn-add" onclick="doVenda()">FINALIZAR VENDA</button>
+  </div>
+
+  <div class="card">
+    <div style="display:flex; gap:10px;">
+      <input id="sVenNome" placeholder="🔍 Por cliente..." oninput="renderVen()">
+      <input id="sVenData" type="date" onchange="renderVen()">
+    </div>
+    <div id="listVen"></div>
+  </div>
+</section>
+
 
     <section id="osTab" style="display:none">
         <h2>🛠 Ordens de Serviço</h2>
@@ -264,30 +287,63 @@ function updateVendaPrice() {
 }
 
 async function doVenda() {
-    const p = _prods.find(x => x.id == document.getElementById('vProdSelect').value);
-    const q = Number(document.getElementById('vQtd').value);
-    const estoqueAtual = (p.q_id || p.qnt || 0);
+  const prod = _prods.find(p =>
+    p.id == document.getElementById('vProdSelect').value
+  );
 
-    if(estoqueAtual < q) return alert("Estoque insuficiente!");
+  if (!prod) return alert("Selecione um produto");
 
-    const valorTotal = p.preco_revenda * q;
-    const lucro = valorTotal - (p.preco_custo * q);
+  const qtd = Number(document.getElementById('vQtd').value || 1);
+  const estoqueAtual = prod.q_id || prod.qnt || 0;
 
-    await db.from('vendas').insert({
-        cliente_id: document.getElementById('vCliSelect').value,
-        produto_id: p.id,
-        quantidade: q,
-        valor: valorTotal,
-        lucro_total: lucro,
-        data: new Date().toISOString()
-    });
+  if (estoqueAtual < qtd) {
+    return alert("Estoque insuficiente!");
+  }
 
+  const valorManual = Number(document.getElementById('vValorManual').value || 0);
+  const desconto = Number(document.getElementById('vDesconto').value || 0);
+  const formaPagamento = document.getElementById('vPagamento').value;
 
+  let valorTotal = 0;
 
-    await db.from('produtos').update({ q_id: estoqueAtual - q, qnt: estoqueAtual - q }).eq('id', p.id);
-    loadAll();
+  if (valorManual > 0) {
+    valorTotal = valorManual;
+  } else {
+    valorTotal = prod.preco_revenda * qtd;
+  }
+
+  valorTotal -= desconto;
+  if (valorTotal < 0) valorTotal = 0;
+
+  const lucro = valorTotal - (prod.preco_custo * qtd);
+
+  await db.from('vendas').insert({
+    cliente_id: document.getElementById('vCliSelect').value,
+    produto_id: prod.id,
+    quantidade: qtd,
+    valor: valorTotal,
+    desconto: desconto,
+    valor_manual: valorManual || null,
+    forma_pagamento: formaPagamento,
+    lucro_total: lucro,
+    data_venda: new Date().toISOString()
+  });
+
+  // Atualiza estoque
+  await db.from('produtos')
+    .update({
+      q_id: estoqueAtual - qtd,
+      qnt: estoqueAtual - qtd
+    })
+    .eq('id', prod.id);
+
+  // Limpa campos
+  document.getElementById('vValorManual').value = "";
+  document.getElementById('vDesconto').value = 0;
+  document.getElementById('vPagamento').value = "";
+
+  loadAll();
 }
-
 
 
 // GENERAL ACTIONS: RENDER, EDIT, DELETE
@@ -576,6 +632,7 @@ window.onload = () => { if(db.auth.getSession()) loadAll(); };
 
 </body>
 </html>
+
 
 
 
