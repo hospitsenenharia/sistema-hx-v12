@@ -464,6 +464,44 @@ function imprimirVenda(id) {
         Qtd: ${v.quantidade}<br>
         Total: R$ ${Number(v.valor).toFixed(2)}<br>
         Data: ${new Date(v.data).toLocaleString("pt-BR")}
+
+        <div id="modalEditVenda" style="
+  display:none;
+  position:fixed;
+  inset:0;
+  background:rgba(0,0,0,.7);
+  z-index:9999;
+  align-items:center;
+  justify-content:center;
+">
+  <div class="card" style="width:420px">
+    <h3 style="color:var(--hx-accent)">✏️ Editar Venda</h3>
+
+    <select id="eVCli"></select>
+    <select id="eVProd"></select>
+    <input id="eVQtd" type="number" min="1">
+
+    <input id="eVValor" type="number" placeholder="Valor">
+    <input id="eVDesc" type="number" placeholder="Desconto">
+
+    <select id="eVPag">
+      <option value="">Forma de pagamento</option>
+      <option>Pix</option>
+      <option>Dinheiro</option>
+      <option>Cartão</option>
+    </select>
+
+    <input id="eVData" type="datetime-local">
+
+    <div style="display:flex; gap:10px; margin-top:10px">
+      <button class="btn btn-add" onclick="salvarEdicaoVenda()">SALVAR</button>
+      <button class="btn btn-del" onclick="fecharModalVenda()">CANCELAR</button>
+    </div>
+  </div>
+</div>
+
+
+        
       </body>
       </html>
     `);
@@ -663,6 +701,7 @@ window.onload = async () => {
 
 </body>
 </html>
+
 
 
 
