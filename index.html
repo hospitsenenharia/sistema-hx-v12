@@ -57,6 +57,18 @@
     <button onclick="changeTab('venTab', this)">💵 Vendas</button>
     <button onclick="changeTab('osTab', this)">🛠 Ordem de Serviço</button>
     <button onclick="changeTab('orcTab', this)">📝 Orçamentos</button>
+    <button onclick="logout()" style="
+  margin-top:auto;
+  background:none;
+  border:none;
+  color:#ff5566;
+  padding:15px;
+  text-align:left;
+  cursor:pointer;
+">
+  🚪 Sair do Sistema
+</button>
+
 </nav>
 
 <main>
@@ -178,17 +190,27 @@ const pRev   = document.getElementById('pRev');
  
 
 async function login() {
-    const email = document.getElementById('lEmail').value;
-    const password = document.getElementById('lPass').value;
-    const { data, error } = await db.auth.signInWithPassword({ email, password });
-    
-    if(error) {
-        document.getElementById('lErr').innerText = "Erro: " + error.message;
-    } else {
-        document.getElementById('loginOverlay').style.display = 'none';
-        loadAll();
-    }
+  const email = document.getElementById('lEmail').value.trim();
+  const password = document.getElementById('lPass').value.trim();
+  const errEl = document.getElementById('lErr');
+
+  errEl.innerText = "";
+
+  if (!email || !password) {
+    errEl.innerText = "Informe e-mail e senha.";
+    return;
+  }
+
+  const { error } = await db.auth.signInWithPassword({ email, password });
+
+  if (error) {
+    errEl.innerText = "Erro: " + error.message;
+  } else {
+    document.getElementById('loginOverlay').style.display = 'none';
+    loadAll();
+  }
 }
+
 
 function changeTab(id, btn) {
   const target = document.getElementById(id);
@@ -595,7 +617,16 @@ function renderOrc() {
     `).join('');
 }
 
-window.onload = () => { if(db.auth.getSession()) loadAll(); };
+window.onload = async () => {
+  const { data } = await db.auth.getSession();
+
+  if (data.session) {
+    document.getElementById('loginOverlay').style.display = 'none';
+    loadAll();
+  } else {
+    document.getElementById('loginOverlay').style.display = 'flex';
+  }
+};
 </script>
 
       <!-- MODAL DE EDIÇÃO DE PRODUTO -->
@@ -632,6 +663,7 @@ window.onload = () => { if(db.auth.getSession()) loadAll(); };
 
 </body>
 </html>
+
 
 
 
