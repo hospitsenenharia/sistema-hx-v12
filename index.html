@@ -174,20 +174,29 @@
 </main>
 
 <script>
-// CONFIGURAÇÃO SUPABASE
+// ================= SUPABASE =================
 const { createClient } = window.supabase;
-const db = createClient("https://axfccmezfofnqfsdurqb.supabase.co", "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImF4ZmNjbWV6Zm9mbnFmc2R1cnFiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjUwNzA1NDMsImV4cCI6MjA4MDY0NjU0M30.woGp6hBgiEa41opQxyxqqMULlDKMXm9T83bhJ7UEmb8"
+const db = createClient(
+  "https://axfccmezfofnqfsdurqb.supabase.co",
+  "SUA_CHAVE_ANON_AQUI"
 );
+
+// ================= DADOS EM MEMÓRIA =================
 let _clis = [], _prods = [], _vens = [], _oss = [], _orcs = [];
 let chartInstance = null;
-let prodEditId = null;
 
-const pNome  = document.getElementById('pNome');
-const pQtd   = document.getElementById('pQtd');
-const pMin   = document.getElementById('pMin');
-const pCusto = document.getElementById('pCusto');
-const pRev   = document.getElementById('pRev');
- 
+// ================= EDIÇÃO DE VENDAS (MODAL) =================
+let vendaEditId = null;
+
+// elementos do modal (HTML já carregado)
+const eVCli   = document.getElementById('eVCli');
+const eVProd  = document.getElementById('eVProd');
+const eVQtd   = document.getElementById('eVQtd');
+const eVValor = document.getElementById('eVValor');
+const eVDesc  = document.getElementById('eVDesc');
+const eVPag   = document.getElementById('eVPag');
+const eVData  = document.getElementById('eVData');
+
 
 async function login() {
   const email = document.getElementById('lEmail').value.trim();
@@ -196,6 +205,8 @@ async function login() {
 
   errEl.innerText = "";
 
+
+    
   if (!email || !password) {
     errEl.innerText = "Informe e-mail e senha.";
     return;
@@ -257,16 +268,35 @@ function refreshSelects() {
     .map(p => `<option value="${p.id}">${p.nome}</option>`)
     .join("");
 
-  const idsClientes = ["vCliSelect", "osCliSelect", "orcCliSelect"];
-  idsClientes.forEach(id => {
-    const el = document.getElementById(id);
-    if (el) el.innerHTML = cliOptions;
-  });
+  // Selects de clientes
+  ["vCliSelect", "osCliSelect", "orcCliSelect", "eVCli"]
+    .forEach(id => {
+      const el = document.getElementById(id);
+      if (el) el.innerHTML = cliOptions;
+    });
 
-  const vProd = document.getElementById("vProdSelect");
-  if (vProd) vProd.innerHTML = prodOptions;
+  // Selects de produtos
+  ["vProdSelect", "eVProd"]
+    .forEach(id => {
+      const el = document.getElementById(id);
+      if (el) el.innerHTML = prodOptions;
+    });
 }
 
+
+    
+let vendaEditId = null;
+
+const eVCli   = document.getElementById('eVCli');
+const eVProd  = document.getElementById('eVProd');
+const eVQtd   = document.getElementById('eVQtd');
+const eVValor = document.getElementById('eVValor');
+const eVDesc  = document.getElementById('eVDesc');
+const eVPag   = document.getElementById('eVPag');
+const eVData  = document.getElementById('eVData');
+
+
+    
 
 // DASHBOARD CALCULATIONS
 function updateDash() {
@@ -701,6 +731,7 @@ window.onload = async () => {
 
 </body>
 </html>
+
 
 
 
