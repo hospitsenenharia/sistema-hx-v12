@@ -471,7 +471,50 @@ function renderVen() {
     `).join('');
 }
 
+// ==================== RENDER VENDAS ====================
+function renderVen() {
+  const sNome =
+    document.getElementById('sVenNome')?.value?.toLowerCase() || "";
 
+  const sData =
+    document.getElementById('sVenData')?.value || "";
+
+  document.getElementById('listVen').innerHTML = _vens
+    .filter(v =>
+      (v.clientes?.nome?.toLowerCase().includes(sNome)) &&
+      (sData ? (v.data_venda || v.data).startsWith(sData) : true)
+    )
+    .map(v => `
+      <div style="padding:10px; border-bottom:1px solid #333; display:flex; justify-content:space-between; align-items:center;">
+        <span>
+          ${(v.data_venda || v.data).split('T')[0]}
+          <strong>${v.clientes?.nome}</strong><br>
+          ${v.produtos?.nome} | Qtd: ${v.quantidade} | R$ ${Number(v.valor).toFixed(2)}
+        </span>
+
+        <div style="display:flex; gap:6px;">
+          <button class="btn btn-add" onclick="editarVenda(${v.id})">✏️</button>
+          <button class="btn btn-add" onclick="imprimirVenda(${v.id})">🖨️</button>
+          <button class="btn btn-del" onclick="delItem('vendas', ${v.id})">🗑️</button>
+        </div>
+      </div>
+    `).join('');
+}
+
+// ==================== RENDER ORDEM DE SERVIÇO ====================
+function renderOS() {
+  const el = document.getElementById('listOS');
+  if (!el) return;
+
+  el.innerHTML = _oss.map(o => `
+    <div style="padding:10px; border-bottom:1px solid #333;">
+      <strong>${o.clientes?.nome || 'Sem cliente'}</strong><br>
+      ${o.descricao || ''}
+    </div>
+  `).join('');
+} // ✅ FECHAMENTO CORRETO
+
+// ==================== IMPRIMIR VENDA ====================
 function imprimirVenda(id) {
   const v = _vens.find(x => x.id === id);
   if (!v) {
@@ -487,18 +530,10 @@ function imprimirVenda(id) {
         <meta charset="utf-8">
         <title>Cupom</title>
         <style>
-          body {
-            font-family: monospace;
-            font-size: 12px;
-          }
-          hr {
-            border: none;
-            border-top: 1px dashed #000;
-            margin: 8px 0;
-          }
+          body { font-family: monospace; font-size: 12px; }
+          hr { border: none; border-top: 1px dashed #000; margin: 8px 0; }
         </style>
       </head>
-
       <body onload="window.print(); window.close()">
         <strong>SISTEMA HX</strong><br>
         CUPOM NÃO FISCAL
@@ -517,6 +552,7 @@ function imprimirVenda(id) {
 
   w.document.close();
 }
+
 
 
 // ==================== ESTOQUE ====================
@@ -666,6 +702,7 @@ function recalcularVenda() {
 
 </body>
 </html>
+
 
 
 
