@@ -181,7 +181,14 @@ const db = createClient(
 "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImF4ZmNjbWV6Zm9mbnFmc2R1cnFiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjUwNzA1NDMsImV4cCI6MjA4MDY0NjU0M30.woGp6hBgiEa41opQxyxqqMULlDKMXm9T83bhJ7UEmb8"
 );
 
-
+async function logout() {
+  const { error } = await db.auth.signOut();
+  if (error) {
+    alert("Erro ao sair: " + error.message);
+  } else {
+    location.reload();
+  }
+}
     // ================= DADOS EM MEMÓRIA =================
 let _clis = [];
 let _prods = [];
@@ -523,7 +530,7 @@ const eMin   = document.getElementById('eMin');
 const eCusto = document.getElementById('eCusto');
 const eRev   = document.getElementById('eRev');
 
-// ================= EDITAR PRODUTO (MODAL)=================
+// ================= EDITAR PRODUTO (MODAL) =================
 function editProd(id) {
   const p = _prods.find(x => x.id === id);
   if (!p) return;
@@ -554,10 +561,16 @@ async function salvarEdicaoProd() {
     })
     .eq('id', prodEditId);
 
-  prodEditId = null;
-  document.getElementById("modalEditProd").style.display = "none";
+  fecharModalProd();
   loadAll();
 }
+
+// ================= FECHAR MODAL =================
+function fecharModalProd() {
+  prodEditId = null;
+  document.getElementById("modalEditProd").style.display = "none";
+}
+
 
 window.onload = async () => {
   const { data } = await db.auth.getSession();
@@ -638,6 +651,7 @@ function recalcularVenda() {
 
 </body>
 </html>
+
 
 
 
