@@ -178,24 +178,19 @@
 const { createClient } = window.supabase;
 const db = createClient(
   "https://axfccmezfofnqfsdurqb.supabase.co",
-  "SUA_CHAVE_ANON_AQUI"
+"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImF4ZmNjbWV6Zm9mbnFmc2R1cnFiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjUwNzA1NDMsImV4cCI6MjA4MDY0NjU0M30.woGp6hBgiEa41opQxyxqqMULlDKMXm9T83bhJ7UEmb8"
 );
 
-// ================= DADOS EM MEMÓRIA =================
-let _clis = [], _prods = [], _vens = [], _oss = [], _orcs = [];
+
+    // ================= DADOS EM MEMÓRIA =================
+let _clis = [];
+let _prods = [];
+let _vens = [];
+let _oss  = [];
+let _orcs = [];
+
 let chartInstance = null;
-
-// ================= EDIÇÃO DE VENDAS (MODAL) =================
-let vendaEditId = null;
-
-// elementos do modal (HTML já carregado)
-const eVCli   = document.getElementById('eVCli');
-const eVProd  = document.getElementById('eVProd');
-const eVQtd   = document.getElementById('eVQtd');
-const eVValor = document.getElementById('eVValor');
-const eVDesc  = document.getElementById('eVDesc');
-const eVPag   = document.getElementById('eVPag');
-const eVData  = document.getElementById('eVData');
+let prodEditId = null;
 
 
 async function login() {
@@ -248,7 +243,7 @@ async function loadAll() {
     const [{data: c}, {data: p}, {data: v}, {data: o}, {data: r}] = await Promise.all([
         db.from('clientes').select('*').order('nome'),
         db.from('produtos').select('*').order('nome'),
-        db.from('vendas').select('*, clientes(nome), produtos(nome)').order('data', {ascending: false}),
+        db.from('vendas').select('*, clientes(nome), produtos(nome)').order('data_venda', { ascending: false }),
         db.from('ordens_servico').select('*, clientes(nome)').order('id', {ascending: false}),
         db.from('orcamentos').select('*, clientes(nome)').order('id', {ascending: false})
     ]);
@@ -304,18 +299,29 @@ function updateDash() {
 }
 
 function renderChart() {
-    const ctx = document.getElementById('chartDiario').getContext('2d');
-    if(chartInstance) chartInstance.destroy();
-    
-    const ultimasVendas = _vens.slice(0, 7).reverse();
-    chartInstance = new Chart(ctx, {
-        type: 'line',
-        data: {
-(sData ? (v.data_venda || v.data).startsWith(sData) : true)
-            datasets: [{ label: 'Vendas Recentes', data: ultimasVendas.map(v => v.valor), borderColor: '#0aff9d', tension: 0.3, fill: true, backgroundColor: 'rgba(10, 255, 157, 0.1)' }]
-        }
-    });
+  const ctx = document.getElementById('chartDiario').getContext('2d');
+  if (chartInstance) chartInstance.destroy();
+
+  const ultimasVendas = _vens.slice(0, 7).reverse();
+
+  chartInstance = new Chart(ctx, {
+    type: 'line',
+    data: {
+      labels: ultimasVendas.map(v =>
+        new Date(v.data_venda || v.data).toLocaleDateString("pt-BR")
+      ),
+      datasets: [{
+        label: 'Vendas Recentes',
+        data: ultimasVendas.map(v => v.valor),
+        borderColor: '#0aff9d',
+        backgroundColor: 'rgba(10, 255, 157, 0.1)',
+        tension: 0.3,
+        fill: true
+      }]
+    }
+  });
 }
+
 
 
 async function doVenda() {
@@ -388,39 +394,23 @@ async function delItem(tab, id) {
 }
 
 async function editarVenda(id) {
-    const v = _vens.find(x => x.id === id);
-    if (!v) return;
+  const v = _vens.find(x => x.id === id);
+  if (!v) return;
 
-    const novaQtd = prompt(
-        `Editar quantidade (${v.produtos?.nome})`,
-        v.quantidade
-    );
+  const novaData = prompt(
+    "Editar data e hora (YYYY-MM-DD HH:mm)",
+    new Date(v.data_venda).toISOString().slice(0,16).replace("T"," ")
+  );
 
-    if (novaQtd === null) return;
+  if (!novaData) return;
 
-    const qtd = Number(novaQtd);
-    if (isNaN(qtd) || qtd <= 0) {
-        alert("Quantidade inválida");
-        return;
-    }
+  const iso = new Date(novaData.replace(" ","T")).toISOString();
 
-    const precoUnit = v.valor / v.quantidade;
-    const custoUnit = v.lucro_total
-        ? (v.valor - v.lucro_total) / v.quantidade
-        : 0;
+  await db.from('vendas')
+    .update({ data_venda: iso })
+    .eq('id', id);
 
-    const novoValor = precoUnit * qtd;
-    const novoLucro = novoValor - (custoUnit * qtd);
-
-    await db.from('vendas')
-        .update({
-            quantidade: qtd,
-            valor: novoValor,
-            lucro_total: novoLucro
-        })
-        .eq('id', id);
-
-    loadAll();
+  loadAll();
 }
 
 
@@ -439,7 +429,7 @@ function renderVen() {
         .map(v => `
         <div style="padding:10px; border-bottom:1px solid #333; display:flex; justify-content:space-between; align-items:center;">
             <span>
-              ${v.data.split('T')[0]} -
+        ${(v.data_venda || v.data).split('T')[0]}
               <strong>${v.clientes?.nome}</strong><br>
               ${v.produtos?.nome} | Qtd: ${v.quantidade} | R$ ${Number(v.valor).toFixed(2)}
             </span>
@@ -517,7 +507,7 @@ function renderEst() {
         </span>
 
         <div>
-          <button class="btn btn-edit" onclick="editProd(${p.id})">✏️</button>
+          <button class="btn btn-add" onclick="editProd(${p.id})">✏️</button>
           <button class="btn btn-del" onclick="delItem('produtos', ${p.id})">🗑️</button>
         </div>
       </div>
@@ -525,7 +515,15 @@ function renderEst() {
   }).join('');
 }
 
-// ==================== EDITAR (MODAL) ====================
+
+ // ================= ELEMENTOS DO MODAL =================
+const eNome  = document.getElementById('eNome');
+const eQtd   = document.getElementById('eQtd');
+const eMin   = document.getElementById('eMin');
+const eCusto = document.getElementById('eCusto');
+const eRev   = document.getElementById('eRev');
+
+// ================= EDITAR PRODUTO (MODAL)=================
 function editProd(id) {
   const p = _prods.find(x => x.id === id);
   if (!p) return;
@@ -541,110 +539,24 @@ function editProd(id) {
   document.getElementById("modalEditProd").style.display = "flex";
 }
 
-// SALVAR EDIÇÃO (MODAL)
+// ================= SALVAR EDIÇÃO (MODAL) =================
 async function salvarEdicaoProd() {
-  const dados = {
-    nome: eNome.value,
-    q_id: Number(eQtd.value),
-    qnt: Number(eQtd.value),
-    estoque_minimo: Number(eMin.value),
-    preco_custo: Number(eCusto.value),
-    preco_revenda: Number(eRev.value)
-  };
+  if (!prodEditId) return;
 
   await db.from('produtos')
-    .update(dados)
+    .update({
+      nome: eNome.value,
+      q_id: Number(eQtd.value),
+      qnt: Number(eQtd.value),
+      estoque_minimo: Number(eMin.value),
+      preco_custo: Number(eCusto.value),
+      preco_revenda: Number(eRev.value)
+    })
     .eq('id', prodEditId);
 
-  fecharModalProd();
-  loadAll();
-}
-
-// FECHAR MODAL
-function fecharModalProd() {
   prodEditId = null;
   document.getElementById("modalEditProd").style.display = "none";
-}
-
-// ==================== ADICIONAR PRODUTO ====================
-async function saveProd() {
-  const dados = {
-    nome: pNome.value,
-    q_id: Number(pQtd.value),
-    qnt: Number(pQtd.value),
-    estoque_minimo: Number(pMin.value),
-    preco_custo: Number(pCusto.value),
-    preco_revenda: Number(pRev.value)
-  };
-
-  await db.from('produtos').insert(dados);
-
-  pNome.value = "";
-  pQtd.value = "";
-  pMin.value = "";
-  pCusto.value = "";
-  pRev.value = "";
-
   loadAll();
-}
-
-
-
-function renderCli() {
-    const s = document.getElementById('sCli').value.toLowerCase();
-    document.getElementById('listCli').innerHTML = _clis.filter(c => c.nome.toLowerCase().includes(s)).map(c => `
-        <div style="padding:10px; border-bottom:1px solid #333; display:flex; justify-content:space-between;">
-            <span>${c.nome} - ${c.telefone || 'Sem fone'}</span>
-            <div>
-                <button class="btn btn-del" onclick="delItem('clientes', ${c.id})">🗑️</button>
-            </div>
-        </div>
-    `).join('');
-}
-
-// OS AND ORC
-async function saveOS() {
-    await db.from('ordens_servico').insert({
-        cliente_id: document.getElementById('osCliSelect').value,
-        descricao: document.getElementById('osDesc').value,
-        status: 'Aberta'
-    });
-    document.getElementById('osDesc').value = "";
-    loadAll();
-}
-
-function renderOS() {
-    document.getElementById('listOS').innerHTML = _oss.map(o => `
-        <div class="card">
-            <div style="display:flex; justify-content:space-between">
-                <strong>OS #${o.id} - ${o.clientes?.nome}</strong>
-                <button class="btn btn-del" onclick="delItem('ordens_servico', ${o.id})">🗑️</button>
-            </div>
-            <p>${o.descricao}</p>
-        </div>
-    `).join('');
-}
-
-// ORCAMENTOS
-async function saveOrc() {
-    await db.from('orcamentos').insert({
-        cliente_id: document.getElementById('orcCliSelect').value,
-        descricao: document.getElementById('orcDesc').value
-    });
-    document.getElementById('orcDesc').value = "";
-    loadAll();
-}
-
-function renderOrc() {
-    document.getElementById('listOrc').innerHTML = _orcs.map(r => `
-        <div class="card">
-            <div style="display:flex; justify-content:space-between">
-                <strong>Orç. #${r.id} - ${r.clientes?.nome}</strong>
-                <button class="btn btn-del" onclick="delItem('orcamentos', ${r.id})">🗑️</button>
-            </div>
-            <p>${r.descricao}</p>
-        </div>
-    `).join('');
 }
 
 window.onload = async () => {
@@ -659,7 +571,7 @@ window.onload = async () => {
 };
 
 
-  // ================= VENDAS =================
+
 
   // ================= VENDAS =================
 function recalcularVenda() {
@@ -726,6 +638,7 @@ function recalcularVenda() {
 
 </body>
 </html>
+
 
 
 
