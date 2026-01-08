@@ -282,31 +282,17 @@ function refreshSelects() {
       if (el) el.innerHTML = prodOptions;
     });
 }
-
-
-    
-let vendaEditId = null;
-
-const eVCli   = document.getElementById('eVCli');
-const eVProd  = document.getElementById('eVProd');
-const eVQtd   = document.getElementById('eVQtd');
-const eVValor = document.getElementById('eVValor');
-const eVDesc  = document.getElementById('eVDesc');
-const eVPag   = document.getElementById('eVPag');
-const eVData  = document.getElementById('eVData');
-
-
-    
+  
 
 // DASHBOARD CALCULATIONS
 function updateDash() {
     const hoje = new Date().toISOString().split('T')[0];
     const mes = hoje.substring(0, 7);
 
-    const vHoje = _vens.filter(v => v.data.startsWith(hoje));
+    const vHoje = _vens.filter(v =>(v.data_venda || v.data).startsWith(hoje));
     const totalHoje = vHoje.reduce((a, b) => a + (b.valor || 0), 0);
     const lucroHoje = vHoje.reduce((a, b) => a + (b.lucro_total || 0), 0);
-    const totalMes = _vens.filter(v => v.data.startsWith(mes)).reduce((a, b) => a + (b.valor || 0), 0);
+    const totalMes = _vens.filter(v => (v.data_venda || v.data).startsWith(mes)).reduce((a, b) => a + (b.valor || 0), 0);
     const criticos = _prods.filter(p => (p.q_id || p.qnt || 0) <= (p.estoque_minimo || 0)).length;
 
     document.getElementById('vDia').innerText = `R$ ${totalHoje.toFixed(2)}`;
@@ -325,18 +311,12 @@ function renderChart() {
     chartInstance = new Chart(ctx, {
         type: 'line',
         data: {
-            labels: ultimasVendas.map(v => v.data.split('T')[0]),
+(sData ? (v.data_venda || v.data).startsWith(sData) : true)
             datasets: [{ label: 'Vendas Recentes', data: ultimasVendas.map(v => v.valor), borderColor: '#0aff9d', tension: 0.3, fill: true, backgroundColor: 'rgba(10, 255, 157, 0.1)' }]
         }
     });
 }
 
-// VENDAS LOGIC
-function updateVendaPrice() {
-    const p = _prods.find(x => x.id == document.getElementById('vProdSelect').value);
-    const q = document.getElementById('vQtd').value;
-    if(p) document.getElementById('vTotalLabel').innerText = `R$ ${(p.preco_revenda * q).toFixed(2)}`;
-}
 
 async function doVenda() {
   const prod = _prods.find(p =>
@@ -369,17 +349,18 @@ async function doVenda() {
 
   const lucro = valorTotal - (prod.preco_custo * qtd);
 
-  await db.from('vendas').insert({
-    cliente_id: document.getElementById('vCliSelect').value,
-    produto_id: prod.id,
-    quantidade: qtd,
-    valor: valorTotal,
-    desconto: desconto,
-    valor_manual: valorManual || null,
-    forma_pagamento: formaPagamento,
-    lucro_total: lucro,
-    data_venda: new Date().toISOString()
-  });
+await db.from('vendas').insert({
+  cliente_id: document.getElementById('vCliSelect').value,
+  produto_id: prod.id,
+  quantidade: qtd,
+  valor: valorTotal,
+  desconto: desconto,
+  valor_manual: valorManual || null,
+  forma_pagamento: formaPagamento,
+  lucro_total: lucro,
+  data_venda: new Date().toISOString()
+});
+
 
   // Atualiza estoque
   await db.from('produtos')
@@ -453,7 +434,7 @@ function renderVen() {
     document.getElementById('listVen').innerHTML = _vens
         .filter(v =>
             (v.clientes?.nome?.toLowerCase().includes(sNome)) &&
-            (sData ? v.data.startsWith(sData) : true)
+(sData ? (v.data_venda || v.data).startsWith(sData) : true)
         )
         .map(v => `
         <div style="padding:10px; border-bottom:1px solid #333; display:flex; justify-content:space-between; align-items:center;">
@@ -474,70 +455,51 @@ function renderVen() {
 
 
 function imprimirVenda(id) {
-    const v = _vens.find(x => x.id === id);
-    if (!v) return alert("Venda não encontrada");
+  const v = _vens.find(x => x.id === id);
+  if (!v) {
+    alert("Venda não encontrada");
+    return;
+  }
 
-    const w = window.open("", "_blank", "width=300,height=600");
+  const w = window.open("", "_blank", "width=300,height=600");
 
-    w.document.write(`
-      <html>
+  w.document.write(`
+    <html>
       <head>
+        <meta charset="utf-8">
+        <title>Cupom</title>
         <style>
-          body { font-family: monospace; font-size: 12px; }
+          body {
+            font-family: monospace;
+            font-size: 12px;
+          }
+          hr {
+            border: none;
+            border-top: 1px dashed #000;
+            margin: 8px 0;
+          }
         </style>
       </head>
+
       <body onload="window.print(); window.close()">
         <strong>SISTEMA HX</strong><br>
-        CUPOM NÃO FISCAL<br><br>
+        CUPOM NÃO FISCAL
+        <hr>
         Cliente: ${v.clientes?.nome || "-"}<br>
         Produto: ${v.produtos?.nome || "-"}<br>
-        Qtd: ${v.quantidade}<br>
+        Quantidade: ${v.quantidade}<br>
         Total: R$ ${Number(v.valor).toFixed(2)}<br>
-        Data: ${new Date(v.data).toLocaleString("pt-BR")}
-
-        <div id="modalEditVenda" style="
-  display:none;
-  position:fixed;
-  inset:0;
-  background:rgba(0,0,0,.7);
-  z-index:9999;
-  align-items:center;
-  justify-content:center;
-">
-  <div class="card" style="width:420px">
-    <h3 style="color:var(--hx-accent)">✏️ Editar Venda</h3>
-
-    <select id="eVCli"></select>
-    <select id="eVProd"></select>
-    <input id="eVQtd" type="number" min="1">
-
-    <input id="eVValor" type="number" placeholder="Valor">
-    <input id="eVDesc" type="number" placeholder="Desconto">
-
-    <select id="eVPag">
-      <option value="">Forma de pagamento</option>
-      <option>Pix</option>
-      <option>Dinheiro</option>
-      <option>Cartão</option>
-    </select>
-
-    <input id="eVData" type="datetime-local">
-
-    <div style="display:flex; gap:10px; margin-top:10px">
-      <button class="btn btn-add" onclick="salvarEdicaoVenda()">SALVAR</button>
-      <button class="btn btn-del" onclick="fecharModalVenda()">CANCELAR</button>
-    </div>
-  </div>
-</div>
-
-
-        
+        Forma: ${v.forma_pagamento || "-"}<br>
+        Data: ${new Date(v.data_venda || v.data).toLocaleString("pt-BR")}
+        <hr>
+        Obrigado pela preferência
       </body>
-      </html>
-    `);
+    </html>
+  `);
 
-    w.document.close();
+  w.document.close();
 }
+
 
 // ==================== ESTOQUE ====================
 
@@ -695,7 +657,40 @@ window.onload = async () => {
     document.getElementById('loginOverlay').style.display = 'flex';
   }
 };
-</script>
+
+
+  // ================= VENDAS =================
+
+  // ================= VENDAS =================
+function recalcularVenda() {
+  const vProdSelect = document.getElementById('vProdSelect');
+  const vQtd = document.getElementById('vQtd');
+  const vValorManual = document.getElementById('vValorManual');
+  const vDesconto = document.getElementById('vDesconto');
+  const vTotalLabel = document.getElementById('vTotalLabel');
+
+  const prod = _prods.find(p => p.id == vProdSelect.value);
+  const qtd = Number(vQtd.value || 1);
+  const valorManual = Number(vValorManual.value || 0);
+  const desconto = Number(vDesconto.value || 0);
+
+  let total = 0;
+
+  if (valorManual > 0) {
+    total = valorManual;
+  } else if (prod) {
+    total = prod.preco_revenda * qtd;
+  }
+
+  total -= desconto;
+  if (total < 0) total = 0;
+
+  vTotalLabel.innerText = `R$ ${total.toFixed(2)}`;
+}
+
+ </script>
+
+
 
       <!-- MODAL DE EDIÇÃO DE PRODUTO -->
   <div id="modalEditProd" style="
@@ -731,6 +726,7 @@ window.onload = async () => {
 
 </body>
 </html>
+
 
 
 
