@@ -262,20 +262,25 @@ function changeTab(id, btn) {
 
 
 
+// ================= LOADALL =================
 async function loadAll() {
-    const [{data: c}, {data: p}, {data: v}, {data: o}, {data: r}] = await Promise.all([
-        db.from('clientes').select('*').order('nome'),
-        db.from('produtos').select('*').order('nome'),
-        db.from('vendas').select('*, clientes(nome), produtos(nome)').order('data_venda', { ascending: false }),
-        db.from('ordens_servico').select('*, clientes(nome)').order('id', {ascending: false}),
-        db.from('orcamentos').select('*, clientes(nome)').order('id', {ascending: false})
-    ]);
+  const { data: clis } = await db.from('clientes').select('*');
+  _clis = clis || [];
 
-    _clis = c || []; _prods = p || []; _vens = v || []; _oss = o || []; _orcs = r || [];
-    
-    refreshSelects();
-    renderCli(); renderEst(); renderVen(); renderOS(); renderOrc(); updateDash();
+  const { data: prods } = await db.from('produtos').select('*');
+  _prods = prods || [];
+
+  const { data: vens } = await db.from('vendas').select('*');
+  _vens = vens || [];
+
+  renderCli();
+  renderEst();
+  renderVen();
+  renderOS();
+  renderOrc();
+  updateDash();
 }
+
 
 function refreshSelects() {
   const cliOptions = _clis
@@ -587,16 +592,10 @@ function fecharModalProd() {
   document.getElementById("modalEditProd").style.display = "none";
 }
 
-
+// ================= ONLOAD =================
 window.onload = async () => {
   const { data } = await db.auth.getSession();
-
-  if (data.session) {
-    document.getElementById('loginOverlay').style.display = 'none';
-    loadAll();
-  } else {
-    document.getElementById('loginOverlay').style.display = 'flex';
-  }
+  if (data.session) loadAll();
 };
 
 
@@ -667,6 +666,7 @@ function recalcularVenda() {
 
 </body>
 </html>
+
 
 
 
