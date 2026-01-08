@@ -189,7 +189,7 @@ async function logout() {
     location.reload();
   }
 }
-    // ================= DADOS EM MEMÓRIA =================
+// ================= DADOS EM MEMÓRIA =================
 let _clis = [];
 let _prods = [];
 let _vens = [];
@@ -199,7 +199,24 @@ let _orcs = [];
 let chartInstance = null;
 let prodEditId = null;
 
+// ================= FUNÇÕES DE RENDER =================
+function renderCli() {
+  const s = document.getElementById('sCli').value.toLowerCase();
+  document.getElementById('listCli').innerHTML =
+    _clis
+      .filter(c => c.nome.toLowerCase().includes(s))
+      .map(c => `
+        <div style="padding:10px; border-bottom:1px solid #333; display:flex; justify-content:space-between;">
+          <span>${c.nome} - ${c.telefone || 'Sem fone'}</span>
+          <div>
+            <button class="btn btn-del" onclick="delItem('clientes', ${c.id})">🗑️</button>
+          </div>
+        </div>
+      `)
+      .join('');
+}
 
+// ================= LOGIN =================
 async function login() {
   const email = document.getElementById('lEmail').value.trim();
   const password = document.getElementById('lPass').value.trim();
@@ -207,8 +224,6 @@ async function login() {
 
   errEl.innerText = "";
 
-
-    
   if (!email || !password) {
     errEl.innerText = "Informe e-mail e senha.";
     return;
@@ -223,6 +238,7 @@ async function login() {
     loadAll();
   }
 }
+
 
 
 function changeTab(id, btn) {
@@ -651,6 +667,7 @@ function recalcularVenda() {
 
 </body>
 </html>
+
 
 
 
