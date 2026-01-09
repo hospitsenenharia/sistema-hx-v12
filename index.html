@@ -114,42 +114,45 @@
     <section id="venTab" style="display:none">
   <h2>💵 Registro de Vendas</h2>
 
+  <!-- FORMULÁRIO DE VENDA -->
   <div class="card">
+    <label>Cliente</label>
     <select id="vCliSelect"></select>
 
+    <label>Produto</label>
     <select id="vProdSelect" onchange="recalcularVenda()"></select>
 
+    <label>Quantidade</label>
     <input id="vQtd" type="number" value="1" min="1" oninput="recalcularVenda()">
 
-    <select id="vPagamento" onchange="recalcularVenda()">
-      <option value="">Forma de pagamento</option>
+    <label>Forma de pagamento</label>
+    <select id="vPagamento">
+      <option value="">Selecione</option>
       <option value="Pix">Pix</option>
       <option value="Dinheiro">Dinheiro</option>
       <option value="Cartão">Cartão</option>
     </select>
 
-    <input id="vValorManual" type="number"
-           placeholder="Valor manual (opcional)"
-           oninput="recalcularVenda()">
-
-    <input id="vDesconto" type="number"
-           placeholder="Desconto"
-           value="0"
-           oninput="recalcularVenda()">
+    <input id="vValorManual" type="number" placeholder="Valor manual (opcional)" oninput="recalcularVenda()">
+    <input id="vDesconto" type="number" placeholder="Desconto" value="0" oninput="recalcularVenda()">
 
     <p>Total: <strong id="vTotalLabel">R$ 0,00</strong></p>
 
     <button class="btn btn-add" onclick="doVenda()">FINALIZAR VENDA</button>
   </div>
 
+  <!-- 🔍 FILTROS (ESSES ESTAVAM FALTANDO) -->
   <div class="card">
-    <div style="display:flex; gap:10px;">
-      <input id="sVenNome" placeholder="🔍 Por cliente..." oninput="renderVen()">
-      <input id="sVenData" type="date" onchange="renderVen()">
-    </div>
+    <input id="sVenNome" placeholder="🔍 Filtrar por cliente" oninput="renderVen()">
+    <input id="sVenData" type="date" onchange="renderVen()">
+  </div>
+
+  <!-- 📋 LISTA DE VENDAS -->
+  <div class="card">
     <div id="listVen"></div>
   </div>
 </section>
+
 
 
     <section id="osTab" style="display:none">
@@ -270,18 +273,32 @@ async function loadAll() {
   const { data: prods } = await db.from('produtos').select('*');
   _prods = prods || [];
 
-  const { data: vens } = await db.from('vendas').select('*');
+  const { data: vens } = await db
+    .from('vendas')
+    .select('*, clientes(nome), produtos(nome)')
+    .order('data_venda', { ascending: false });
   _vens = vens || [];
 
-  refreshSelects();   // ✅ AQUI (OBRIGATÓRIO)
+  const { data: oss } = await db
+    .from('ordens_servico')
+    .select('*, clientes(nome)');
+  _oss = oss || [];
 
+  const { data: orcs } = await db
+    .from('orcamentos')
+    .select('*, clientes(nome)');
+  _orcs = orcs || [];
+
+  refreshSelects();
   renderCli();
   renderEst();
   renderVen();
   renderOS();
-  renderOrc();
+  renderOrc?.();
   updateDash();
 }
+
+
 
 
 
@@ -444,17 +461,11 @@ async function editarVenda(id) {
   loadAll();
 }
 
-            <div style="display:flex; gap:6px;">
-                <button class="btn btn-add" onclick="editarVenda(${v.id})">✏️</button>
-                <button class="btn btn-add" onclick="imprimirVenda(${v.id})">🖨️</button>
-                <button class="btn btn-del" onclick="delItem('vendas', ${v.id})">🗑️</button>
-            </div>
-        </div>
-    `).join('');
-}
 
-// ==================== RENDER VENDAS ====================
-function renderVen() {
+
+//==================== RENDER VENDAS ====================
+function renderVen()
+{
   const sNome =
     document.getElementById('sVenNome')?.value?.toLowerCase() || "";
 
@@ -684,6 +695,7 @@ function recalcularVenda() {
 
 </body>
 </html>
+
 
 
 
