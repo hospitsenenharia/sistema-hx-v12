@@ -273,6 +273,8 @@ async function loadAll() {
   const { data: vens } = await db.from('vendas').select('*');
   _vens = vens || [];
 
+  refreshSelects();   // ✅ AQUI (OBRIGATÓRIO)
+
   renderCli();
   renderEst();
   renderVen();
@@ -282,29 +284,30 @@ async function loadAll() {
 }
 
 
+
+
 function refreshSelects() {
-  const cliOptions = _clis
-    .map(c => `<option value="${c.id}">${c.nome}</option>`)
-    .join("");
+  const cliOptions = _clis.map(c =>
+    `<option value="${c.id}">${c.nome}</option>`
+  ).join("");
 
-  const prodOptions = _prods
-    .map(p => `<option value="${p.id}">${p.nome}</option>`)
-    .join("");
+  const prodOptions = _prods.map(p =>
+    `<option value="${p.id}">${p.nome}</option>`
+  ).join("");
 
-  // Selects de clientes
-  ["vCliSelect", "osCliSelect", "orcCliSelect", "eVCli"]
+  ["vCliSelect", "osCliSelect", "orcCliSelect"]
     .forEach(id => {
       const el = document.getElementById(id);
       if (el) el.innerHTML = cliOptions;
     });
 
-  // Selects de produtos
-  ["vProdSelect", "eVProd"]
+  ["vProdSelect"]
     .forEach(id => {
       const el = document.getElementById(id);
       if (el) el.innerHTML = prodOptions;
     });
 }
+
   
 
 // DASHBOARD CALCULATIONS
@@ -440,27 +443,6 @@ async function editarVenda(id) {
 
   loadAll();
 }
-
-
-function renderVen() {
-    const sNome =
-      document.getElementById('sVenNome')?.value?.toLowerCase() || "";
-
-    const sData =
-      document.getElementById('sVenData')?.value || "";
-
-    document.getElementById('listVen').innerHTML = _vens
-        .filter(v =>
-            (v.clientes?.nome?.toLowerCase().includes(sNome)) &&
-(sData ? (v.data_venda || v.data).startsWith(sData) : true)
-        )
-        .map(v => `
-        <div style="padding:10px; border-bottom:1px solid #333; display:flex; justify-content:space-between; align-items:center;">
-            <span>
-        ${(v.data_venda || v.data).split('T')[0]}
-              <strong>${v.clientes?.nome}</strong><br>
-              ${v.produtos?.nome} | Qtd: ${v.quantidade} | R$ ${Number(v.valor).toFixed(2)}
-            </span>
 
             <div style="display:flex; gap:6px;">
                 <button class="btn btn-add" onclick="editarVenda(${v.id})">✏️</button>
@@ -702,6 +684,7 @@ function recalcularVenda() {
 
 </body>
 </html>
+
 
 
 
