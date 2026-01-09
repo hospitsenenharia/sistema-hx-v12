@@ -219,6 +219,105 @@ function renderCli() {
       .join('');
 }
 
+<script>
+// ==================== SALVAR CLIENTE ====================
+async function saveCli() {
+  const nome = document.getElementById('cNome').value.trim();
+  const tel  = document.getElementById('cTel').value.trim();
+
+  if (!nome) {
+    alert("Informe o nome do cliente");
+    return;
+  }
+
+  await db.from('clientes').insert({
+    nome: nome,
+    telefone: tel || null
+  });
+
+  document.getElementById('cNome').value = "";
+  document.getElementById('cTel').value  = "";
+
+  loadAll();
+}
+
+// ==================== SALVAR PRODUTO ====================
+async function saveProd() {
+  const nome  = document.getElementById('pNome').value.trim();
+  const qtd   = Number(document.getElementById('pQtd').value || 0);
+  const min   = Number(document.getElementById('pMin').value || 0);
+  const custo = Number(document.getElementById('pCusto').value || 0);
+  const rev   = Number(document.getElementById('pRev').value || 0);
+
+  if (!nome) {
+    alert("Informe o nome do produto");
+    return;
+  }
+
+  await db.from('produtos').insert({
+    nome: nome,
+    q_id: qtd,
+    qnt: qtd,
+    estoque_minimo: min,
+    preco_custo: custo,
+    preco_revenda: rev
+  });
+
+  document.getElementById('pNome').value = "";
+  document.getElementById('pQtd').value  = "";
+  document.getElementById('pMin').value  = "";
+  document.getElementById('pCusto').value = "";
+  document.getElementById('pRev').value   = "";
+
+  loadAll();
+}
+
+// ==================== SALVAR ORDEM DE SERVIÇO ====================
+async function saveOS() {
+  const cli = document.getElementById('osCliSelect').value;
+  const desc = document.getElementById('osDesc').value.trim();
+
+  if (!cli || !desc) {
+    alert("Selecione o cliente e informe a descrição");
+    return;
+  }
+
+  await db.from('ordens_servico').insert({
+    cliente_id: cli,
+    descricao: desc,
+    data_abertura: new Date().toISOString()
+  });
+
+  document.getElementById('osDesc').value = "";
+
+  loadAll();
+}
+
+// ==================== SALVAR ORÇAMENTO ====================
+async function saveOrc() {
+  const cli = document.getElementById('orcCliSelect').value;
+  const desc = document.getElementById('orcDesc').value.trim();
+
+  if (!cli || !desc) {
+    alert("Selecione o cliente e descreva o orçamento");
+    return;
+  }
+
+  await db.from('orcamentos').insert({
+    cliente_id: cli,
+    descricao: desc,
+    data: new Date().toISOString()
+  });
+
+  document.getElementById('orcDesc').value = "";
+
+  loadAll();
+}
+</script>
+
+
+    
+
 // ================= LOGIN =================
 async function login() {
   const email = document.getElementById('lEmail').value.trim();
@@ -494,6 +593,21 @@ function renderVen()
     `).join('');
 }
 
+
+// ==================== RENDER ORÇAMENTO  ====================
+
+    function renderOrc() {
+  const el = document.getElementById('listOrc');
+  if (!el) return;
+
+  el.innerHTML = _orcs.map(o => `
+    <div style="padding:10px; border-bottom:1px solid #333;">
+      <strong>${o.clientes?.nome || 'Sem cliente'}</strong><br>
+      ${o.descricao || ''}
+    </div>
+  `).join('');
+}
+
 // ==================== RENDER ORDEM DE SERVIÇO ====================
 function renderOS() {
   const el = document.getElementById('listOS');
@@ -695,6 +809,7 @@ function recalcularVenda() {
 
 </body>
 </html>
+
 
 
 
