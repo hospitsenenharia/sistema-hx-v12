@@ -239,7 +239,7 @@ async function salvarEdicaoProd() {
   fecharModalProd();
   loadAll();
 }
-'    
+
 
 // ==================== SALVAR ORDEM DE SERVIÇO ====================
 async function saveOS() {
@@ -362,7 +362,9 @@ renderVen();
 renderOS();
 renderOrc();
 updateDash();
+}
 
+    
 function refreshSelects() {
   const cliOptions = _clis.map(c =>
     `<option value="${c.id}">${c.nome}</option>`
@@ -674,21 +676,24 @@ function editProd(id) {
 
 
 // ================= SALVAR EDIÇÃO (MODAL) =================
-await db.from('produtos')
-  .update({
-    nome: document.getElementById('eNome').value,
-    q_id: Number(document.getElementById('eQtd').value),
-    qnt: Number(document.getElementById('eQtd').value),
-    estoque_minimo: Number(document.getElementById('eMin').value),
-    preco_custo: Number(document.getElementById('eCusto').value),
-    preco_revenda: Number(document.getElementById('eRev').value)
-  })
-  .eq('id', prodEditId);
+async function salvarEdicaoProd() {
+  if (!prodEditId) return;
 
+  await db.from('produtos')
+    .update({
+      nome: document.getElementById('eNome').value,
+      q_id: Number(document.getElementById('eQtd').value),
+      qnt: Number(document.getElementById('eQtd').value),
+      estoque_minimo: Number(document.getElementById('eMin').value),
+      preco_custo: Number(document.getElementById('eCusto').value),
+      preco_revenda: Number(document.getElementById('eRev').value)
+    })
+    .eq('id', prodEditId);
 
   fecharModalProd();
   loadAll();
 }
+
 
 // ================= FECHAR MODAL =================
 function fecharModalProd() {
@@ -743,6 +748,7 @@ window.onload = async () => {
 
 </body>
 </html>
+
 
 
 
