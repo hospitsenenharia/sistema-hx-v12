@@ -649,14 +649,6 @@ function renderEst() {
   }).join('');
 }
 
-
- // ================= ELEMENTOS DO MODAL =================
-const eNome  = document.getElementById('eNome');
-const eQtd   = document.getElementById('eQtd');
-const eMin   = document.getElementById('eMin');
-const eCusto = document.getElementById('eCusto');
-const eRev   = document.getElementById('eRev');
-
 // ================= EDITAR PRODUTO (MODAL) =================
 function editProd(id) {
   const p = _prods.find(x => x.id === id);
@@ -673,33 +665,49 @@ function editProd(id) {
   document.getElementById("modalEditProd").style.display = "flex";
 }
 
-
-
-// ================= SALVAR EDIÇÃO (MODAL) =================
-async function salvarEdicaoProd() {
-  if (!prodEditId) return;
-
-  await db.from('produtos')
-    .update({
-      nome: document.getElementById('eNome').value,
-      q_id: Number(document.getElementById('eQtd').value),
-      qnt: Number(document.getElementById('eQtd').value),
-      estoque_minimo: Number(document.getElementById('eMin').value),
-      preco_custo: Number(document.getElementById('eCusto').value),
-      preco_revenda: Number(document.getElementById('eRev').value)
-    })
-    .eq('id', prodEditId);
-
-  fecharModalProd();
-  loadAll();
-}
-
-
 // ================= FECHAR MODAL =================
 function fecharModalProd() {
   prodEditId = null;
   document.getElementById("modalEditProd").style.display = "none";
 }
+
+
+// ================= FUNÇÕES TEMPORÁRIAS (EVITAR ERROS) =================
+function saveCli() {
+  console.warn("saveCli() ainda não implementada");
+}
+
+function saveProd() {
+  console.warn("saveProd() ainda não implementada");
+}
+
+function recalcularVenda() {
+  const prodId = document.getElementById('vProdSelect').value;
+  const qtd = Number(document.getElementById('vQtd').value || 1);
+  const valorManual = Number(document.getElementById('vValorManual').value || 0);
+  const desconto = Number(document.getElementById('vDesconto').value || 0);
+
+  let total = 0;
+
+  if (valorManual > 0) {
+    total = valorManual;
+  } else {
+    const prod = _prods.find(p => p.id == prodId);
+    if (!prod) {
+      document.getElementById('vTotalLabel').innerText = "R$ 0,00";
+      return;
+    }
+    total = prod.preco_revenda * qtd;
+  }
+
+  total -= desconto;
+  if (total < 0) total = 0;
+
+  document.getElementById('vTotalLabel').innerText =
+    `R$ ${total.toFixed(2)}`;
+}
+
+
 
 // ================= ONLOAD =================
 window.onload = async () => {
@@ -707,10 +715,6 @@ window.onload = async () => {
   if (data.session) loadAll();
 };
 </script>
-
-
-
-
 
 <!-- MODAL DE EDIÇÃO DE PRODUTO -->
 <div id="modalEditProd" style="
@@ -748,6 +752,7 @@ window.onload = async () => {
 
 </body>
 </html>
+
 
 
 
