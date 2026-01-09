@@ -203,6 +203,7 @@ let chartInstance = null;
 let prodEditId = null;
 
 // ================= FUNÇÕES DE RENDER =================
+// ================= FUNÇÕES DE RENDER =================
 function renderCli() {
   const s = document.getElementById('sCli').value.toLowerCase();
   document.getElementById('listCli').innerHTML =
@@ -218,7 +219,7 @@ function renderCli() {
       `)
       .join('');
 }
-<script>
+
 // ==================== SALVAR CLIENTE ====================
 async function saveCli() {
   const nome = document.getElementById('cNome').value.trim();
@@ -239,6 +240,7 @@ async function saveCli() {
 
   loadAll();
 }
+
 
 // ==================== SALVAR PRODUTO ====================
 async function saveProd() {
@@ -692,29 +694,29 @@ function editProd(id) {
 
   prodEditId = id;
 
-  eNome.value  = p.nome || "";
-  eQtd.value   = p.q_id || p.qnt || 0;
-  eMin.value   = p.estoque_minimo || 0;
-  eCusto.value = p.preco_custo || 0;
-  eRev.value   = p.preco_revenda || 0;
+  document.getElementById('eNome').value  = p.nome || "";
+  document.getElementById('eQtd').value   = p.q_id || p.qnt || 0;
+  document.getElementById('eMin').value   = p.estoque_minimo || 0;
+  document.getElementById('eCusto').value = p.preco_custo || 0;
+  document.getElementById('eRev').value   = p.preco_revenda || 0;
 
   document.getElementById("modalEditProd").style.display = "flex";
 }
 
-// ================= SALVAR EDIÇÃO (MODAL) =================
-async function salvarEdicaoProd() {
-  if (!prodEditId) return;
 
-  await db.from('produtos')
-    .update({
-      nome: eNome.value,
-      q_id: Number(eQtd.value),
-      qnt: Number(eQtd.value),
-      estoque_minimo: Number(eMin.value),
-      preco_custo: Number(eCusto.value),
-      preco_revenda: Number(eRev.value)
-    })
-    .eq('id', prodEditId);
+
+// ================= SALVAR EDIÇÃO (MODAL) =================
+await db.from('produtos')
+  .update({
+    nome: document.getElementById('eNome').value,
+    q_id: Number(document.getElementById('eQtd').value),
+    qnt: Number(document.getElementById('eQtd').value),
+    estoque_minimo: Number(document.getElementById('eMin').value),
+    preco_custo: Number(document.getElementById('eCusto').value),
+    preco_revenda: Number(document.getElementById('eRev').value)
+  })
+  .eq('id', prodEditId);
+
 
   fecharModalProd();
   loadAll();
@@ -773,6 +775,7 @@ window.onload = async () => {
 
 </body>
 </html>
+
 
 
 
