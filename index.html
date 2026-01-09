@@ -221,57 +221,25 @@ function renderCli() {
 }
 
 // ==================== SALVAR CLIENTE ====================
-async function saveCli() {
-  const nome = document.getElementById('cNome').value.trim();
-  const tel  = document.getElementById('cTel').value.trim();
+// ================= SALVAR EDIÇÃO (MODAL) =================
+async function salvarEdicaoProd() {
+  if (!prodEditId) return;
 
-  if (!nome) {
-    alert("Informe o nome do cliente");
-    return;
-  }
+  await db.from('produtos')
+    .update({
+      nome: document.getElementById('eNome').value,
+      q_id: Number(document.getElementById('eQtd').value),
+      qnt: Number(document.getElementById('eQtd').value),
+      estoque_minimo: Number(document.getElementById('eMin').value),
+      preco_custo: Number(document.getElementById('eCusto').value),
+      preco_revenda: Number(document.getElementById('eRev').value)
+    })
+    .eq('id', prodEditId);
 
-  await db.from('clientes').insert({
-    nome: nome,
-    telefone: tel || null
-  });
-
-  document.getElementById('cNome').value = "";
-  document.getElementById('cTel').value  = "";
-
+  fecharModalProd();
   loadAll();
 }
-
-
-// ==================== SALVAR PRODUTO ====================
-async function saveProd() {
-  const nome  = document.getElementById('pNome').value.trim();
-  const qtd   = Number(document.getElementById('pQtd').value || 0);
-  const min   = Number(document.getElementById('pMin').value || 0);
-  const custo = Number(document.getElementById('pCusto').value || 0);
-  const rev   = Number(document.getElementById('pRev').value || 0);
-
-  if (!nome) {
-    alert("Informe o nome do produto");
-    return;
-  }
-
-  await db.from('produtos').insert({
-    nome: nome,
-    q_id: qtd,
-    qnt: qtd,
-    estoque_minimo: min,
-    preco_custo: custo,
-    preco_revenda: rev
-  });
-
-  document.getElementById('pNome').value = "";
-  document.getElementById('pQtd').value  = "";
-  document.getElementById('pMin').value  = "";
-  document.getElementById('pCusto').value = "";
-  document.getElementById('pRev').value   = "";
-
-  loadAll();
-}
+'    
 
 // ==================== SALVAR ORDEM DE SERVIÇO ====================
 async function saveOS() {
@@ -775,6 +743,7 @@ window.onload = async () => {
 
 </body>
 </html>
+
 
 
 
