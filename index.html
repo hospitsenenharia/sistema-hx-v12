@@ -201,8 +201,12 @@ let _orcs = [];
 
 let chartInstance = null;
 let prodEditId = null;
+// 🔽 CONTROLE DE EDIÇÃO DE VENDA
+let vendaEditId = null;
+let vendaOriginal = null;
 
-// ================= FUNÇÕES DE RENDER =================
+
+
 // ================= FUNÇÕES DE RENDER =================
 function renderCli() {
   const s = document.getElementById('sCli').value.toLowerCase();
@@ -503,24 +507,89 @@ async function delItem(tab, id) {
     }
 }
 
-async function editarVenda(id) {
+function editarVenda(id) {
   const v = _vens.find(x => x.id === id);
   if (!v) return;
 
-  const novaData = prompt(
-    "Editar data e hora (YYYY-MM-DD HH:mm)",
-    new Date(v.data_venda).toISOString().slice(0,16).replace("T"," ")
-  );
+  vendaEditId = id;
+  vendaOriginal = v;
 
-  if (!novaData) return;
+  // Preenche selects
+  document.getElementById('eVendaCliente').innerHTML =
+    _clis.map(c => `<option value="${c.id}">${c.nome}</option>`).join("");
 
-  const iso = new Date(novaData.replace(" ","T")).toISOString();
+  document.getElementById('eVendaProduto').innerHTML =
+    _prods.map(p => `<option value="${p.id}">${p.nome}</option>`).join("");
 
+  document.getElementById('eVendaCliente').value = v.cliente_id;
+  document.getElementById('eVendaProduto').value = v.produto_id;
+  document.getElementById('eVendaQtd').value = v.quantidade;
+  document.getElementById('eVendaValor').value = v.valor;
+  document.getElementById('eVendaDesconto').value = v.desconto || 0;
+  document.getElementById('eVendaPagamento').value = v.forma_pagamento || "Pix";
+
+  document.getElementById('eVendaData').value =
+    new Date(v.data_venda).toISOString().slice(0,16);
+
+  document.getElementById('modalEditVenda').style.display = "flex";
+}
+
+
+  async function salvarEdicaoVenda() {
+  if (!vendaEditId || !vendaOriginal) return;
+
+  // 1) Ler campos do modal
+  const novoClienteId = document.getElementById('eVendaCliente').value;
+  const novoProdutoId = document.getElementById('eVendaProduto').value;
+  const novaQtd = Number(document.getElementById('eVendaQtd').value);
+  const novoValor = Number(document.getElementById('eVendaValor').value);
+  const novoDesconto = Number(document.getElementById('eVendaDesconto').value || 0);
+  const novaForma = document.getElementById('eVendaPagamento').value;
+  const novaData = document.getElementById('eVendaData').value;
+
+  // 2) Devolver estoque da venda original
+  await db.from('produtos')
+    .update({ q_id: (vendaOriginal.produtos?.q_id || 0) + vendaOriginal.quantidade })
+    .eq('id', vendaOriginal.produto_id);
+
+  // 3) Validar e debitar novo estoque
+  const prodNovo = _prods.find(p => p.id == novoProdutoId);
+  if (!prodNovo || (prodNovo.q_id || 0) < novaQtd) {
+    alert("Estoque insuficiente");
+    return;
+  }
+
+  await db.from('produtos')
+    .update({ q_id: prodNovo.q_id - novaQtd })
+    .eq('id', novoProdutoId);
+
+  // 4) Recalcular lucro
+  const lucro = novoValor - ((prodNovo.preco_custo || 0) * novaQtd);
+
+  // 5) 👉 AQUI entra o seu bloco 👇
   await db.from('vendas')
-    .update({ data_venda: iso })
-    .eq('id', id);
+    .update({
+      cliente_id: novoClienteId,
+      produto_id: novoProdutoId,
+      quantidade: novaQtd,
+      valor: novoValor,
+      desconto: novoDesconto,
+      forma_pagamento: novaForma,
+      lucro_total: lucro,
+      data_venda: new Date(novaData).toISOString()
+    })
+    .eq('id', vendaEditId);
 
+  // 6) Fechar modal e recarregar
+  fecharModalVenda();
   loadAll();
+}
+
+
+function fecharModalVenda() {
+  vendaEditId = null;
+  vendaOriginal = null;
+  document.getElementById('modalEditVenda').style.display = "none";
 }
 
 
@@ -748,10 +817,60 @@ window.onload = async () => {
   </div>
 </div>
 
+<div id="modalEditVenda" style="
+  display:none;
+  position:fixed;
+  inset:0;
+  background:rgba(0,0,0,.7);
+  z-index:9999;
+  align-items:center;
+  justify-content:center;
+">
+  <div style="
+    background:#181818;
+    padding:20px;
+    border-radius:8px;
+    width:420px;
+    border:1px solid #0aff9d;
+  ">
+    <h3 style="color:#0aff9d">✏️ Editar Venda</h3>
+
+    <label>Cliente</label>
+    <select id="eVendaCliente"></select>
+
+    <label>Produto</label>
+    <select id="eVendaProduto"></select>
+
+    <label>Quantidade</label>
+    <input id="eVendaQtd" type="number" min="1">
+
+    <label>Forma de pagamento</label>
+    <select id="eVendaPagamento">
+      <option value="Pix">Pix</option>
+      <option value="Dinheiro">Dinheiro</option>
+      <option value="Cartão">Cartão</option>
+    </select>
+
+    <label>Valor</label>
+    <input id="eVendaValor" type="number">
+
+    <label>Desconto</label>
+    <input id="eVendaDesconto" type="number">
+
+    <label>Data e hora</label>
+    <input id="eVendaData" type="datetime-local">
+
+    <div style="display:flex; gap:10px; margin-top:15px;">
+      <button class="btn btn-add" onclick="salvarEdicaoVenda()">SALVAR</button>
+      <button class="btn btn-del" onclick="fecharModalVenda()">CANCELAR</button>
+    </div>
+  </div>
+</div>
 
 
 </body>
 </html>
+
 
 
 
