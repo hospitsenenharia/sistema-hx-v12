@@ -412,7 +412,7 @@ function updateDash() {
     const totalHoje = vHoje.reduce((a, b) => a + (b.valor || 0), 0);
     const lucroHoje = vHoje.reduce((a, b) => a + (b.lucro_total || 0), 0);
     const totalMes = _vens.filter(v => (v.data_venda || v.data).startsWith(mes)).reduce((a, b) => a + (b.valor || 0), 0);
-    const criticos = _prods.filter(p => (p.q_id || p.qnt || 0) <= (p.estoque_minimo || 0)).length;
+    const criticos = _prods.filter(p => (p.qtd || 0) <= (p.estoque_minimo || 0)).length;
 
     document.getElementById('vDia').innerText = `R$ ${totalHoje.toFixed(2)}`;
     document.getElementById('lDia').innerText = `R$ ${lucroHoje.toFixed(2)}`;
@@ -567,18 +567,21 @@ function editarVenda(id) {
 
   // 2) Devolver estoque da venda original
   await db.from('produtos')
-    .update({ q_id: (vendaOriginal.produtos?.q_id || 0) + vendaOriginal.quantidade })
+    .update({
+  qtd: (vendaOriginal.produtos?.qtd || 0) + vendaOriginal.quantidade
+})
+
     .eq('id', vendaOriginal.produto_id);
 
   // 3) Validar e debitar novo estoque
   const prodNovo = _prods.find(p => p.id == novoProdutoId);
-  if (!prodNovo || (prodNovo.q_id || 0) < novaQtd) {
+  if (!prodNovo || (prodNovo.qtd || 0) < novaQtd) {
     alert("Estoque insuficiente");
     return;
   }
 
   await db.from('produtos')
-    .update({ q_id: prodNovo.q_id - novaQtd })
+ .update({ qtd: prodNovo.qtd - novaQtd })
     .eq('id', novoProdutoId);
 
   // 4) Recalcular lucro
@@ -717,7 +720,7 @@ function imprimirVenda(id) {
 // RENDER ESTOQUE COM ALERTA
 function renderEst() {
   document.getElementById('listEst').innerHTML = _prods.map(p => {
-    const estoque = (p.q_id || p.qnt || 0);
+  const estoque = p.qtd || 0;
     const critico = estoque <= (p.estoque_minimo || 0);
 
     return `
@@ -744,7 +747,7 @@ function editProd(id) {
   prodEditId = id;
 
   document.getElementById('eNome').value  = p.nome || "";
-  document.getElementById('eQtd').value   = p.q_id || p.qnt || 0;
+  document.getElementById('eQtd').value = p.qtd || 0;
   document.getElementById('eMin').value   = p.estoque_minimo || 0;
   document.getElementById('eCusto').value = p.preco_custo || 0;
   document.getElementById('eRev').value   = p.preco_revenda || 0;
@@ -888,6 +891,7 @@ window.onload = async () => {
 
 </body>
 </html>
+
 
 
 
