@@ -862,7 +862,7 @@ async function saveProd() {
   const estoque = Number(document.getElementById('pQtd').value);
   const estoqueMin = Number(document.getElementById('pMin').value);
   const precoCusto = Number(document.getElementById('pCusto').value);
-  const precoVenda = Number(document.getElementById('pRev').value);
+  const precoRevenda = Number(document.getElementById('pRev').value);
 
   if (!nome) {
     alert("Informe o nome do produto");
@@ -876,7 +876,7 @@ async function saveProd() {
       estoque: estoque || 0,
       estoque_minimo: estoqueMin || 0,
       preco_custo: precoCusto || 0,
-      preco_revenda: precoVenda || 0
+      preco_revenda: precoRevenda || 0
     });
 
   if (error) {
@@ -885,15 +885,16 @@ async function saveProd() {
     return;
   }
 
-  // limpa campos
+  // Limpa formulário
   document.getElementById('pNome').value = "";
   document.getElementById('pQtd').value = "";
   document.getElementById('pMin').value = "";
   document.getElementById('pCusto').value = "";
   document.getElementById('pRev').value = "";
 
-  loadAll(); // atualiza estoque e selects
+  loadAll();
 }
+
 
 
 function recalcularVenda() {
@@ -1016,6 +1017,7 @@ window.onload = async () => {
 
 </body>
 </html>
+
 
 
 
