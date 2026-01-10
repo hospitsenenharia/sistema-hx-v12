@@ -480,31 +480,39 @@ if (estoqueAtual < qtd) {
 
   const lucro = valorTotal - (prod.preco_custo * qtd);
 
-await db.from('vendas').insert({
-  cliente_id: document.getElementById('vCliSelect').value,
-  produto_id: prod.id,
-  quantidade: qtd,
-  valor: valorTotal,
-  desconto: desconto,
-  valor_manual: valorManual || null,
-  forma_pagamento: formaPagamento,
-  lucro_total: lucro,
-  data_venda: new Date().toISOString()
-});
+const { error: vendaError } = await db
+  .from('vendas')
+  .insert({
+    cliente_id: document.getElementById('vCliSelect').value,
+    produto_id: prod.id,
+    quantidade: qtd,
+    valor: valorTotal,
+    desconto: desconto,
+    valor_manual: valorManual || null,
+    forma_pagamento: formaPagamento,
+    lucro_total: lucro,
+    data_venda: new Date().toISOString()
+  });
+
+if (vendaError) {
+  console.error(vendaError);
+  alert("Erro ao registrar a venda");
+  return;
+}
 
 
   // Atualiza estoque
-const { data, error } = await db
+const { error: estoqueError } = await db
   .from('produtos')
-  .update({ qtd: estoqueAtual - qtd })
-  .eq('id', prod.id)
-  .select();
+  .update({ estoque: estoqueAtual - qtd })
+  .eq('id', prod.id);
 
-if (error) {
-  console.error("Erro ao atualizar estoque:", error);
+if (estoqueError) {
+  console.error(estoqueError);
   alert("Erro ao atualizar estoque");
   return;
 }
+
 
 console.log("Estoque atualizado:", data);
 
@@ -892,6 +900,7 @@ window.onload = async () => {
 
 </body>
 </html>
+
 
 
 
