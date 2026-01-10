@@ -827,13 +827,74 @@ function fecharModalProd() {
 
 
 // ================= FUNÇÕES TEMPORÁRIAS (EVITAR ERROS) =================
-function saveCli() {
-  console.warn("saveCli() ainda não implementada");
+async function saveCli() {
+  const nome = document.getElementById('cNome').value.trim();
+  const telefone = document.getElementById('cTel').value.trim();
+
+  if (!nome) {
+    alert("Informe o nome do cliente");
+    return;
+  }
+
+  const { error } = await db
+    .from('clientes')
+    .insert({
+      nome: nome,
+      telefone: telefone || null
+    });
+
+  if (error) {
+    console.error("Erro ao salvar cliente:", error);
+    alert("Erro ao cadastrar cliente");
+    return;
+  }
+
+  // limpa campos
+  document.getElementById('cNome').value = "";
+  document.getElementById('cTel').value = "";
+
+  loadAll(); // recarrega lista e selects
 }
 
-function saveProd() {
-  console.warn("saveProd() ainda não implementada");
+
+async function saveProd() {
+  const nome = document.getElementById('pNome').value.trim();
+  const estoque = Number(document.getElementById('pQtd').value);
+  const estoqueMin = Number(document.getElementById('pMin').value);
+  const precoCusto = Number(document.getElementById('pCusto').value);
+  const precoVenda = Number(document.getElementById('pRev').value);
+
+  if (!nome) {
+    alert("Informe o nome do produto");
+    return;
+  }
+
+  const { error } = await db
+    .from('produtos')
+    .insert({
+      nome: nome,
+      estoque: estoque || 0,
+      estoque_minimo: estoqueMin || 0,
+      preco_custo: precoCusto || 0,
+      preco_revenda: precoVenda || 0
+    });
+
+  if (error) {
+    console.error("Erro ao salvar produto:", error);
+    alert("Erro ao cadastrar produto");
+    return;
+  }
+
+  // limpa campos
+  document.getElementById('pNome').value = "";
+  document.getElementById('pQtd').value = "";
+  document.getElementById('pMin').value = "";
+  document.getElementById('pCusto').value = "";
+  document.getElementById('pRev').value = "";
+
+  loadAll(); // atualiza estoque e selects
 }
+
 
 function recalcularVenda() {
   const prodId = document.getElementById('vProdSelect').value;
@@ -955,6 +1016,7 @@ window.onload = async () => {
 
 </body>
 </html>
+
 
 
 
