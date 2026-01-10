@@ -229,20 +229,30 @@ function renderCli() {
 async function salvarEdicaoProd() {
   if (!prodEditId) return;
 
-  await db.from('produtos')
+  const { data, error } = await db
+    .from('produtos')
     .update({
       nome: document.getElementById('eNome').value,
-      q_id: Number(document.getElementById('eQtd').value),
-      qnt: Number(document.getElementById('eQtd').value),
+      qtd: Number(document.getElementById('eQtd').value),
       estoque_minimo: Number(document.getElementById('eMin').value),
       preco_custo: Number(document.getElementById('eCusto').value),
       preco_revenda: Number(document.getElementById('eRev').value)
     })
-    .eq('id', prodEditId);
+    .eq('id', prodEditId)
+    .select();
+
+  if (error) {
+    console.error("Erro ao salvar edição do produto:", error);
+    alert("Erro ao salvar o produto");
+    return;
+  }
+
+  console.log("Produto atualizado:", data);
 
   fecharModalProd();
   loadAll();
 }
+
 
 
 // ==================== SALVAR ORDEM DE SERVIÇO ====================
@@ -446,7 +456,7 @@ async function doVenda() {
   if (!prod) return alert("Selecione um produto");
 
   const qtd = Number(document.getElementById('vQtd').value || 1);
-  const estoqueAtual = prod.q_id || prod.qnt || 0;
+const estoqueAtual = prod.qtd || 0;
 
   if (estoqueAtual < qtd) {
     return alert("Estoque insuficiente!");
@@ -483,12 +493,20 @@ await db.from('vendas').insert({
 
 
   // Atualiza estoque
-  await db.from('produtos')
-    .update({
-      q_id: estoqueAtual - qtd,
-      qnt: estoqueAtual - qtd
-    })
-    .eq('id', prod.id);
+const { data, error } = await db
+  .from('produtos')
+  .update({ qtd: estoqueAtual - qtd })
+  .eq('id', prod.id)
+  .select();
+
+if (error) {
+  console.error("Erro ao atualizar estoque:", error);
+  alert("Erro ao atualizar estoque");
+  return;
+}
+
+console.log("Estoque atualizado:", data);
+
 
   // Limpa campos
   document.getElementById('vValorManual').value = "";
@@ -870,6 +888,7 @@ window.onload = async () => {
 
 </body>
 </html>
+
 
 
 
