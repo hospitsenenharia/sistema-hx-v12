@@ -587,48 +587,65 @@ function editarVenda(id) {
 }
 
 
- async function salvarEdicaoVenda() {
+async function salvarEdicaoVenda() {
   if (!vendaEditId || !vendaOriginal) return;
 
   const novoProdutoId = document.getElementById('eVendaProduto').value;
   const novaQtd = Number(document.getElementById('eVendaQtd').value);
   const novoValor = Number(document.getElementById('eVendaValor').value);
+  const novoDesconto = Number(document.getElementById('eVendaDesconto').value || 0);
+  const novaForma = document.getElementById('eVendaPagamento').value;
+  const novaData = document.getElementById('eVendaData').value;
+  const novoClienteId = document.getElementById('eVendaCliente').value;
 
-  // 1️⃣ DEVOLVE estoque da venda original
+  // 1️⃣ DEVOLVER ESTOQUE DA VENDA ORIGINAL
+  const { data: prodAntigo } = await db
+    .from('produtos')
+    .select('estoque')
+    .eq('id', vendaOriginal.produto_id)
+    .single();
+
   await db.from('produtos')
     .update({
-      estoque: (vendaOriginal.produtos?.estoque ?? 0) + vendaOriginal.quantidade
+      estoque: (prodAntigo.estoque ?? 0) + vendaOriginal.quantidade
     })
     .eq('id', vendaOriginal.produto_id);
 
-  // 2️⃣ BUSCA produto novo
+  // 2️⃣ VALIDAR NOVO PRODUTO
   const prodNovo = _prods.find(p => p.id == novoProdutoId);
   if (!prodNovo || prodNovo.estoque < novaQtd) {
     alert("Estoque insuficiente");
     return;
   }
 
-  // 3️⃣ DEBITA estoque novo
+  // 3️⃣ DEBITAR NOVO ESTOQUE
   await db.from('produtos')
     .update({ estoque: prodNovo.estoque - novaQtd })
     .eq('id', novoProdutoId);
 
-  // 4️⃣ Recalcula lucro
-  const lucro = novoValor - ((prodNovo.preco_custo || 0) * novaQtd);
+  // 4️⃣ RECALCULAR LUCRO
+  const lucro =
+    novoValor - ((prodNovo.preco_custo || 0) * novaQtd);
 
-  // 5️⃣ Atualiza venda
+  // 5️⃣ ATUALIZAR VENDA
   await db.from('vendas')
     .update({
+      cliente_id: novoClienteId,
       produto_id: novoProdutoId,
       quantidade: novaQtd,
       valor: novoValor,
-      lucro_total: lucro
+      desconto: novoDesconto,
+      forma_pagamento: novaForma,
+      lucro_total: lucro,
+      data_venda: new Date(novaData).toISOString()
     })
     .eq('id', vendaEditId);
 
+  // 6️⃣ FINALIZAR
   fecharModalVenda();
   loadAll();
 }
+
 
 
 
@@ -1017,6 +1034,7 @@ window.onload = async () => {
 
 </body>
 </html>
+
 
 
 
