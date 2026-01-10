@@ -233,7 +233,7 @@ async function salvarEdicaoProd() {
     .from('produtos')
     .update({
       nome: document.getElementById('eNome').value,
-      q_id: Number(document.getElementById('eQtd').value), // ✅ NOME CORRETO
+      estoque: Number(document.getElementById('eQtd').value),
       estoque_minimo: Number(document.getElementById('eMin').value),
       preco_custo: Number(document.getElementById('eCusto').value),
       preco_revenda: Number(document.getElementById('eRev').value)
@@ -241,7 +241,7 @@ async function salvarEdicaoProd() {
     .eq('id', prodEditId);
 
   if (error) {
-    console.error("Erro ao salvar edição do produto:", error);
+    console.error(error);
     alert("Erro ao salvar o produto");
     return;
   }
@@ -249,6 +249,7 @@ async function salvarEdicaoProd() {
   fecharModalProd();
   loadAll();
 }
+
 
 
 
@@ -455,11 +456,12 @@ async function doVenda() {
   if (!prod) return alert("Selecione um produto");
 
   const qtd = Number(document.getElementById('vQtd').value || 1);
-const estoqueAtual = prod.q_id || 0;
+const estoqueAtual = prod.estoque ?? 0;
 
-  if (estoqueAtual < qtd) {
-    return alert("Estoque insuficiente!");
-  }
+if (estoqueAtual < qtd) {
+  alert("Estoque insuficiente!");
+  return;
+}
 
   const valorManual = Number(document.getElementById('vValorManual').value || 0);
   const desconto = Number(document.getElementById('vDesconto').value || 0);
@@ -720,9 +722,8 @@ function imprimirVenda(id) {
 // RENDER ESTOQUE COM ALERTA
 function renderEst() {
   document.getElementById('listEst').innerHTML = _prods.map(p => {
-   const estoque = p.q_id || 0;
-    const critico = estoque <= (p.estoque_minimo || 0);
-
+    const estoque = p.estoque ?? 0;
+    const critico = estoque <= (p.estoque_minimo ?? 0);
     return `
       <div style="padding:10px; border-bottom:1px solid #333; display:flex; justify-content:space-between; ${critico ? 'color:var(--hx-danger)' : ''}">
         <span>
@@ -747,7 +748,7 @@ function editProd(id) {
   prodEditId = id;
 
   document.getElementById('eNome').value  = p.nome || "";
-  document.getElementById('eQtd').value = p.qtd || 0;
+  document.getElementById('eQtd').value = p.estoque ?? 0;
   document.getElementById('eMin').value   = p.estoque_minimo || 0;
   document.getElementById('eCusto').value = p.preco_custo || 0;
   document.getElementById('eRev').value   = p.preco_revenda || 0;
@@ -891,6 +892,7 @@ window.onload = async () => {
 
 </body>
 </html>
+
 
 
 
