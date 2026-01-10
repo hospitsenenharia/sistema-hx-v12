@@ -691,30 +691,52 @@ function renderVen()
 
 // ==================== RENDER ORÇAMENTO  ====================
 
-    function renderOrc() {
+ function renderOrc() {
   const el = document.getElementById('listOrc');
   if (!el) return;
 
   el.innerHTML = _orcs.map(o => `
-    <div style="padding:10px; border-bottom:1px solid #333;">
-      <strong>${o.clientes?.nome || 'Sem cliente'}</strong><br>
-      ${o.descricao || ''}
+    <div style="padding:10px; border-bottom:1px solid #333; display:flex; justify-content:space-between;">
+      <span>
+        <strong>${o.clientes?.nome || 'Sem cliente'}</strong><br>
+        ${o.descricao || ''}
+      </span>
+      <div>
+        <button class="btn btn-add" onclick="imprimirOrc(${o.id})">🖨️</button>
+        <button class="btn btn-del" onclick="delItem('orcamentos', ${o.id})">🗑️</button>
+      </div>
     </div>
   `).join('');
 }
 
+
+// ==================== RENDER ORDEM DE SERVIÇO ====================
 // ==================== RENDER ORDEM DE SERVIÇO ====================
 function renderOS() {
   const el = document.getElementById('listOS');
   if (!el) return;
 
   el.innerHTML = _oss.map(o => `
-    <div style="padding:10px; border-bottom:1px solid #333;">
-      <strong>${o.clientes?.nome || 'Sem cliente'}</strong><br>
-      ${o.descricao || ''}
+    <div style="
+      padding:10px;
+      border-bottom:1px solid #333;
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+    ">
+      <span>
+        <strong>${o.clientes?.nome || 'Sem cliente'}</strong><br>
+        ${o.descricao || ''}
+      </span>
+
+      <div style="display:flex; gap:6px;">
+        <button class="btn btn-add" onclick="imprimirOS(${o.id})">🖨️</button>
+        <button class="btn btn-del" onclick="delItem('ordens_servico', ${o.id})">🗑️</button>
+      </div>
     </div>
   `).join('');
-} // ✅ FECHAMENTO CORRETO
+}
+
 
 // ==================== IMPRIMIR VENDA ====================
 function imprimirVenda(id) {
@@ -788,7 +810,143 @@ function imprimirVenda(id) {
 w.document.close();
 
 }
+function imprimirOS(id) {
+  const os = _oss.find(o => o.id === id);
+  if (!os) {
+    alert("Ordem de serviço não encontrada");
+    return;
+  }
 
+  const w = window.open("", "_blank", "width=300,height=600");
+
+  w.document.write(`
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Ordem de Serviço</title>
+  <style>
+    body {
+      font-family: monospace;
+      font-size: 12px;
+      width: 80mm;
+      margin: 0;
+      padding: 5px;
+    }
+    .center { text-align: center; }
+    hr {
+      border: none;
+      border-top: 1px dashed #000;
+      margin: 6px 0;
+    }
+  </style>
+</head>
+
+<body onload="window.print(); window.close()">
+
+  <div class="center">
+    <strong>HX ACESSÓRIOS & ELETRÔNICOS</strong><br>
+    CNPJ: 61.331.523/0001-05<br>
+    Av. Mamede Paes Mendonça, 752<br>
+    Aracaju - SE<br>
+    Contato: (79) 99819-6955
+  </div>
+
+  <hr>
+
+  <div class="center">
+    <strong>ORDEM DE SERVIÇO</strong>
+  </div>
+
+  <hr>
+
+  Cliente: ${os.clientes?.nome || "-"}<br>
+  Data: ${new Date(os.data_abertura).toLocaleString("pt-BR")}<br>
+
+  <hr>
+
+  <strong>Descrição:</strong><br>
+  ${os.descricao || "-"}
+
+  <hr>
+
+  <div>
+    Assinatura do cliente:<br><br>
+    _______________________________
+  </div>
+
+</body>
+</html>
+`);
+
+  w.document.close();
+}
+
+    
+function imprimirOrc(id) {
+  const o = _orcs.find(x => x.id === id);
+  if (!o) {
+    alert("Orçamento não encontrado");
+    return;
+  }
+
+  const w = window.open("", "_blank", "width=300,height=600");
+
+  w.document.write(`
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Orçamento</title>
+  <style>
+    body {
+      font-family: monospace;
+      font-size: 12px;
+      width: 80mm;
+      margin: 0;
+      padding: 5px;
+    }
+    .center { text-align: center; }
+    hr {
+      border: none;
+      border-top: 1px dashed #000;
+      margin: 6px 0;
+    }
+  </style>
+</head>
+
+<body onload="window.print(); window.close()">
+
+  <div class="center">
+    <strong>HX ACESSÓRIOS & ELETRÔNICOS</strong><br>
+    CNPJ: 61.331.523/0001-05<br>
+    Av. Mamede Paes Mendonça, 752<br>
+    Aracaju - SE<br>
+    Contato: (79) 99819-6955
+  </div>
+
+  <hr>
+
+  <div class="center">
+    <strong>ORÇAMENTO</strong>
+  </div>
+
+  <hr>
+
+  Cliente: ${o.clientes?.nome || "-"}<br><br>
+  ${o.descricao || ''}
+
+  <hr>
+
+  <div class="center">
+    Validade do orçamento: 7 dias
+  </div>
+
+</body>
+</html>
+`);
+
+  w.document.close();
+}
 
 
 // ==================== ESTOQUE ====================
@@ -1034,6 +1192,7 @@ window.onload = async () => {
 
 </body>
 </html>
+
 
 
 
