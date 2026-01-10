@@ -862,13 +862,10 @@ async function saveCli() {
     return;
   }
 
-  // ✅ limpa os campos
-  document.getElementById('cNome').value = "";
-  document.getElementById('cTel').value = "";
-
   // ✅ atualiza lista e selects
   loadAll();
 }
+
 
 async function saveProd() {
   const nome = document.getElementById('pNome').value.trim();
@@ -1030,6 +1027,7 @@ window.onload = async () => {
 
 </body>
 </html>
+
 
 
 
