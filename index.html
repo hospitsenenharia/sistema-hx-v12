@@ -464,77 +464,91 @@ async function doVenda() {
     p.id == document.getElementById('vProdSelect').value
   );
 
-  if (!prod) return alert("Selecione um produto");
+  if (!prod) {
+    alert("Selecione um produto");
+    return;
+  }
 
   const qtd = Number(document.getElementById('vQtd').value || 1);
-const estoqueAtual = prod.estoque ?? 0;
+  const estoqueAtual = prod.estoque ?? 0;
 
-if (estoqueAtual < qtd) {
-  alert("Estoque insuficiente!");
-  return;
-}
-
-  const valorManual = Number(document.getElementById('vValorManual').value || 0);
-  const desconto = Number(document.getElementById('vDesconto').value || 0);
-  const formaPagamento = document.getElementById('vPagamento').value;
-
-  let valorTotal = 0;
-
-  if (valorManual > 0) {
-    valorTotal = valorManual;
-  } else {
-    valorTotal = prod.preco_revenda * qtd;
+  if (qtd <= 0) {
+    alert("Quantidade inválida");
+    return;
   }
+
+  if (estoqueAtual < qtd) {
+    alert("Estoque insuficiente!");
+    return;
+  }
+
+  const valorManual = Number(document.getElementById('vValorManual')?.value || 0);
+  const desconto = Number(document.getElementById('vDesconto')?.value || 0);
+  const formaPagamento = document.getElementById('vPagamento').value;
+  const clienteId = document.getElementById('vCliSelect').value;
+
+  if (!clienteId) {
+    alert("Selecione um cliente");
+    return;
+  }
+
+  let valorTotal = valorManual > 0
+    ? valorManual
+    : prod.preco_revenda * qtd;
 
   valorTotal -= desconto;
   if (valorTotal < 0) valorTotal = 0;
 
   const lucro = valorTotal - (prod.preco_custo * qtd);
 
-const { error: vendaError } = await db
-  .from('vendas')
-  .insert({
-    cliente_id: document.getElementById('vCliSelect').value,
-    produto_id: prod.id,
-    quantidade: qtd,
-    valor: valorTotal,
-    desconto: desconto,
-    valor_manual: valorManual || null,
-    forma_pagamento: formaPagamento,
-    lucro_total: lucro,
-    data_venda: new Date().toISOString()
-  });
+  // 1️⃣ SALVAR VENDA
+  const { error: vendaError } = await db
+    .from('vendas')
+    .insert({
+      cliente_id: clienteId,
+      produto_id: prod.id,
+      quantidade: qtd,
+      valor: valorTotal,
+      desconto: desconto || 0,
+      forma_pagamento: formaPagamento,
+      lucro_total: lucro,
+      data_venda: new Date().toISOString()
+    });
 
-if (vendaError) {
-  console.error(vendaError);
-  alert("Erro ao registrar a venda");
-  return;
-}
+  if (vendaError) {
+    console.error("Erro ao salvar venda:", vendaError);
+    alert("Erro ao registrar a venda");
+    return;
+  }
 
+  // 2️⃣ ATUALIZAR ESTOQUE
+  const { error: estoqueError } = await db
+    .from('produtos')
+    .update({ estoque: estoqueAtual - qtd })
+    .eq('id', prod.id);
 
-  // Atualiza estoque
-const { error: estoqueError } = await db
-  .from('produtos')
-  .update({ estoque: estoqueAtual - qtd })
-  .eq('id', prod.id);
+  if (estoqueError) {
+    console.error("Erro ao atualizar estoque:", estoqueError);
+    alert("Venda registrada, mas erro ao atualizar estoque");
+    return;
+  }
 
-if (estoqueError) {
-  console.error(estoqueError);
-  alert("Erro ao atualizar estoque");
-  return;
-}
+  // 3️⃣ SUCESSO
+  alert("✅ Venda realizada com sucesso!");
 
+  // 4️⃣ LIMPAR FORMULÁRIO
+  document.getElementById('vQtd').value = 1;
+  if (document.getElementById('vValorManual')) {
+    document.getElementById('vValorManual').value = '';
+  }
+  if (document.getElementById('vDesconto')) {
+    document.getElementById('vDesconto').value = '';
+  }
 
-console.log("Estoque atualizado:", data);
-
-
-  // Limpa campos
-  document.getElementById('vValorManual').value = "";
-  document.getElementById('vDesconto').value = 0;
-  document.getElementById('vPagamento').value = "";
-
+  // 5️⃣ ATUALIZAR TELA
   loadAll();
 }
+
 
 
 // GENERAL ACTIONS: RENDER, EDIT, DELETE
@@ -1025,6 +1039,7 @@ window.onload = async () => {
 
 </body>
 </html>
+
 
 
 
