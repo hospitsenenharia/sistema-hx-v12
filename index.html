@@ -107,6 +107,17 @@
             <button class="btn btn-add" onclick="saveProd()">ADICIONAR</button>
         </div>
         <div class="card">
+  <input
+    id="sEstNome"
+    placeholder="🔍 Pesquisar produto..."
+    oninput="renderEst()"
+  >
+</div>
+
+
+
+        
+        <div class="card">
             <div id="listEst"></div>
         </div>
     </section>
@@ -695,32 +706,66 @@ function imprimirVenda(id) {
   const w = window.open("", "_blank", "width=300,height=600");
 
   w.document.write(`
-    <html>
-      <head>
-        <meta charset="utf-8">
-        <title>Cupom</title>
-        <style>
-          body { font-family: monospace; font-size: 12px; }
-          hr { border: none; border-top: 1px dashed #000; margin: 8px 0; }
-        </style>
-      </head>
-      <body onload="window.print(); window.close()">
-        <strong>SISTEMA HX</strong><br>
-        CUPOM NÃO FISCAL
-        <hr>
-        Cliente: ${v.clientes?.nome || "-"}<br>
-        Produto: ${v.produtos?.nome || "-"}<br>
-        Quantidade: ${v.quantidade}<br>
-        Total: R$ ${Number(v.valor).toFixed(2)}<br>
-        Forma: ${v.forma_pagamento || "-"}<br>
-        Data: ${new Date(v.data_venda || v.data).toLocaleString("pt-BR")}
-        <hr>
-        Obrigado pela preferência
-      </body>
-    </html>
-  `);
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Cupom</title>
+  <style>
+    body {
+      font-family: monospace;
+      font-size: 12px;
+      width: 80mm;
+      margin: 0;
+      padding: 5px;
+    }
+    .center {
+      text-align: center;
+    }
+    hr {
+      border: none;
+      border-top: 1px dashed #000;
+      margin: 6px 0;
+    }
+  </style>
+</head>
 
-  w.document.close();
+<body onload="window.print(); window.close()">
+
+  <div class="center">
+    <strong>HX ACESSÓRIOS & ELETRÔNICOS</strong><br>
+    CNPJ: 61.331.523/0001-05<br>
+    Av. Mamede Paes Mendonça, 752<br>
+    Aracaju - SE<br>
+    Contato: (79) 99819-6955
+  </div>
+
+  <hr>
+
+  <div class="center">
+    <strong>CUPOM NÃO FISCAL</strong>
+  </div>
+
+  <hr>
+
+  Cliente: ${v.clientes?.nome || "-"}<br>
+  Produto: ${v.produtos?.nome || "-"}<br>
+  Quantidade: ${v.quantidade}<br>
+  Total: R$ ${Number(v.valor).toFixed(2)}<br>
+  Forma: ${v.forma_pagamento || "-"}<br>
+  Data: ${new Date(v.data_venda || v.data).toLocaleString("pt-BR")}
+
+  <hr>
+
+  <div class="center">
+    Obrigado pela preferência
+  </div>
+
+</body>
+</html>
+`);
+
+w.document.close();
+
 }
 
 
@@ -729,24 +774,34 @@ function imprimirVenda(id) {
 
 // RENDER ESTOQUE COM ALERTA
 function renderEst() {
-  document.getElementById('listEst').innerHTML = _prods.map(p => {
-    const estoque = p.estoque ?? 0;
-    const critico = estoque <= (p.estoque_minimo ?? 0);
-    return `
-      <div style="padding:10px; border-bottom:1px solid #333; display:flex; justify-content:space-between; ${critico ? 'color:var(--hx-danger)' : ''}">
-        <span>
-          ${p.nome} | Estoque: <strong>${estoque}</strong>
-          ${critico ? '<span class="critical"> ⚠️ BAIXO</span>' : ''}
-        </span>
+  const termo =
+    document.getElementById('sEstNome')?.value?.toLowerCase() || "";
 
-        <div>
-          <button class="btn btn-add" onclick="editProd(${p.id})">✏️</button>
-          <button class="btn btn-del" onclick="delItem('produtos', ${p.id})">🗑️</button>
+  document.getElementById('listEst').innerHTML = _prods
+    .filter(p =>
+      p.nome?.toLowerCase().includes(termo)
+    )
+    .map(p => {
+      const estoque = p.estoque ?? 0;
+      const critico = estoque <= (p.estoque_minimo ?? 0);
+
+      return `
+        <div style="padding:10px; border-bottom:1px solid #333; display:flex; justify-content:space-between; ${critico ? 'color:var(--hx-danger)' : ''}">
+          <span>
+            ${p.nome} | Estoque: <strong>${estoque}</strong>
+            ${critico ? '<span class="critical"> ⚠️ BAIXO</span>' : ''}
+          </span>
+
+          <div>
+            <button class="btn btn-add" onclick="editProd(${p.id})">✏️</button>
+            <button class="btn btn-del" onclick="delItem('produtos', ${p.id})">🗑️</button>
+          </div>
         </div>
-      </div>
-    `;
-  }).join('');
+      `;
+    })
+    .join('');
 }
+
 
 // ================= EDITAR PRODUTO (MODAL) =================
 function editProd(id) {
@@ -900,6 +955,7 @@ window.onload = async () => {
 
 </body>
 </html>
+
 
 
 
