@@ -229,7 +229,7 @@ function renderCli() {
 async function salvarEdicaoProd() {
   if (!prodEditId) return;
 
-  const { data, error } = await db
+  const { error } = await db
     .from('produtos')
     .update({
       nome: document.getElementById('eNome').value,
@@ -238,8 +238,7 @@ async function salvarEdicaoProd() {
       preco_custo: Number(document.getElementById('eCusto').value),
       preco_revenda: Number(document.getElementById('eRev').value)
     })
-    .eq('id', prodEditId)
-    .select();
+    .eq('id', prodEditId);
 
   if (error) {
     console.error("Erro ao salvar edição do produto:", error);
@@ -247,11 +246,10 @@ async function salvarEdicaoProd() {
     return;
   }
 
-  console.log("Produto atualizado:", data);
-
   fecharModalProd();
   loadAll();
 }
+
 
 
 
@@ -891,6 +889,7 @@ window.onload = async () => {
 
 </body>
 </html>
+
 
 
 
