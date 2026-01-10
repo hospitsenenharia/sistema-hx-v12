@@ -826,7 +826,6 @@ function fecharModalProd() {
 }
 
 
-// ================= FUNÇÕES TEMPORÁRIAS (EVITAR ERROS) =================
 async function saveCli() {
   const nome = document.getElementById('cNome').value.trim();
   const telefone = document.getElementById('cTel').value.trim();
@@ -848,6 +847,15 @@ async function saveCli() {
     alert("Erro ao cadastrar cliente");
     return;
   }
+
+  // ✅ limpa os campos
+  document.getElementById('cNome').value = "";
+  document.getElementById('cTel').value = "";
+
+  // ✅ atualiza lista e selects
+  loadAll();
+}
+
 
   // limpa campos
   document.getElementById('cNome').value = "";
@@ -1017,6 +1025,7 @@ window.onload = async () => {
 
 </body>
 </html>
+
 
 
 
