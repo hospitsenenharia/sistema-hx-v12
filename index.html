@@ -423,7 +423,7 @@ function updateDash() {
     const totalHoje = vHoje.reduce((a, b) => a + (b.valor || 0), 0);
     const lucroHoje = vHoje.reduce((a, b) => a + (b.lucro_total || 0), 0);
     const totalMes = _vens.filter(v => (v.data_venda || v.data).startsWith(mes)).reduce((a, b) => a + (b.valor || 0), 0);
-    const criticos = _prods.filter(p => (p.qtd || 0) <= (p.estoque_minimo || 0)).length;
+    const criticos = _prods.filter(p =>  (p.estoque ?? 0) <= (p.estoque_minimo ?? 0)).length;
 
     document.getElementById('vDia').innerText = `R$ ${totalHoje.toFixed(2)}`;
     document.getElementById('lDia').innerText = `R$ ${lucroHoje.toFixed(2)}`;
@@ -600,24 +600,24 @@ function editarVenda(id) {
   const novaData = document.getElementById('eVendaData').value;
 
   // 2) Devolver estoque da venda original
-  await db.from('produtos')
- .update({
-  qtd: Number(document.getElementById('eQtd').value)
-})
+await db.from('produtos')
+  .update({
+    estoque: (vendaOriginal.produtos?.estoque ?? 0) + vendaOriginal.quantidade
+  })
+  .eq('id', vendaOriginal.produto_id);
 
-
-    .eq('id', vendaOriginal.produto_id);
 
   // 3) Validar e debitar novo estoque
   const prodNovo = _prods.find(p => p.id == novoProdutoId);
-  if (!prodNovo || (prodNovo.qtd || 0) < novaQtd) {
+  if (!prodNovo || (prodNovo.estoque ?? 0) < novaQtd)
     alert("Estoque insuficiente");
     return;
   }
 
-  await db.from('produtos')
- .update({ qtd: prodNovo.qtd - novaQtd })
-    .eq('id', novoProdutoId);
+await db.from('produtos')
+  .update({ estoque: prodNovo.estoque - novaQtd })
+  .eq('id', novoProdutoId);
+
 
   // 4) Recalcular lucro
   const lucro = novoValor - ((prodNovo.preco_custo || 0) * novaQtd);
@@ -870,15 +870,6 @@ async function saveCli() {
   loadAll();
 }
 
-
-  // limpa campos
-  document.getElementById('cNome').value = "";
-  document.getElementById('cTel').value = "";
-
-  loadAll(); // recarrega lista e selects
-}
-
-
 async function saveProd() {
   const nome = document.getElementById('pNome').value.trim();
   const estoque = Number(document.getElementById('pQtd').value);
@@ -1039,6 +1030,7 @@ window.onload = async () => {
 
 </body>
 </html>
+
 
 
 
