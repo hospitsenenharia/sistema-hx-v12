@@ -416,22 +416,42 @@ function refreshSelects() {
 
 // DASHBOARD CALCULATIONS
 function updateDash() {
-    const hoje = new Date().toISOString().split('T')[0];
-    const mes = hoje.substring(0, 7);
+  const agora = new Date();
 
-    const vHoje = _vens.filter(v =>(v.data_venda || v.data).startsWith(hoje));
-    const totalHoje = vHoje.reduce((a, b) => a + (b.valor || 0), 0);
-    const lucroHoje = vHoje.reduce((a, b) => a + (b.lucro_total || 0), 0);
-    const totalMes = _vens.filter(v => (v.data_venda || v.data).startsWith(mes)).reduce((a, b) => a + (b.valor || 0), 0);
-    const criticos = _prods.filter(p =>  (p.estoque ?? 0) <= (p.estoque_minimo ?? 0)).length;
+  const inicioHoje = new Date();
+  inicioHoje.setHours(0, 0, 0, 0);
 
-    document.getElementById('vDia').innerText = `R$ ${totalHoje.toFixed(2)}`;
-    document.getElementById('lDia').innerText = `R$ ${lucroHoje.toFixed(2)}`;
-    document.getElementById('vMes').innerText = `R$ ${totalMes.toFixed(2)}`;
-    document.getElementById('qtdCrit').innerText = `${criticos} Itens`;
+  const fimHoje = new Date();
+  fimHoje.setHours(23, 59, 59, 999);
 
-    renderChart();
+  const inicioMes = new Date(agora.getFullYear(), agora.getMonth(), 1);
+
+  const vendasHoje = _vens.filter(v => {
+    const d = new Date(v.data_venda || v.data);
+    return d >= inicioHoje && d <= fimHoje;
+  });
+
+  const vendasMes = _vens.filter(v => {
+    const d = new Date(v.data_venda || v.data);
+    return d >= inicioMes;
+  });
+
+  const totalHoje = vendasHoje.reduce((s, v) => s + Number(v.valor || 0), 0);
+  const lucroHoje = vendasHoje.reduce((s, v) => s + Number(v.lucro_total || 0), 0);
+  const totalMes = vendasMes.reduce((s, v) => s + Number(v.valor || 0), 0);
+
+  const criticos = _prods.filter(p =>
+    (p.estoque ?? 0) <= (p.estoque_minimo ?? 0)
+  ).length;
+
+  document.getElementById('vDia').innerText = `R$ ${totalHoje.toFixed(2)}`;
+  document.getElementById('lDia').innerText = `R$ ${lucroHoje.toFixed(2)}`;
+  document.getElementById('vMes').innerText = `R$ ${totalMes.toFixed(2)}`;
+  document.getElementById('qtdCrit').innerText = `${criticos} Itens`;
+
+  renderChart();
 }
+
 
 function renderChart() {
   const ctx = document.getElementById('chartDiario').getContext('2d');
@@ -1192,6 +1212,7 @@ window.onload = async () => {
 
 </body>
 </html>
+
 
 
 
